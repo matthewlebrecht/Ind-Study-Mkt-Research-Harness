@@ -1,0 +1,113 @@
+harness_id: H-SAFETY-ENV-01
+module: h_safety_env_01
+name: OSHA + EPA ECHO Regulatory Record Extractor
+current_version: v1.3
+grandfathered_name: false
+
+signal_types: [osha_inspection, epa_echo_compliance]
+declared_evidence_families: [9_industrial_safety_environmental]
+sources:
+  - id: SRC-0023
+    role: primary
+    notes: OSHA establishment/inspection index (ords/imis). HTML, no API.
+  - id: SRC-0024
+    role: primary
+    notes: EPA ECHO REST services. Two-step get_facilities -> get_qid.
+
+versions:
+  - version: v1.3
+    date: 2026-09-03
+    reprocessing_required: false
+    summary: >
+      Session 10 item 6 bug fixes, no policy change; S7/S25/S21 untouched per item 9.
+      S24: ECHO facility lists are paged (up to 500) and a full final page is DECLARED as a
+      floor with a suppressed_by_cap governance note, where `responseset=100` was an
+      undeclared cap. S19: result rows that do not parse are counted per search. S20: an
+      unparseable violation count is unknown, not zero, and the observation says how many
+      are excluded. S16: a full OSHA page with no Next link is reported as a floor. The
+      code constant said v1.1 while the manifest said v1.2; both are now v1.3.
+    notes: >
+      CONSEQUENCE, stated plainly: the offline replay refreshed 64 of 131 rows to v1.3
+      (quarantined) because their content changed -- ECHO facility counts that were
+      silently capped at 100 (Teichert: 149) and OSHA floors now declared. This
+      re-quarantines grandfathered rows, which item 9 sought to avoid; it is the direct
+      effect of the ordered fix, not a policy change, and the 67 unchanged rows stay
+      released. Review sheet drawn (30 of 64).
+
+  - version: v1.0
+    date: 2026-08-30
+    reprocessing_required: false
+    summary: >
+      Closes the manufacturing coverage gap CLAUDE.md flagged. OSHA + EPA ECHO are one
+      logical harness under spec §9 Q4 -- both answer "what does the regulatory record say
+      about how this company runs its physical operations", they share entity resolution
+      and a company loop, and neither is independently useful to this project.
+    notes: >
+      Three source behaviours worth recording, each of which produced a wrong result before
+      it was found.
+      (1) OSHA's establishment search only honours LOWERCASE parameter names. The
+      documented mixed-case form fields return "your search did not return any results" for
+      every query -- indistinguishable from genuine absence, and it would have been written
+      as absent_confirmed for all 108 companies.
+      (2) A single-name lookup is not enough to assert absence. Mack Group files as "Mack
+      Molding" and "Duke Manufacturing Co." returns nothing where "Duke Manufacturing"
+      returns three inspections. The first run recorded six real inspections as confirmed
+      absence. absent_confirmed now requires every name variant to come back empty.
+      (3) Companies.hq_state is not uniform -- pilots hold "OH", Anvil rows hold
+      "Chicago, IL". Taking the first two characters yields "CH", and OSHA does not reject
+      an unknown state, it silently searches nationally. core.resolution.state_code parses
+      properly and returns "" rather than guessing.
+  - version: v1.1
+    date: 2026-08-30
+    reprocessing_required: true
+    affected_topics: [safety_inspection_history]
+    summary: >
+      Reports OSHA result truncation instead of silently understating it. OSHA serves 20
+      inspections per page, publishes no total, and its p_start/p_finish parameters appear
+      in its own sort links but do not advance the window -- offsets 0, 20 and 40 return
+      identical rows. v1.0 therefore recorded exactly "20 inspections" for 12 of 107
+      companies as though it were a total.
+    notes: >
+      Now emits `governance` / `suppressed_by_cap` on the attempt and states inside the
+      observation text that the count is a floor rather than a total. Outcome stays
+      `covered` and coverage_rate is unaffected, per spec §11 Q5 -- the harness reached the
+      source and a declared rule fired, which is not a miss. Recorded as a material
+      revision because HR-0008 committed the 12 understated rows.
+
+    known_limitations: >
+      OSHA's index requires a state, so a company with no parseable hq_state gets a named
+      coverage gap rather than a query. EPA ECHO searches nationally by name and so
+      degrades gracefully instead. Inspection DETAIL pages (individual citation text,
+      penalty amounts) are not fetched -- the detail endpoint requires session context the
+      harness does not establish -- so violation COUNTS are captured but not the standards
+      cited. That is the natural v1.1 and would materially sharpen the legacy_constraint
+      reading.
+
+  - version: v1.2
+    date: 2026-08-31
+    reprocessing_required: true
+    affected_topics: [osha_inspection_profile, safety_inspection_intensity]
+    summary: >
+      OSHA pagination now works. v1.1 concluded the source could not be paged, because
+      hand-built `p_start`/`p_finish` offsets returned identical rows at 0, 20 and 40 --
+      so 13 companies were left holding floor counts of exactly 20 marked
+      `suppressed_by_cap`, and their real inspection totals were unknown.
+
+      The parameters were right and the values were wrong. The result page's own
+      pagination link carries `p_start=` EMPTY with `p_finish` acting as a cursor, plus
+      `p_sort`, `p_desc`, `p_direction=Next`, `p_show`, a rewritten date window and
+      `sitezip=100000`. Following the link the server publishes, rather than
+      reconstructing one, pages correctly: Kroger/TN yields 31 distinct inspections where
+      the offset loop reported 20 as a floor.
+    notes: >
+      Marked reprocessing_required because the affected rows are not merely refreshable --
+      they assert counts that were floors and are now exact, so any analysis that treated
+      "20 inspections" as a value rather than a lower bound is invalidated. The result set
+      wraps rather than terminating (page 3 re-serves page 1), so the loop stops on "no new
+      activity numbers", which also guards against a cycle.
+
+      Worth recording as a general lesson: v1.1 correctly identified that the obvious
+      paging parameters did not work, and then drew the wrong conclusion -- that the source
+      could not be paged -- rather than the narrower one, that this particular construction
+      of them did not work. The evidence for the wider claim was never gathered. Reading
+      the page's own controls is cheap and was not tried.

@@ -1,0 +1,90 @@
+harness_id: H-EXECID-01
+module: h_execid_01
+name: Executive Identification
+current_version: v1.1
+grandfathered_name: false
+
+signal_types: [executive_identification]
+# Deliberately empty. This is a prerequisite harness: it writes Company_Executives, never
+# Observations, and makes no claim about modernization posture. `executive_identification`
+# is registered in Signal_Types with signal_class=prerequisite and a null evidence_family,
+# and validate_repo_db.py check 5 enforces that pairing.
+declared_evidence_families: []
+
+sources:
+  - id: SRC-0039
+    role: primary
+    notes: >
+      Company leadership / executive-team pages on the company own domain. First-party and
+      current, which is why they are graded A; a weaker first-party page (About, Who We
+      Are) that happens to name executives is graded B because it was not built to be a
+      complete roster.
+  - id: SRC-0040
+    role: resolution_only
+    notes: >
+      Brave Search API, used only to resolve a company to its homepage when Companies.website
+      is blank, and as a site-constrained last resort for finding a leadership page. Never
+      cited: the claim is always made against the page the result points to. Recorded in
+      the same resolution_only role H-FMCSA-01 gives the FMCSA census endpoint, for the
+      same reason -- so "which harnesses depend on search" and "which records cite search"
+      do not return the same set with no way to tell them apart.
+
+versions:
+  - version: v1.1
+    date: 2026-09-06
+    reprocessing_required: false
+    summary: >
+      Session 14 item 2, the EXECID low-grade tier (gate inventory E26 / E32, convention
+      41). A name whose adjacent line is title-shaped but outside the closed vocabulary is
+      admitted with the title as written (E26); a name with no adjacent title on a page
+      already classified leadership/officers/team is admitted with an empty title (E32).
+      Both write role_relevance `unconfirmed`, source_grade C, confidence 0.3 / 0.25 and a
+      `[low-grade: ...]` marker in name_variants; db.sync_executives now accepts an empty
+      title only on such a row. Never primary, so H-EXECVOICE-01 does not read them.
+      Capped at 10 low-grade people per page; page ranking counts confirmed people only.
+  - version: v1.0
+    date: 2026-08-31
+    reprocessing_required: false
+    summary: >
+      First build. Unblocks the buyer_articulates gap by producing the executive roster
+      H-EXECVOICE-01 needs. Reads first-party leadership pages discovered by following
+      links the homepage actually publishes, extracts (name, title) pairs requiring both
+      halves to be present and adjacent, normalizes titles against a closed vocabulary,
+      and writes Company_Executives. Also backfills Companies.website by search for the
+      nine buyer companies that had none, which closes the named H-WAYBACK-01 coverage gap.
+    notes: >
+      Three calibration findings, all recorded because each is a near-miss of the projects
+      characteristic failure mode rather than a tuning detail.
+
+      (1) The Kenco About page produced an executive named "How We" titled "President and
+      CEO" -- a heading fragment that satisfies every structural test for a two-token
+      personal name. This is convention 16 in miniature: not noise, but confident
+      wrongness that would have sent H-EXECVOICE-01 searching for a nonexistent person.
+      Fixed with a capitalised-function-word rejection set.
+
+      (2) Nicholas and Company ranked /join-our-team above its real About page, because a
+      careers page matches "our team" exactly as well as a leadership page does. Recruiting
+      language is now excluded from candidacy outright.
+
+      (3) McShane publishes its executives at /who-we-are/team-members alongside
+      /who-we-are/history and /who-we-are/giving-back. Scoring the whole URL path gave all
+      of them the score they inherit from the shared /who-we-are prefix, and the real page
+      lost the tiebreak and was never fetched -- 18 executives including a CTO, silently
+      missed while the run looked successful. Candidates are now scored on the last path
+      segment, with ancestor-inherited matches heavily discounted.
+    known_limitations: >
+      Aggregator sources (ZoomInfo, LinkedIn, theorg.com, rocketreach.co, comparably.com,
+      leadiq.com) are in the specified waterfall but are not read. They are undated and
+      frequently stale, and a departed executive recorded as current would send
+      H-EXECVOICE-01 collecting statements attributed to a company that never made them --
+      manufactured evidence, which convention 6a rates worse than a gap. Aggregator URLs
+      seen during discovery are recorded in the run log so a later version can start from
+      that list with a freshness test and a lower source grade.
+
+      Departure detection is implemented but gated: a previously-active executive is only
+      marked superseded for companies where this run actually read a genuine leadership
+      page. Without that gate a transient fetch failure would mark an entire roster as
+      departed.
+
+      This version does not read press releases or business journals as a fourth tier.
+      That is the natural v1.1 for companies whose own site names nobody.

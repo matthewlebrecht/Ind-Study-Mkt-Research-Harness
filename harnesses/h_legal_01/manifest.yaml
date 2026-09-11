@@ -1,0 +1,154 @@
+harness_id: H-LEGAL-01
+module: h_legal_01
+name: Federal Docket Extractor
+current_version: v1.2
+grandfathered_name: false
+
+signal_types: [federal_court_docket, nlrb_case]
+declared_evidence_families: [13_legal_dispute_records]
+
+sources:
+  - id: SRC-0047
+    role: primary
+    notes: >
+      CourtListener RECAP federal docket search. Keyless. Queried PARTY-SCOPED, which is
+      not a detail: the default `q=` searches the full text of filed documents, so
+      q="Kenco Group" returns 55 dockets whose top hit is an unrelated Delaware furniture
+      bankruptcy, while party:"Kenco Group" returns 21 that are all genuinely Kenco. The
+      55 was already quoted into CLAUDE.md as this harness's expected yield.
+  - id: SRC-0048
+    role: primary
+    notes: >
+      NLRB case search. READ as of v1.1, and v1.0's "no interface exists" was wrong --
+      it came from guessed API paths (/api/v1/cases and friends, all 404) and a
+      response-size inference, never from using the site's own form. The form POSTs to
+      /search/case and redirects to a plain GET at /search/case/<term>, which returns
+      server-rendered results: respondent name, case number, date filed, status, location,
+      region. Keyless, no JavaScript, robots.txt permits it.
+
+      124 cases resolve to 36 of 108 companies. It writes NO observations by design: the
+      allegation vocabulary is statutory and names conduct under the NLRA, not systems --
+      0 of 10 sampled labels classify to any theme. Reported separately from CourtListener
+      under its own signal so the two never share a coverage figure.
+
+versions:
+  - version: v1.2
+    date: 2026-09-03
+    reprocessing_required: false
+    summary: >
+      Corroboration-gate policy (session 9). The nature-of-suit whitelist (contract, trade
+      secret, patent, ...) was a corroboration-strength gate: right company, a real
+      technology vendor as a principal caption party, but the "systems dispute" reading
+      unsupported by the suit type. A vendor docket with a non-commercial or blank nature
+      is now written at grade C / weak_clue / confidence 0.35 with the "[low-grade:"
+      marker and a basis saying so, instead of being dropped. Every identity condition
+      (party-scoped search, token-prefix party test, caption-not-party-list, plan-party
+      exclusion, short-token vendor exclusion, mass-action cap) is unchanged.
+    notes: >
+      The 2026-09-01 first run's ten false rows sat under ERISA, civil rights and personal
+      injury; they were false on IDENTITY (co-defendant vendors on mass dockets), which the
+      caption and party-count conditions already remove. The low-grade tier re-admits only
+      dockets that pass all of those. The single v1.1 row (O00377, human-corrected) is
+      proposed identically.
+
+  - version: v1.1
+    date: 2026-09-01
+    reprocessing_required: false
+    affected_topics: []
+    summary: >
+      NLRB IS READABLE, AND v1.0 SAID OTHERWISE. That verdict -- "declared and not read,
+      no JSON interface exists" -- was wrong, and it was wrong in this project's
+      characteristic way: inferred from response SIZE and from API paths I invented
+      (/api/v1/cases and friends, all 404), without ever using the site's own form. The
+      form is a POST to /search/case which redirects to a plain GET at
+      /search/case/<term>, and that returns SERVER-RENDERED results: respondent name, case
+      number, date filed, status, location, region. No JavaScript, no authentication, no
+      key, and robots.txt permits it. Convention 36 again -- an answer arrived at
+      confidently about a different question than the one asked.
+
+      COVERAGE: 124 NLRB cases resolve to 36 of 108 companies. A third of the universe has
+      federal labour-dispute history, which is far better coverage than the docket side.
+
+      IT WRITES NO OBSERVATIONS, BY DESIGN AND BY MEASUREMENT. Case pages carry an
+      `Allegations` section, but its vocabulary is statutory and describes conduct under
+      the NLRA -- "8(a)(3) Discharge", "8(a)(1) Coercive Statements", "8(a)(5) Refusal to
+      Bargain", and "Allegations data is not available." on representation cases. Sampled
+      across five companies, ZERO of ten distinct labels classify to any theme in
+      core/topics.py, and none can: they name what an employer allegedly did to organising
+      rights, never what systems it runs. Reading a modernization theme off "8(a)(3)
+      Discharge" would be exactly the caption-classification error v1.0 already made and
+      removed. So the attempts record `absent_confirmed` with the reason, and case detail
+      pages are NOT fetched per company -- several hundred requests for a yield that is
+      zero by construction.
+
+      This is a real instrument reporting an honest absence of THIS signal, not a gap. The
+      labour friction it does establish is family-3 material and belongs to a harness
+      scoped for it.
+
+      REPORTED SEPARATELY FROM COURTLISTENER, never merged. `nlrb_case` is its own signal
+      declared in scope, so each source has its own denominator (convention 5) and neither
+      inherits the other's coverage figure.
+
+      IDENTITY MATTERS AS MUCH HERE AS IN THE DOCKETS. NLRB search is a loose phrase match:
+      "Prime" returns Prime Healthcare and PrimeFlight Aviation (10 read, 0 matched --
+      the adversarial case working), "Western Express" returns Western Flyer Express,
+      "SpartanNash" returns the Teamsters locals that filed against it. 242 identity
+      rejections across the run, all logged.
+
+      ONE ALIAS SEEDED: Kenco Group -> "Kenco", "Kenco Logistics". NLRB returns 0 for the
+      holding-brand name and 5 for the operating name -- the Mack Group / Mack Molding
+      shape, and the same false absence convention 6a exists to stop. "Kenco" is a coined
+      token, so it is safe as an identity under convention 31 in a way "Prime" is not.
+      Companies whose NLRB respondent name differs from their canonical name and have no
+      seeded alias are under-returned; the attempt text says so rather than implying a
+      clean record.
+
+  - version: v1.0
+    date: 2026-09-01
+    reprocessing_required: false
+    affected_topics: []
+    summary: >
+      First build. IC4 -- federal court dockets are involuntary disclosure, the class the
+      evidence base is shortest on, and the reason the taxonomy promoted CourtListener to
+      build-now.
+
+      EXPECT VERY LOW YIELD, AND TREAT THAT AS THE FINDING. Measured over a 120-docket
+      sample across six companies before the harness was written, this instrument's
+      population is overwhelmingly employment discrimination (442 Civil rights jobs),
+      personal injury, motor vehicle and ERISA, with a patent/trademark tail that belongs
+      to family 14 rather than here. About a quarter of dockets carry no suitNature at all.
+      Being sued is not modernization evidence, and the gate is not loosened to manufacture
+      yield (convention 32: decide admission first, strength second).
+
+      TWO ADMISSION ROUTES. Either the dispute's own text -- caption, nature of suit, cause
+      -- classifies to a modernization theme AND the theme is the subject by
+      `article.theme_is_the_subject`, reused unchanged from H-FIRSTPARTY-01; or the
+      opposing party is a technology vendor, which makes a dispute a systems dispute
+      whatever the caption says. Vendors are matched against an explicit list plus the 12
+      provider-benchmark companies already in `Companies`, never by inferring that a party
+      name "looks like" a software firm -- "Systems", "Solutions" and "Technologies" are
+      all over the staffing firms and contractors in this universe.
+
+      DOCUMENT DESCRIPTIONS ARE FETCHED BUT CANNOT CARRY A CLAIM. Classification runs on
+      the fields the COURT wrote about the dispute. Docket chatter -- scheduling orders,
+      notices of appearance -- is the filing clerk's vocabulary, and letting it classify
+      would turn it into the company's modernization posture. Same lesson as MedTech Dive's
+      section navigation becoming Merit Medical's behaviour.
+
+      IDENTITY IS THE WHOLE RISK. `party:` is tokenized, not an exact phrase:
+      party:"Prime Inc." returns 483 dockets including "Certified Prime Inc", "Parker's
+      Prime, Inc." and "Prime Excavating". Every party string is scored with
+      `article.is_about_company`, so convention 31 governs -- a coined token stands alone,
+      an ordinary English word needs the full company phrase. Prime Inc. and McGough
+      Construction were read through before the first run, per the brief.
+
+      WHAT AN ABSENCE HERE MEANS, AND IT IS NARROW. CourtListener is authoritative for the
+      federal dockets it holds, so a clean result is a confirmed absence of a FEDERAL
+      docket. It is not evidence of no dispute: most commercial disputes are resolved in
+      state court (taxonomy 13c, not built) or in arbitration, and never appear here.
+      The attempt text says so rather than leaving the reader to infer it.
+
+      Paging is not implemented. One search page is read per company and the source's own
+      reported total is recorded alongside it, so any company whose total exceeds what was
+      read is logged as CAPPED and its docket count is a floor, not an exact number
+      (convention 7 -- the OSHA 20-per-page failure).

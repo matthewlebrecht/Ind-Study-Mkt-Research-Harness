@@ -1,0 +1,114 @@
+harness_id: H-FIRSTPARTY-01
+module: h_firstparty_01
+name: First-Party Announcement Extractor
+current_version: v1.2
+grandfathered_name: false
+
+signal_types: [first_party_announcement]
+declared_evidence_families: [1_first_party_strategy_governance]
+
+sources:
+  - id: SRC-0040
+    role: resolution_only
+    notes: >
+      Brave Search API, used only to locate candidate announcements. Never cited: every
+      claim is made against the fetched article.
+  - id: SRC-0001
+    role: primary
+    notes: >
+      Company newsroom / press releases on the company own domain. Taxonomy 1a,
+      reliability A -- the company is the author of record.
+  - id: SRC-0002
+    role: primary
+    notes: >
+      PR Newswire / Business Wire and the syndication that carries them. Taxonomy 1b,
+      reliability A. Wire copies of an announcement already counted from the company own
+      newsroom are collapsed rather than counted twice.
+  - id: SRC-0003
+    role: supporting
+    notes: >
+      Local and regional business journals, plus the trade press for this population
+      (Construction Dive, ENR, FreightWaves, Supply Chain Dive, Transport Topics).
+      Taxonomy 1c, reliability B, upgraded to A when the piece directly quotes an
+      executive -- which is the upgrade rule the taxonomy itself specifies.
+
+versions:
+  - version: v1.2
+    date: 2026-09-03
+    reprocessing_required: false
+    summary: >
+      Corroboration-gate policy (session 9). Two gates converted from refuse-to-write to
+      write-at-low-grade: (1) the "two distinct terms or a headline mention" admission
+      threshold -- a single generic term in a long release now writes at grade C /
+      weak_clue / confidence 0.4 marked "[low-grade: single generic term, not in the
+      headline]"; (2) the spine's generic-tier refusal -- a release whose only theme terms
+      are generic writes at grade C / weak_clue / confidence 0.3 marked "generic-tier
+      term(s) only". Both stay in theme_below_threshold in the run log, now with
+      written_low_grade: true. Every v1.1 row is proposed identically.
+    notes: >
+      Identity gates untouched: is_about_company, the index-page and standing-page
+      detectors, the source-class allowlist and the aggregator/vendor exclusions.
+      The 5-year staleness window is logged as unclear (temporal validity, not
+      corroboration) and is unchanged.
+
+  - version: v1.0
+    date: 2026-08-31
+    reprocessing_required: false
+    summary: >
+      First build. The second `buyer_articulates` instrument and the one with reach: no
+      prerequisite, so it covers companies whose own sites name no executive. Searches for
+      announcements, restricts to first-party and business-journal sources, requires the
+      article to be about the company, dates it from structured markup only, classifies it
+      into the shared theme spine, and grades it by the taxonomy family-1 rule.
+    notes: >
+      Partitions deliberately with H-EXECVOICE-01, which excludes the company own domain
+      and the wires. One CEO quote routinely appears in a company release, on a wire and in
+      a trade article; three rows saying so is not three times the evidence.
+
+      Three bugs were found and fixed before this version was accepted, all in the same
+      family as convention 16. Prime Inc. matched Digital Prime Technologies, Prime Data
+      Centers, Primech and Prime Electric because its name reduces to one common token;
+      Midmark leadership page was counted as first-party news because exec bios read as
+      article prose; and wire syndication triple-counted single announcements.
+  - version: v1.1
+    date: 2026-08-31
+    reprocessing_required: true
+    affected_topics: [all]
+    summary: >
+      v1.0 produced 248 observations at 97% coverage. Auditing them rather than trusting
+      the number found that two thirds did not support their own claim.
+
+      (1) SINGLE GENERIC TERM. 163 of 248 rows rested on ONE matched term, and the terms
+      were the generic ones: "workforce management" (48 rows), "integration" (26),
+      "cybersecurity" (18), "ai" (12). A Gilbane earnings release saying "our integrated
+      platform" became an announcement about systems integration and interoperability --
+      business integration read as systems integration. An announcement is now admitted for
+      a theme only if it matches two distinct terms or names the theme in its headline.
+      This is an ADMISSION threshold, not a strength one: the claim itself was unsupported,
+      so the rows should not exist at any strength.
+
+      (2) WIRE INDEX PAGES. 40 rows came from pages titled "All Computer Software News and
+      Press Releases from PR Newswire" -- aggregations of unrelated companies releases.
+      They defeated the paragraph-length article test because wires pad each headline with
+      a summary long enough to read as prose.
+
+      (3) `signal_strength` was inferred from "a quote appeared somewhere on the page",
+      which labelled 161 of 248 rows `repeated_pattern` on as little as one matched term.
+      Repetition is now counted, per convention 19.
+    notes: >
+      The count falling is the point. A harness reporting 97% coverage while two thirds of
+      its rows rested on one generic keyword is another instance of the pattern convention
+      16 describes, and the honest number is the smaller one.
+    known_limitations: >
+      `legacy_constraint` is unreachable from this source by construction: a company press
+      release does not announce its own obsolescence. Any `legacy_constraint` reading here
+      would be a misread, so the available values are active_transition, target_state and
+      unknown. This matters for gap analysis -- buyer legacy articulation has to come from
+      H-EXECVOICE-01 or a future employee-review harness, not from here.
+
+      Announcements older than five years are excluded and reported as a governance
+      suppression. 33 were suppressed on the first full run.
+
+      Business-journal coverage is thinner than taxonomy 1c implies, because most regional
+      outlets paywall. bizjournals.com results are frequently unreadable to an
+      unauthenticated fetch and are recorded as fetch failures rather than absences.

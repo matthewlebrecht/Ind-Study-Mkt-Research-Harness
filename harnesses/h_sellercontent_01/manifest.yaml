@@ -1,0 +1,108 @@
+harness_id: H-SELLERCONTENT-01
+module: h_sellercontent_01
+name: Provider-Market Messaging Extractor
+current_version: v1.4
+grandfathered_name: false
+
+signal_types: [seller_service_page]
+declared_evidence_families: [seller_discourse]
+sources:
+  - id: SRC-0038
+    role: primary
+    notes: >
+      Consulting/SI firm service and capability pages. Provider universe is configured in
+      sources.json, not discovered -- the research posture makes this a compact benchmark
+      rather than a population to enumerate.
+
+versions:
+  - version: v1.4
+    date: 2026-09-03
+    reprocessing_required: false
+    summary: >
+      Corroboration-gate policy (session 9). A theme that a page carries on generic-tier
+      terms only -- the bare "integration", "AI", "SAP", "Lean", a lone cloud vendor name --
+      is no longer refused at extraction. It is written at grade C, weak_clue, confidence
+      0.3, with the standard "[low-grade:" marker in evidence_excerpt naming the relaxed
+      gate, so the review layer sifts it instead of the pattern deciding. The specific
+      tier is unchanged and every row v1.3 wrote is proposed identically.
+    notes: >
+      Identity gates untouched: the JS-shell text floor, homepage-discovery rules and the
+      provider configuration are as before. Low-grade rows are the same claims the
+      2026-09-02 pattern fix retired, now present and marked rather than absent.
+
+  - version: v1.3
+    date: 2026-09-02
+    reprocessing_required: true
+    affected_topics: [systems_integration, cloud_infrastructure_migration, data_analytics_ai,
+                      erp_core_systems, digital_transformation_process, warehouse_automation,
+                      ot_modernization]
+    summary: >
+      No harness code change beyond a --retire-stale flag; the version moves because the
+      shared spine's ADMISSION rule changed (core/topics.py two-tier patterns, pattern-fix
+      brief 2026-09-02) and every row this harness writes is a classification under it.
+      Offline replay from the 2026-08-30 archive. The measured defect: six of seven
+      systems_integration provider rows rested on the bare word "integration", two of four
+      cloud rows on a lone vendor name, one data/AI row on a bare "AI", one ERP row on a
+      bare "SAP". Under the new rule those claims are not made, and --retire-stale removes
+      the machine rows that carried them rather than leaving them published under v1.2.
+    notes: >
+      Retirement is keyed on the natural key of what the run proposed, so surviving rows
+      keep their observation_ids. Also picks up the ot_modernization row for P008 that the
+      2026-09-02 split made visible (Argano's page names control systems), which the
+      pre-fix replay already proposed. Output quarantined on write per the audit gate.
+
+  - version: v1.0
+    date: 2026-08-30
+    reprocessing_required: false
+    summary: >
+      Week 2 seller benchmark. 12 providers across four archetypes (boutique
+      modernization, mid-market consultancy, accounting-firm consulting arm, systems
+      integrator). 43 observations, coverage 92% -- 5 covered, 6 partial, 1 not_covered.
+      Classifies provider messaging into core/topics.py, the same theme spine buyer-side
+      harnesses map into, so convergence/divergence is measurable rather than asserted.
+    notes: >
+      Two findings from the run itself. (1) Every one of the 12 providers messages about
+      data/analytics/AI, on real matched terms rather than a loose pattern -- so that theme
+      cannot discriminate between providers and is near-useless for positioning analysis;
+      the discriminating themes are ERP/core systems, cloud migration and cybersecurity.
+      (2) Five of twelve configured service-page URLs 404'd and were substituted by
+      homepage discovery, and two providers serve JS-rendered shells. Runs built on a
+      discovered substitute are marked `partial`, not `covered`, because a theme profile
+      read off whatever the homepage happened to link to is not comparable to one read off
+      an actual service page.
+  - version: v1.1
+    date: 2026-08-30
+    reprocessing_required: true
+    affected_topics: [all]
+    summary: >
+      Offline replay did not reproduce the live run. Homepage discovery was gated on
+      `not args.offline`, so a replay skipped it entirely and produced 38 observations at
+      83% coverage where the live run produced 43 at 92%, with two providers wrongly
+      dropping to not_covered. Every candidate page discovery needs was already archived,
+      so the gate bought nothing and broke the archive's only purpose. Discovery now runs
+      identically in both modes and the replay reproduces the original exactly.
+    notes: >
+      Recorded as a material revision because HR-0006 committed the degraded 38-row
+      result. The re-run reconciles those rows in place rather than appending.
+
+  - version: v1.2
+    date: 2026-08-30
+    reprocessing_required: true
+    affected_topics: [all]
+    summary: >
+      Fixes an idempotency failure. source_url was set to the page a theme was matched on,
+      but db.py keys a claim on (company_id, harness_id, topic, source_url) -- so when
+      homepage discovery substituted a different URL between runs, the same logical claim
+      hashed to a new key and inserted a duplicate instead of reconciling. The v1.0 -> v1.1
+      re-run left 48 rows for 43 claims.
+    notes: >
+      source_url is now the provider homepage, which is stable; the specific pages that
+      evidenced a theme moved into evidence_excerpt, where a reviewer can still check them.
+      The stale rows were removed with delete_observations(keep_reviewed=True) and the
+      harness re-run clean. Re-running now reports 43 unchanged, 0 inserted.
+
+    known_limitations: >
+      Case-study pages (kind `case`) are specified in sources.json but not yet collected --
+      only `service` pages are configured, so the harness currently measures what providers
+      SAY THEY DO and not what they CLAIM TO HAVE DONE. Those are different claims and the
+      second is the more falsifiable one. Closing this is the natural v1.1.

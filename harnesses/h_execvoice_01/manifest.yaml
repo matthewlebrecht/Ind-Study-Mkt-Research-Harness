@@ -1,0 +1,227 @@
+harness_id: H-EXECVOICE-01
+module: h_execvoice_01
+name: Executive Candor Extractor
+current_version: v1.7
+grandfathered_name: false
+
+signal_types: [executive_public_statement]
+declared_evidence_families: [15_executive_candor_actor_networks]
+
+sources:
+  - id: SRC-0040
+    role: resolution_only
+    notes: >
+      Brave Search API. Used only to locate third-party pages that may quote a named
+      executive; never cited. The claim is always made against the fetched page.
+  - id: SRC-0033
+    role: primary
+    notes: >
+      Conference talk and interview coverage. In practice this version reads the written
+      coverage of such appearances rather than video, since transcript work is a different
+      technology stack (taxonomy 15c).
+  - id: SRC-0034
+    role: supporting
+    notes: >
+      Podcast appearances. Kept in scope because they surface through the same search, but
+      the taxonomy marks 15b "don't-build (yield too low for this population)" and the run
+      results are expected to bear that out rather than contradict it.
+
+versions:
+  - version: v1.7
+    date: 2026-09-06
+    reprocessing_required: false
+    summary: >
+      Session 15, shared quote extractor (same change as H-TRADEPRESS-01 v1.7): a quotation span that runs out of the article
+      body into page furniture (an editors'-picks teaser, a byline with a date bullet, a
+      newsletter or share box) is rejected as `span_crosses_page_furniture` in the shared
+      quote extractor (harnesses/h_execvoice_01/quotes.py, PAGE_FURNITURE). O00604 was a
+      Construction Dive sidebar teaser about Novo Construction attributed to Walbridge's
+      Randy Abdallah by exactly such a span, admitted on the `PLC` suffix false positive;
+      judged unsupported and deleted. The row's real origin was harnesses/h_tradepress_01/
+      extract.py::article_body, whose end-of-article markers ("Editors' picks", "Recommended
+      Reading") are short lines the prose filter dropped before the footer cut could see
+      them; the body now ends at the first such marker line once prose has begun. Verified
+      on an offline replay: Walbridge proposes 1 row instead of 2 (13 instead of 14 in
+      total), every other row reproduces. No other rule changed.
+  - version: v1.6
+    date: 2026-09-06
+    reprocessing_required: false
+    summary: >
+      Session 15 item 1 (Matthew's decision): the EXECID low-grade tier is searched as well
+      as primary names -- up to 4 `unconfirmed`-role people per company after the 2 primary.
+      Quotes found through those names are graded by the unchanged quote rules; the
+      executive record's grade does not propagate. The observation text carries a speaker
+      record note naming which speakers came from an unconfirmed-role row, and the run log
+      counts quotes_via_low_grade_names per company. Extraction rules otherwise identical
+      to v1.5.
+  - version: v1.5
+    date: 2026-09-03
+    reprocessing_required: false
+    summary: >
+      Session 10 item 6 (E15): the company-identity test on a fetched page is tightened to
+      H-FIRSTPARTY-01's rule (every distinctive token near the top, or the full phrase for
+      a dictionary-word name); the old test accepted any one token anywhere on the page.
+      Offline replay: the 5 released human-reviewed rows reproduce unchanged, 3 held as
+      conflicts, and the single v1.4 low-grade row is no longer proposed -- its page fails
+      the tightened identity test, which is the intended direction.
+
+  - version: v1.4
+    date: 2026-09-03
+    reprocessing_required: false
+    summary: >
+      Corroboration-gate policy (session 9). Two quote gates converted from refuse to
+      write-at-low-grade: a quote between 40 chars and the 60-char floor, and a quote
+      whose only theme terms are generic-tier (the spine's refusal). Such quotes carry
+      weak_reason; a theme row built only from them is grade C / weak_clue / confidence
+      0.3-0.4 with the "[low-grade:" marker. Attribution gates (explicit vs proximity,
+      eponymous surname, full name absent, boilerplate) are identity gates and unchanged.
+    notes: >
+      Every v1.3 row is proposed identically; the two human-reviewed rows the tighter
+      spine did not reproduce (O00369, O00373) may now reproduce as low-grade proposals
+      and will be reported as conflicts against the human rows, never overwritten.
+
+  - version: v1.3
+    date: 2026-09-02
+    reprocessing_required: false
+    summary: >
+      Follows the shared spine's two-tier admission change (core/topics.py, pattern-fix
+      brief 2026-09-02). Bare "AI" is generic in the spine now; in attributed executive
+      speech it is the subject, so quotes.py's buyer-voice table carries it (case-
+      sensitive) for this harness and H-TRADEPRESS-01's quote path. Offline replay:
+      every committed row reproduces unchanged. Two human-reviewed rows would NOT be
+      proposed by the new spine -- O00369 (bare "integration" in a quote) and O00373
+      ("Integrated Lean Project Delivery", bare "Lean") -- and are HELD, not removed:
+      a person's verdict stands until a person revisits it (convention 35).
+    notes: >
+      Not re-run live. reprocessing_required is false because nothing admitted before is
+      admitted differently now; the two held rows are the reviewer's call and are listed
+      in the session 8 report.
+
+  - version: v1.2
+    date: 2026-09-01
+    reprocessing_required: true
+    affected_topics: [data_analytics_ai, digital_transformation_process,
+                      systems_integration, transportation_fleet_systems]
+    summary: >
+      THE SHARED ATTRIBUTION FIX. `harnesses/h_execvoice_01/quotes.py` scored
+      name-then-verb attribution FOLLOWING a quote -- `"...," Broderick said.` -- as
+      `proximity` rather than `explicit`. It is the commonest attribution shape in American
+      journalism. `explicit_after` matched only verb-then-name ("said Broderick"), and
+      `explicit_before` matched name-then-verb but is anchored to the text PRECEDING the
+      quote, so nothing matched the ordinary case.
+
+      Two consequences, and the second is a correctness error rather than lost yield.
+      An article whose only quote is attributed that way routed to ST-PRESSPROFILE and
+      produced nothing. And at an EPONYMOUS firm -- McGough, Gilbane, Mack -- convention
+      31's corollary rejects a `proximity` quote outright, so a genuinely and explicitly
+      attributed quote was thrown away entirely.
+
+      THE GUARD THAT MAKES THE FIX SAFE. Accepting name-then-verb naively would accept
+      `"...," McGough Construction said.` as the PERSON speaking when it is the company.
+      That would trade the error convention 31's corollary exists to catch for the one this
+      fix removes. `_explicit_following` refuses the match where the text between the
+      surname and the verb carries another token of the company name. Verified separable:
+
+          "...," McGough said.               -> explicit   (was: thrown away)
+          "...," McGough Construction said.  -> REJECTED   (unchanged)
+          bare proximity at an eponymous firm -> REJECTED  (unchanged)
+
+      SCOPE: attribution classification only. No admission threshold, theme matching or
+      identity rule was touched, so the re-audit measures one change.
+
+      ROW DELTA: 8 observations before, 8 after. Exactly ONE changed --
+      Suffolk Construction (A043), confidence 0.65 -> 0.85, a quote moving from
+      `proximity` to `explicit`. No row was added, removed or re-themed.
+
+      reprocessing_required is TRUE because `confidence_0_1` is derived from attribution
+      and therefore differs between versions for that row; a trend query spanning v1.1 and
+      v1.2 would compare two different scales. The rows were removed and rewritten via
+      delete_observations(keep_reviewed=True) rather than reconciled, because a corrected
+      run does not propose rows it no longer believes and reconciliation alone would leave
+      a stale row in place. None of the 8 was human-reviewed, so no review was at risk --
+      but note the side effect: a delete-and-rewrite RENUMBERS observation_ids
+      (O00277-O00284 became O00368-O00375). Acceptable here precisely because none carried
+      human provenance; it would not be on a reviewed set.
+
+      A REGRESSION THIS DOES NOT FIX, LOGGED RATHER THAN BUNDLED: proximity attribution
+      still ignores an intervening explicit attribution to someone else, so an executive
+      named earlier in a page can pick up a later quote the article attributes to a
+      different speaker. Verified identical before and after this fix by running HEAD's
+      quotes.py against the same fixture, so it is pre-existing and out of scope. See
+      test_name_then_verb_does_not_upgrade_a_third_party_quote.
+
+  - version: v1.0
+    date: 2026-08-31
+    reprocessing_required: false
+    summary: >
+      First build, and the projects first `buyer_articulates` instrument. Depends on
+      H-EXECID-01 for the executive roster. Searches for each companys top two
+      primary-relevance executives by name, fetches third-party pages, and records an
+      observation only where a directly quoted passage is attributable to that named
+      executive AND mentions a modernization theme. Quotes are interpreted onto
+      organizational_state from explicit cues, and the matched cue is written into the
+      observation so a Week 4 reviewer can disagree with the reading without re-fetching.
+    notes: >
+      Two design decisions worth recording.
+
+      (1) BUYER-VOICE PATTERNS. `core/topics.py` documents that its patterns are
+      provider-side phrasing and that buyer-side patterns belong per-harness. Testing made
+      the reason concrete: the most valuable thing an operator says -- "we were still
+      running our distribution centers on spreadsheets, and that does not scale" --
+      matches nothing in the seller vocabulary, because vendors write "digital
+      transformation" where operators write "spreadsheets". The two sides of the market
+      describe the same condition with no shared token. `quotes.BUYER_VOICE_PATTERNS`
+      supplies the buyer half, resolving into the SAME theme keys so the spine is not
+      forked. Three patterns were removed during review for being loose enough to risk a
+      fifth instance of convention 16.
+
+      (2) GRADE B, NOT A. The taxonomy allows family 15 an A ceiling, but that A belongs
+      to content an executive authored directly -- a LinkedIn post under their own name --
+      which this harness cannot reach, because LinkedIn serves a bot wall to an
+      unauthenticated fetch. Everything reachable here is journalist- or
+      conference-mediated: genuinely said, but selected and framed by someone else. Taking
+      the A because the family permits it would overstate the exact evidence the Week 3-4
+      convergence analysis leans on hardest.
+    known_limitations: >
+      Low yield is expected and is not a defect: signal_taxonomy.md marks podcast
+      appearances "don't-build" for this population because mid-size private industrial
+      executives rarely speak publicly. `absent_confirmed` is the correct and common
+      outcome -- the harness searched by name, reached readable third-party pages, and
+      found no attributable quote. Companies where H-EXECID-01 identified no executive are
+      recorded `not_covered` with the dependency named, so the prerequisite gap is visible
+      in coverage math rather than hidden inside this harnesss numbers.
+
+      LinkedIn (taxonomy 15a, the highest-reliability source in the entire taxonomy) is
+      unreachable without authentication and is not attempted.
+
+      Video and podcast audio are not transcribed; only written coverage is read. Taxonomy
+      15c notes this is a different technology stack.
+
+      publication_date is left empty. Third-party article dates are inconsistently marked
+      up and guessing one would violate convention 3, which requires anything stated in an
+      observation to come from the source snapshot rather than inference.
+
+  - version: v1.1
+    date: 2026-08-31
+    reprocessing_required: true
+    affected_topics: [all]
+    summary: >
+      Two attribution defects found by auditing the ten rows v1.0 committed, rather than
+      by trusting the count.
+
+      (1) EPONYMOUS SURNAMES. A quote was attributed to Tom McGough of McGough
+      Construction off a page about a different person entirely, because "McGough" appears
+      nearby as the COMPANY name and surname proximity cannot tell the two apart.
+      Eponymous firms are everywhere in construction and trucking, so this is not an edge
+      case. Where the executive surname is also a company-name token, only explicit
+      attribution now counts.
+
+      (2) VENDOR DIRECTORY PAGES. A CIO Review vendor profile
+      (logistics.cioreview.com/vendor/2015/ct_logistics) produced a buyer_articulates row
+      for CT Logistics. `/vendor/` was missing from the family-6 URL exclusions, so the
+      exact trap session2_priority_order.md names was left half-closed.
+    notes: >
+      Marked reprocessing_required because both defects produce rows that are wrong about
+      WHO said something, not merely imprecise. Prior rows were deleted rather than
+      reconciled, since a corrected run does not propose them and reconciliation alone
+      would leave them in place.

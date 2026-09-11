@@ -1,0 +1,30 @@
+Buyer signal vs provider messaging   (11 providers, 98 buyer companies)
+
+  theme                           sellers  share  buyers  status                 low-grade only (S/B)
+  ------------------------------  -------  -----  ------  ---------------------  --------------------
+  warehouse_automation                  0     0%       2  covered                  0 / 2  
+  data_analytics_ai                    10    91%      35  covered                  1 / 4  
+  erp_core_systems                      6    55%       3  covered                  1 / 0  
+  systems_integration                   1     9%       3  covered                  6 / 16 
+  digital_transformation_process        7    64%      16  covered                  0 / 14 
+  transportation_fleet_systems          1     9%       5  covered                  0 / 3  
+  cloud_infrastructure_migration        2    18%       1  covered                  2 / 2  
+  cybersecurity                         4    36%       0  no absence instrument    0 / 13 
+  ot_modernization                      1     9%       1  covered                  0 / 13 
+  workforce_enablement                  2    18%       2  covered                  0 / 25 
+
+  188 low-grade row(s) EXCLUDED from the counts above (grade C, '[low-grade:' excerpt; 2026-09-03 corroboration-gate policy). The last column is companies/providers a theme would gain from low-grade rows alone.
+
+reading the table
+
+  12 buyer topic(s) carry no theme mapping (198 company-observations). Most buyer evidence collected so far is regulatory and is not about a modernization theme; it is left unmapped rather than forced into one.
+      environmental_compliance_profile     68 companies
+      safety_inspection_history            63 companies
+      removed_public_content               19 companies
+      open_roles_volume                    17 companies
+      operating_model                      8 companies
+      fleet_scale                          7 companies
+      crash_exposure_rate                  5 companies
+      vehicle_maintenance_out_of_service_rate 3 companies
+
+wrote data\snapshots\gap_report.csv

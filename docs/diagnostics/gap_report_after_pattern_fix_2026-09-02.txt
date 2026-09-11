@@ -1,0 +1,28 @@
+Buyer signal vs provider messaging   (11 providers, 97 buyer companies)
+
+  theme                           sellers  share  buyers  status
+  ------------------------------  -------  -----  ------  ------
+  warehouse_automation                  0     0%       2  covered
+  data_analytics_ai                    10    91%      35  covered
+  erp_core_systems                      6    55%       3  covered
+  systems_integration                   1     9%       4  covered
+  digital_transformation_process        7    64%      13  covered
+  transportation_fleet_systems          1     9%       5  covered
+  cloud_infrastructure_migration        2    18%       0  no absence instrument
+  cybersecurity                         4    36%       0  no absence instrument
+  ot_modernization                      1     9%       0  no absence instrument
+  workforce_enablement                  2    18%       2  covered
+
+reading the table
+
+  12 buyer topic(s) carry no theme mapping (195 company-observations). Most buyer evidence collected so far is regulatory and is not about a modernization theme; it is left unmapped rather than forced into one.
+      environmental_compliance_profile     68 companies
+      safety_inspection_history            63 companies
+      removed_public_content               19 companies
+      open_roles_volume                    14 companies
+      operating_model                      8 companies
+      fleet_scale                          7 companies
+      crash_exposure_rate                  5 companies
+      vehicle_maintenance_out_of_service_rate 3 companies
+
+wrote data\snapshots\gap_report.csv

@@ -1,0 +1,164 @@
+harness_id: H-PRODUCTQUALITY-01
+module: h_productquality_01
+name: Federal Recall & Complaint Extractor
+current_version: v1.4
+grandfathered_name: false
+
+signal_types: [product_quality_event]
+declared_evidence_families: [11_product_quality_customer_friction]
+
+sources:
+  - id: SRC-0044
+    role: primary
+    notes: >
+      openFDA device recall and MAUDE adverse-event APIs. Keyless, rate-limited.
+      Answers HTTP 404 for "no matching records", which this harness reads as a result
+      rather than a fetch failure -- treating it as an error would destroy the
+      distinction between "no recalls" and "could not look".
+  - id: SRC-0045
+    role: primary
+    notes: openFDA food enforcement API. Keyless.
+  - id: SRC-0027
+    role: primary
+    notes: >
+      CPSC recalls (saferproducts.gov). Queried on RecallTitle. CompanyName, ProductName
+      and RecallDescription all return an ERROR RECORD dressed as a 200 result, which the
+      first run recorded as confirmed absence for two companies before the error-record
+      check was added.
+  - id: SRC-0046
+    role: supporting
+    notes: >
+      NHTSA recalls. Declared but not read by v1.0 -- no company in this universe is a
+      vehicle manufacturer, so the instrument has an empty population here. Declared
+      rather than dropped so the dependency and its status are recorded.
+
+versions:
+  - version: v1.4
+    date: 2026-09-03
+    reprocessing_required: false
+    summary: >
+      Session 10 item 5 (Matthew): a bare symptom phrase ("manufacturing defect") with no
+      named system or cause writes at low grade (C / weak_clue / 0.35, state unknown,
+      theme digital_transformation_process, marker "bare symptom phrase, no named system
+      or cause"). Item 6 (P14): the firm-name identity test now also requires the
+      company's tokens to be a PREFIX of the firm's, aligning with H-LEGAL-01's L9 rule.
+      Note: this harness deletes and rewrites its unreviewed rows on commit, so v1.3's
+      low-grade rows were renumbered under v1.4 (session 4 side effect, still open).
+
+  - version: v1.3
+    date: 2026-09-03
+    reprocessing_required: false
+    summary: >
+      Corroboration-gate policy (session 9). The same-sentence rule is split: a process-
+      cause cue and a failure predicate in the SAME sentence is the strong claim as before;
+      a cue in one sentence with a failure predicate elsewhere in the narrative is now a
+      low-grade row (grade C / weak_clue / confidence 0.35, organizational_state unknown,
+      "[low-grade:" marker) where v1.2 refused it. A cue with no failure predicate anywhere
+      stays refused: the Midmark ECG record is a claim that is false, not weak. The
+      identity test, the population map, and the cause-not-product-description rule are
+      unchanged; O00366 is proposed identically.
+
+  - version: v1.2
+    date: 2026-09-01
+    reprocessing_required: false
+    affected_topics: []
+    summary: >
+      POPULATION MAP, not extraction logic. No prior observation is invalidated -- the one
+      row v1.1 wrote (Merit Medical, medical_device) is untouched by every change here --
+      so reprocessing_required is false. What changes is which companies get asked, and
+      which database they get asked in.
+
+      THE REAL MISS: doTERRA (A059), Melaleuca (A057) and 4LIFE (A010) sell ingestible
+      dietary supplements and were queried against CPSC alone. openFDA's food enforcement
+      endpoint covers dietary supplement recalls, so a live instrument existed for all
+      three and never ran. Their zeros were absence from the wrong database, which is not
+      absence. All three now carry ["consumer", "food"] and are queried against both; CPSC
+      is retained because they also sell non-ingestible goods. POPULATION values are lists
+      as of this version for exactly this reason -- one company can sit in two populations.
+
+      CORRECTION: IPS-Integrated Project Services (A025) is removed from the population.
+      It designs and builds pharmaceutical facilities and manufactures no devices, so its
+      openFDA zero was an `absent_confirmed` reading as "this device maker has a clean
+      record" -- a false statement about a firm that makes no devices. It is now
+      `not_covered`, which is what convention 6 requires: a confirmed absence needs the
+      source to be complete FOR THE SIGNAL, and a device registry is not complete for a
+      company outside it.
+
+      DELIBERATELY NOT DECIDED: Duke Manufacturing (C0003) stays `consumer`. Commercial
+      foodservice equipment is not a consumer product, so CPSC may be the WRONG instrument
+      rather than an incomplete one -- in which case Duke's zero is meaningless either way
+      and the honest record is not_covered. That is a claim about what CPSC covers and is
+      logged for Harness Advisor rather than settled here. Petersen Inc. and Pacific Steel
+      & Recycling were re-checked and remain correctly outside the population: heavy
+      fabrication and steel service hold no FDA registration and no CPSC recall history.
+
+  - version: v1.1
+    date: 2026-08-31
+    reprocessing_required: true
+    affected_topics: [digital_transformation_process]
+    summary: >
+      MATERIAL. A process-cause cue must now share a SENTENCE with a failure predicate
+      ("failed", "did not", "error", "missing", "deviation").
+
+      v1.0 read a MAUDE narrative in which Midmark's ECG software CORRECTLY detected a
+      myocardial infarction -- the physician's guide advising human interpretation at the
+      borderline -- scored it on the bare token "SOFTWARE", and wrote a `legacy_constraint`
+      observation asserting the opposite of what the record says. One generic token
+      manufacturing a claim: convention 16 in its purest form, and convention 32's remedy
+      applies, because the row should not exist at any strength rather than existing at
+      `weak_clue`.
+
+      Found by reading the two rows the run produced, not by a test. Two rows was the
+      entire output and one of them was wrong.
+
+      Also material: openFDA YYYYMMDD dates are normalised to ISO (v1.0 wrote "between
+      20201027 and 20201027" into observation text, which is not a date a reviewer can
+      check), and the response-cache key now carries a fingerprint of the request URL --
+      without it, fixing a broken query had no effect, because the harness replayed the
+      broken query's answer from the same day's cache partition. A cache key that does not
+      change when the request changes is not a cache, it is a stale answer with a
+      confident name.
+  - version: v1.0
+    date: 2026-08-31
+    reprocessing_required: false
+    summary: >
+      First build. IC4 instrument -- involuntary disclosure, the instrument class the
+      evidence base is shortest on, and the only remaining route to `legacy_constraint`
+      now that family 4 (employee reviews) is closed to compliant collection and
+      H-FIRSTPARTY-01 structurally cannot produce one.
+
+      Admits a recall only where the recall's OWN REASON TEXT names a process or systems
+      cause. The theme comes from the cause, never from the product description: a recall
+      of an "AI-enabled monitor" for a cracked housing is not evidence about AI.
+    notes: >
+      QUARANTINED pending audit at harness_output/audits/H-PRODUCTQUALITY-01__v1.0.json.
+
+      THREE DISTINCTIONS THIS HARNESS IS BUILT AROUND, all of them convention 6 and 6a:
+
+      1. A company outside the instrument's population is `not_covered`, not
+         `absent_confirmed`. A general contractor has no FDA registration; a clean FDA
+         record for one is not evidence of anything. The population is hand-seeded in
+         POPULATION and visible.
+      2. Recalls found whose cause was NOT a systems cause resolve to `absent_confirmed`
+         with the count stated -- "absence of a systems-cause recall, not absence of
+         recalls". A company with fourteen contamination recalls must not read identically
+         to one with a spotless record.
+      3. A server error served as a 200 is a fetch failure, not an empty result. CPSC does
+         exactly this, and the first run wrote `absent_confirmed` for 4LIFE and Scentsy off
+         error records before the check existed. That is false absence evidence, which
+         convention 6a rates worse than a gap.
+    known_limitations: >
+      The population map is hand-seeded and certainly incomplete: any company in the
+      universe holding an FDA registration or a CPSC recall that is not listed in
+      POPULATION is silently outside the run. It is recorded as `not_covered` with the
+      reason, so the gap is visible rather than implied, but it is a gap.
+
+      NHTSA is declared and unread. No company in this universe manufactures vehicles.
+
+      MAUDE adverse-event narratives are long, redacted ((b)(6)) and written by clinicians
+      rather than by the firm, so they carry far fewer usable process-cause statements than
+      recall reason texts do. Yield from that endpoint is expected to stay low.
+
+      The process-cause pattern set is deliberately narrow and will miss causes phrased in
+      ways it does not anticipate. Widening it is cheap; the audit's random control is what
+      should decide whether to.

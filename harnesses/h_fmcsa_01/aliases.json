@@ -1,0 +1,25 @@
+{
+  "_readme": [
+    "Human-seeded name variants for FMCSA resolution.",
+    "",
+    "The resolver searches both legal_name and dba_name in the FMCSA census, which",
+    "handles most brand/registry divergence on its own (e.g. Venture Logistics files",
+    "as VENTURE TRANSPORT LLC but lists 'VENTURE LOGISTICS' as a DBA, so it resolves",
+    "unaided). Entries are only needed where the operating entity's registered name",
+    "shares no searchable token with the company's canonical name.",
+    "",
+    "Every entry here is a documented limit on automation: it is a fact a human had to",
+    "supply. Keep the 'why' field populated so the Week 4 reliability review can count",
+    "how much human seeding the harness actually required.",
+    "",
+    "usdot_seed pins a resolution outright, bypassing name scoring. Use sparingly and",
+    "only for a USDOT number a human has verified against the company's own materials."
+  ],
+
+  "C0002": {
+    "canonical_name": "Mack Group",
+    "name_variants": ["MACK MOLDING"],
+    "usdot_seed": [],
+    "why": "Mack Group is the holding-brand name; the FMCSA registrant is its operating subsidiary Mack Molding Company Inc (Arlington VT). No DBA field links them."
+  }
+}

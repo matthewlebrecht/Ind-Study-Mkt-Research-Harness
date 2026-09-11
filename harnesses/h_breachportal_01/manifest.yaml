@@ -1,0 +1,52 @@
+harness_id: H-BREACHPORTAL-01
+module: h_breachportal_01
+name: State AG Breach-Notification Portal Reader
+current_version: v1.1
+grandfathered_name: false
+
+signal_types: [state_ag_breach_notice]
+declared_evidence_families: [9_industrial_safety_environmental]
+
+sources:
+  - id: SRC-0050
+    role: primary
+    notes: >
+      California DOJ breach-notification list, filtered by organisation name. The list is
+      the state's permanent public record of every breach affecting 500+ California
+      residents since 2012. An empty filtered result carries the page's own marker, so
+      absence is a read result. IC4. Licensed absence claimed only for companies
+      headquartered in California.
+  - id: SRC-0051
+    role: primary
+    notes: >
+      Washington AG breach-notification list, read in full through its pager and matched
+      locally by name. Every breach affecting 500+ Washington residents since 2015. IC4.
+      Licensed absence claimed only for companies headquartered in Washington.
+
+versions:
+  - version: v1.1
+    date: 2026-09-06
+    reprocessing_required: false
+    summary: >
+      Session 16 follow-up. A California listing reached through two query terms for the
+      same company (the name minus suffixes, and its first distinctive token) was written
+      twice -- Estes Express Lines' 2023 breach became O00611 and O00612. One incident is
+      one row: CA hits are now deduplicated on the listing's own identity (organisation,
+      breach date(s), reported date). Scope: Goodfellow Bros treated as
+      California-headquartered by Matthew's decision, so the licensed-absence population is
+      8. No other rule changed.
+  - version: v1.0
+    date: 2026-09-06
+    reprocessing_required: false
+    summary: >
+      First build (session 16). The portfolio's first IC4 instrument for a modernization
+      theme: state AG breach-notification portals, scoped to the two states whose public
+      lists are searchable from this network (California, Washington). Every buyer is
+      searched against both portals for presence; a company headquartered in a portal's
+      state gets a scoped attempt there, and its empty result is `absent_confirmed` -- the
+      licensed absence core/composition.py reads as absence_licensed_IC4 for
+      `cybersecurity`. Identity by core.resolution.resolve over candidate organisation
+      names; a listing writes buyer_acts / measured_result / grade A / state unknown, the
+      incident and nothing more. Texas (connection timeout), Maryland (JS-rendered), Vermont
+      and Montana (robots), Massachusetts and New Hampshire (403), Iowa and Indiana (PDF
+      year lists) are out of scope and recorded in the session 16 report.

@@ -1,0 +1,130 @@
+{
+  "_about": "Provider universe for the Week 2 seller benchmark. Deliberately compact: CLAUDE.md's research posture makes provider messaging a comparative benchmark, not a co-equal research population, so this is sized to characterise the market Talbot West competes in rather than to enumerate it.",
+  "_selection_rationale": "Chosen to span the three provider archetypes a mid-size industrial buyer actually encounters: (a) mid-market-focused management/technology consultancies, (b) accounting-firm consulting arms, which are disproportionately present in the private mid-market, and (c) systems integrators whose revenue comes from the ERP/supply-chain platforms these buyers run. Global tier-1 firms are represented but not over-weighted, because their mid-market practice is not what a 500-5,000 employee private company usually buys.",
+  "_caveat": "Reliability ceiling is B per docs/signal_taxonomy.md SD-a: this is self-promotional content and inflated framing is expected. Observations from it describe what the provider MESSAGES about, never what the provider has demonstrably delivered.",
+  "_page_kinds": "service = capability/solution page (what they sell). case = case study/client story (what they claim to have done).",
+
+  "providers": [
+    {
+      "provider_id": "P001",
+      "name": "Talbot West",
+      "archetype": "boutique_modernization",
+      "homepage": "https://talbotwest.com",
+      "note": "Project sponsor. Included as the benchmark anchor: the comparison is most useful to Talbot West if their own messaging sits inside the same measured distribution as their competitors'.",
+      "pages": [
+        {"kind": "service", "url": "https://talbotwest.com/services"},
+        {"kind": "service", "url": "https://talbotwest.com/ai-insights"}
+      ]
+    },
+    {
+      "provider_id": "P002",
+      "name": "West Monroe",
+      "archetype": "midmarket_consultancy",
+      "homepage": "https://www.westmonroe.com",
+      "pages": [
+        {"kind": "service", "url": "https://www.westmonroe.com/services"},
+        {"kind": "service", "url": "https://www.westmonroe.com/industries/manufacturing-distribution"}
+      ]
+    },
+    {
+      "provider_id": "P003",
+      "name": "Slalom",
+      "archetype": "midmarket_consultancy",
+      "homepage": "https://www.slalom.com",
+      "pages": [
+        {"kind": "service", "url": "https://www.slalom.com/us/en/what-we-do"},
+        {"kind": "service", "url": "https://www.slalom.com/us/en/industries/manufacturing"}
+      ]
+    },
+    {
+      "provider_id": "P004",
+      "name": "RSM US",
+      "archetype": "accounting_consulting_arm",
+      "homepage": "https://rsmus.com",
+      "pages": [
+        {"kind": "service", "url": "https://rsmus.com/services/consulting.html"},
+        {"kind": "service", "url": "https://rsmus.com/industries/manufacturing.html"}
+      ]
+    },
+    {
+      "provider_id": "P005",
+      "name": "Crowe",
+      "archetype": "accounting_consulting_arm",
+      "homepage": "https://www.crowe.com",
+      "pages": [
+        {"kind": "service", "url": "https://www.crowe.com/services/consulting"},
+        {"kind": "service", "url": "https://www.crowe.com/industries/manufacturing-distribution"}
+      ]
+    },
+    {
+      "provider_id": "P006",
+      "name": "Plante Moran",
+      "archetype": "accounting_consulting_arm",
+      "homepage": "https://www.plantemoran.com",
+      "pages": [
+        {"kind": "service", "url": "https://www.plantemoran.com/explore-our-thinking/services/technology-consulting"},
+        {"kind": "service", "url": "https://www.plantemoran.com/industries/manufacturing"}
+      ]
+    },
+    {
+      "provider_id": "P007",
+      "name": "Grant Thornton",
+      "archetype": "accounting_consulting_arm",
+      "homepage": "https://www.grantthornton.com",
+      "pages": [
+        {"kind": "service", "url": "https://www.grantthornton.com/services/advisory"},
+        {"kind": "service", "url": "https://www.grantthornton.com/industries/manufacturing"}
+      ]
+    },
+    {
+      "provider_id": "P008",
+      "name": "Argano",
+      "archetype": "systems_integrator",
+      "homepage": "https://argano.com",
+      "pages": [
+        {"kind": "service", "url": "https://argano.com/services/"},
+        {"kind": "service", "url": "https://argano.com/industries/manufacturing/"}
+      ]
+    },
+    {
+      "provider_id": "P009",
+      "name": "Hitachi Solutions America",
+      "archetype": "systems_integrator",
+      "homepage": "https://global.hitachi-solutions.com",
+      "pages": [
+        {"kind": "service", "url": "https://global.hitachi-solutions.com/services/"},
+        {"kind": "service", "url": "https://global.hitachi-solutions.com/industries/manufacturing/"}
+      ]
+    },
+    {
+      "provider_id": "P010",
+      "name": "Avanade",
+      "archetype": "systems_integrator",
+      "homepage": "https://www.avanade.com",
+      "pages": [
+        {"kind": "service", "url": "https://www.avanade.com/en-us/services"},
+        {"kind": "service", "url": "https://www.avanade.com/en-us/industries/manufacturing"}
+      ]
+    },
+    {
+      "provider_id": "P011",
+      "name": "Kearney",
+      "archetype": "tier1_consultancy",
+      "homepage": "https://www.kearney.com",
+      "pages": [
+        {"kind": "service", "url": "https://www.kearney.com/service/operations-performance"},
+        {"kind": "service", "url": "https://www.kearney.com/service/digital-analytics"}
+      ]
+    },
+    {
+      "provider_id": "P012",
+      "name": "Accenture Industry X",
+      "archetype": "tier1_consultancy",
+      "homepage": "https://www.accenture.com",
+      "pages": [
+        {"kind": "service", "url": "https://www.accenture.com/us-en/services/industry-x-index"},
+        {"kind": "service", "url": "https://www.accenture.com/us-en/industries/industrial-index"}
+      ]
+    }
+  ]
+}

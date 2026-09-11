@@ -1,0 +1,43 @@
+{
+ "_readme": [
+  "Source-independent operating-name variants, shared across harnesses.",
+  "",
+  "Distinct from harnesses/h_fmcsa_01/aliases.json, which additionally holds",
+  "FMCSA-specific seeds (usdot_seed). Entries here are true of the company itself --",
+  "'the entity that files under this other name IS this company' -- so they apply to",
+  "any name-keyed source: OSHA, EPA ECHO, court records, procurement portals.",
+  "",
+  "Every entry is a documented limit on automation: a fact a human had to supply.",
+  "Keep 'why' populated so the Week 4 review can count how much human seeding the",
+  "portfolio actually required, rather than estimating it."
+ ],
+ "C0002": {
+  "canonical_name": "Mack Group",
+  "name_variants": [
+   "Mack Molding"
+  ],
+  "why": "Mack Group is the holding-brand name; the operating entity that appears in federal records is Mack Molding Company Inc (Arlington VT). Confirmed against OSHA (6 inspections under 'Mack Molding', 0 under 'Mack Group') and FMCSA."
+ },
+ "A059": {
+  "canonical_name": "doTERRA International",
+  "name_variants": [
+   "doTERRA"
+  ],
+  "why": "CPSC's RecallTitle parameter matches the words in a recall headline, and the headline reads 'doTERRA International LLC Recalls ...' only in the firm field -- the title itself carries the bare brand. 'doTERRA International' returns 0 and 'doTERRA' returns the company's real recall (id 21734). 'International' is not a legal-form suffix, so strip_legal_suffix cannot remove it and a human has to supply the variant (convention 13: never guess an abbreviation). Seeded 2026-09-01 after v1.1 wrote a false absent_confirmed for this company."
+ },
+ "A054": {
+  "canonical_name": "Prime Inc.",
+  "name_variants": [
+   "New Prime"
+  ],
+  "why": "The Missouri trucking firm trades as Prime Inc. and its legal entity is New Prime, Inc. -- the party name in federal dockets, including the Supreme Court case New Prime Inc. v. Oliveira. H-LEGAL-01's party guard correctly refused 'New Prime, Inc.' because the company's tokens are not a prefix of the party's, which is the same strictness that keeps out 'Certified Prime Inc' and \"Parker's Prime, Inc.\". Only a human can tell those apart, which is what this registry is for. Seeded 2026-09-01."
+ },
+ "C0006": {
+  "canonical_name": "Kenco Group",
+  "name_variants": [
+   "Kenco",
+   "Kenco Logistics"
+  ],
+  "why": "Kenco Group is the holding-brand name; the operating entities that appear in federal records are Kenco Logistics, Inc. and Kenco Logistic Services, LLC. NLRB case search is a phrase match and returns 0 for 'Kenco Group' while 'Kenco' returns 5 cases, all of them genuinely Kenco -- the same shape as the Mack Group / Mack Molding seed for C0002, and the same false-absence risk convention 6a exists to stop. 'Kenco' is a coined token, so it is safe as an identity under convention 31 in a way 'Prime' is not. Seeded 2026-09-01."
+ }
+}

@@ -1,0 +1,127 @@
+harness_id: H-EMPREVIEW-01
+module: h_empreview_01
+name: Employee Review Aggregate
+current_version: v1.1
+grandfathered_name: false
+
+signal_types: [employee_review_aggregate]
+declared_evidence_families: [4_employee_experience_workarounds]
+
+sources:
+  - id: SRC-0013
+    role: primary
+    notes: >
+      Glassdoor. Taxonomy 4a, and the source this harness was commissioned to read.
+      NOT READ: robots.txt publishes `Disallow: /` for the ClaudeBot and anthropic-ai
+      crawler identities, and the site additionally returns HTTP 403 to any
+      unauthenticated fetch. Declared here rather than dropped, so the dependency and its
+      status are recorded rather than implied by an absence.
+  - id: SRC-0041
+    role: primary
+    notes: >
+      Comparably company review pages. The one family-4 source with US coverage of this
+      population that permits automated collection. Rate-limits aggressively.
+  - id: SRC-0040
+    role: resolution_only
+    notes: >
+      Brave Search API, used only to locate a company Comparably profile when the
+      constructed slug misses. Never cited; and never trusted on rank -- the query for
+      "Prime Inc." returns comparably.com/companies/cprime, a different company.
+
+versions:
+  - version: v1.1
+    date: 2026-09-03
+    reprocessing_required: false
+    summary: >
+      Corroboration-gate policy (session 9). A theme mentioned by a single reviewer on a
+      single term -- below the "two reviews or two terms" admission threshold -- is written
+      at grade C / weak_clue / confidence 0.3 with the "[low-grade:" marker instead of
+      being held in themes_below_threshold only. No effect on the evidence base today:
+      107 of 108 companies are access_blocked at the source (glassdoor.com and indeed.com
+      refuse this crawler), so the harness has never read a sample above the floor.
+
+  - version: v1.0
+    date: 2026-08-31
+    reprocessing_required: false
+    summary: >
+      First build. Aggregate-only theme extraction over employee reviews, per the explicit
+      design instruction in signal_taxonomy 4a: "design it as a theme-extraction-over-N
+      -reviews harness, not a single-review extractor, or it will sit at C forever." One
+      observation per (company, theme), carrying the count of reviews that mentioned it and
+      the sample size; never a row per review. Grade B, which is the aggregate ceiling; A
+      is unreachable at any sample size because reviewers self-select.
+
+      Introduces `core/robots.py`, a robots.txt compliance gate, because this is the first
+      harness in the project whose named sources actively forbid automated collection and
+      it could not be written correctly without checking.
+    notes: >
+      THE ACCESS FINDING IS THE MAIN RESULT OF THIS BUILD.
+
+      Both commissioned sources are closed to compliant automated collection, measured
+      2026-08-31:
+
+        glassdoor.com    robots.txt Disallow: /      for ClaudeBot / anthropic-ai (+ HTTP 403)
+        indeed.com       robots.txt Disallow: /cmp/  for ClaudeBot / anthropic-ai
+        careerbliss.com  robots.txt Disallow: /      for ClaudeBot
+
+      Indeed is the interesting case: it restricts `/cmp/` -- exactly where company reviews
+      live -- for the crawler identities, while leaving the narrower Claude-User and
+      Claude-SearchBot groups unrestricted there. An unattended pass over 108 companies
+      that archives every page is the crawler profile, not the user-initiated one, so the
+      stricter group governs. Choosing a user-agent string that misses those blocklists
+      would be evasion rather than compliance, and the archive would rest on access the
+      publisher declined to grant.
+
+      Comparably is permitted by robots.txt and was read successfully during development
+      -- real pages, 12 reviewBody entries and an EmployerAggregateRating block per company
+      -- and then began returning HTTP 403 on every HTML path while continuing to serve
+      robots.txt, the signature of an edge rate limiter rather than a policy change.
+
+      Measured behaviour: roughly one or two requests succeed in a cold window, after which
+      the host refuses for a long and unpredictable period. Waits of 10, 20 and 30 minutes
+      each cleared it briefly and it re-blocked within two requests. At that rate a single
+      pass over 108 companies is not achievable at any polite pace, so the circuit breaker
+      stops the run after six consecutive failures rather than walking the remainder into a
+      wall. kununu, the only other robots-permitted substitute, answers 202 with a 2 KB
+      JavaScript challenge and no content.
+
+      CONSEQUENCE FOR THIS VERSION: the extraction and aggregation path has NOT completed
+      end to end against a live fetch inside the harness. It is covered by unit tests over
+      a fixture whose microdata shape and review text were taken from real Comparably
+      responses captured during development, and the access, resolution, verification and
+      failure-routing paths ARE verified live. But no `covered` outcome has been produced
+      from a live page, and that gap should be closed before any row from this harness is
+      treated as evidence.
+
+      This is recorded rather than swallowed because family 4 is the portfolio's only
+      instrument for `legacy_constraint`. H-FIRSTPARTY-01 structurally cannot produce one
+      (a press release does not announce a company's own obsolescence) and H-EXECVOICE-01
+      yields 8 observations universe-wide. A quiet zero here would license the conclusion
+      that employees are not complaining about systems, when the truth is that this harness
+      is not permitted to look. Convention 6a.
+    known_limitations: >
+      NOT YET PROVEN ON LIVE DATA. The harness has never emitted a `covered` outcome from
+      a live fetch, because the only permitted source rate-limited before a full company
+      could be processed. Everything up to and including profile verification is verified
+      live; theme aggregation and observation construction are verified only against a
+      fixture. Treat v1.0 as built and unit-tested but not field-validated.
+
+      Coverage is bounded by Comparably's company universe, which is much thinner than
+      Glassdoor's for private mid-size industrials. Constructed slugs hit 3 of 11 companies
+      in testing; a verified search fallback recovers some of the rest.
+
+      A company below the five-review floor is recorded `not_covered` for insufficient
+      sample, never `absent_confirmed`. Too few reviews to support an aggregate is a
+      statement about the sample, not about the company.
+
+      Reviews are undated on the page, so `publication_date` is left empty rather than
+      guessed (convention 3). This means the harness cannot distinguish a complaint about a
+      system replaced three years ago from a current one -- a real limitation for a
+      `legacy_constraint` claim, and the reason confidence is capped at 0.75.
+
+      The sample is self-selected: people with strong opinions write reviews. Aggregate
+      counts describe the reviewers, not the workforce, and the observation text says so.
+
+      Comparably skews heavily to pay, management and culture commentary rather than tools
+      and systems, so `absent_confirmed` is expected to be the common outcome even where
+      the sample is adequate.

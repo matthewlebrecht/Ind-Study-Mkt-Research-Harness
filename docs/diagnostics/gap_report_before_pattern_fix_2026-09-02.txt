@@ -1,0 +1,28 @@
+Buyer signal vs provider messaging   (11 providers, 97 buyer companies)
+
+  theme                           sellers  share  buyers  status
+  ------------------------------  -------  -----  ------  ------
+  warehouse_automation                  0     0%       2  covered
+  data_analytics_ai                    11   100%      35  covered
+  erp_core_systems                      7    64%       3  covered
+  systems_integration                   7    64%       4  covered
+  digital_transformation_process        7    64%      13  covered
+  transportation_fleet_systems          1     9%       5  covered
+  cloud_infrastructure_migration        4    36%       0  buyer silent
+  cybersecurity                         4    36%       0  buyer silent
+  ot_modernization                      0     0%       0  NO INSTRUMENT
+  workforce_enablement                  2    18%       2  covered
+
+reading the table
+  * 1 theme(s) are messaged by EVERY provider (data_analytics_ai). A theme every seller claims cannot discriminate between them and is near-useless for positioning analysis.
+  * 2 theme(s) have provider messaging and no buyer signal despite an instrument existing: cloud_infrastructure_migration, cybersecurity. These are FORMALLY UNTESTED, not divergences and not weak findings. The only instrument that can see them is the first-party announcement, which is biased against exactly these themes (convention 21a). Read the per-theme `note` in core/topics.py, which records which instrument backs each theme and how biased it is, before quoting any of them.
+
+  12 buyer topic(s) carry no theme mapping (195 company-observations). Most buyer evidence collected so far is regulatory and is not about a modernization theme; it is left unmapped rather than forced into one.
+      environmental_compliance_profile     68 companies
+      safety_inspection_history            63 companies
+      removed_public_content               19 companies
+      open_roles_volume                    14 companies
+      operating_model                      8 companies
+      fleet_scale                          7 companies
+      crash_exposure_rate                  5 companies
+      vehicle_maintenance_out_of_service_rate 3 companies

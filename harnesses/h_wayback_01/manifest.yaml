@@ -1,0 +1,84 @@
+harness_id: H-WAYBACK-01
+module: h_wayback_01
+name: Disappeared-Evidence Detector
+current_version: v1.3
+grandfathered_name: false
+
+signal_types: [removed_page]
+declared_evidence_families: [18_historical_change_disappearing_evidence]
+sources:
+  - id: SRC-0037
+    role: primary
+    notes: Wayback Machine CDX index. Mechanics live in core/wayback.py so other harnesses
+           can use the archive as a verification utility, per signal_taxonomy 18a.
+
+versions:
+  - version: v1.3
+    date: 2026-09-03
+    reprocessing_required: false
+    summary: >
+      Session 10 item 2 (Matthew): the replatform refusal (W8) is admitted as a CONFOUND
+      at low grade with a distinct marker "[low-grade: confound-admitted; W8 replatform
+      refusal relaxed 2026-09-03, review before use]" -- grade C, weak_clue, confidence
+      0.3, attempt covered. The row states the gone share and dominant year and says the
+      pattern is consistent with a site migration. Every v1.2 row is proposed identically.
+
+  - version: v1.2
+    date: 2026-09-03
+    reprocessing_required: false
+    summary: >
+      Corroboration-gate policy (session 9). Removed paths captured only once (below the
+      2-capture floor) are written at grade C / weak_clue / confidence 0.3 with the
+      "[low-grade:" marker when no multi-capture removal exists for the site, instead of
+      being dropped -- and the attempt is `covered`, not `absent_confirmed`: v1.1 recorded
+      a threshold refusal as negative evidence, which is the inconsistency the inventory
+      flagged. The dated-path exclusion (identity: dictionary-word paths on news/award
+      posts), the replatform refusal (logged as unclear) and the 2-year cutoff are
+      unchanged, so every v1.1 row is proposed identically.
+
+  - version: v1.0
+    date: 2026-08-30
+    reprocessing_required: false
+    summary: >
+      Detects modernization-relevant pages that were archived successfully and have no
+      successful capture since a cutoff, while the domain itself is still being archived.
+      The only signal type in the portfolio that surfaces evidence no live-page harness can
+      ever see.
+    notes: >
+      The filter, not the detector, is where the value is. A first pass reported 12 "removed
+      modernization pages" for McGough Construction; every one was a dated news or award
+      post matched on a substring ("research" inside a research-center award title). That is
+      the Infor / "Information Systems" failure in a new place, so dated article paths are
+      now excluded before relevance is tested, and McGough correctly yields nothing.
+
+      Replatform detection is the second guard and refuses the claim outright rather than
+      degrading it. Two independent indicators: disappearances clustered in one year (an
+      overnight CMS cutover), or a wholesale share of relevant paths gone regardless of
+      dates (a staged migration, which defeats the first test -- Cajun Industries showed
+      100% of relevant paths gone with a 2017 peak). Either fires `classification_ambiguous`
+      and emits nothing. A false positive here costs a missed signal; a false negative
+      fabricates a finding.
+  - version: v1.1
+    date: 2026-08-30
+    reprocessing_required: false
+    summary: >
+      Adds exponential backoff to CDX lookups and relaxes request pacing. The v1.0 full run
+      completed only 28 of 99 lookups and reported 32% coverage -- a number that measured
+      request pacing rather than the archive. v1.1 reports 87% with one transient failure.
+    notes: >
+      CDX rate-limits with 429/5xx rather than a header, so without retries the failures
+      classify correctly as `source_unavailable`/`transient` and are honestly recorded --
+      they are just overwhelmingly the wrong answer. Worth noting that the audit schema
+      made this visible immediately: 62 transient failures in one run is not something a
+      free-text known_issues note would have surfaced as clearly.
+
+    known_limitations: >
+      (1) The 8 pilot companies have no `website` value -- that column arrived with the
+      Anvil import and only Anvil rows carry it -- so every pilot is a named coverage gap.
+      Filling 8 URLs would unblock them and is the cheapest coverage win available.
+      (2) CDX exposes no total count, so a response at the 2,000-row limit is reported as
+      `suppressed_by_cap` rather than treated as a complete history.
+      (3) The harness detects that a page is GONE, never what it SAID. Fetching the last
+      good snapshot and classifying its content into core/topics.py would turn "a page
+      disappeared" into "a claim about warehouse automation disappeared", which is a
+      materially stronger signal. That is the natural v1.1.

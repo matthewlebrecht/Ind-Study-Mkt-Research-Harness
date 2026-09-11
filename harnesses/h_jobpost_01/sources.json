@@ -1,0 +1,43 @@
+{
+  "_readme": [
+    "Per-company job-posting sources for H-JOBPOST-01.",
+    "",
+    "There is no single job-postings source for private mid-size companies, so each",
+    "company is its own integration. That is the whole difficulty of this evidence",
+    "family, and this file is where the difficulty is made visible: a company either",
+    "has a working adapter here or it is an explicit, reported coverage gap.",
+    "",
+    "'ats' selects the adapter. 'careers_url' is the human-checkable citation that goes",
+    "into source_url \u2014 always the company's own page, never the ATS internals.",
+    "",
+    "Entries under 'gaps' are companies with no working adapter yet. They are processed",
+    "every run, produce no observations, and are counted in the coverage report. Never",
+    "delete a gap to make a run look clean."
+  ],
+  "sources": {
+    "C0005": {
+      "ats": "paylocity",
+      "careers_url": "https://venturelogistics.com/careers",
+      "discovered": "2026-08-24 \u2014 careers page links directly to recruiting.paylocity.com job details"
+    },
+    "C0006": {
+      "ats": "workday",
+      "careers_url": "https://kencogroup.com/careers/",
+      "cxs_url": "https://kencogroup.wd12.myworkdayjobs.com/wday/cxs/kencogroup/Kenco",
+      "discovered": "2026-08-24 \u2014 Workday tenant kencogroup.wd12, site 'Kenco'"
+    },
+    "C0007": {
+      "ats": "icims",
+      "careers_url": "https://www.plslogistics.com/careers",
+      "host": "careers-plslogistics.icims.com",
+      "discovered": "2026-08-24 \u2014 iCIMS portal; company also lists JazzHR and Paycor postings not covered here"
+    }
+  },
+  "gaps": {
+    "C0001": "Midmark \u2014 careers page at midmark.com/about-us/careers returns 200 but lists no ATS in server-rendered HTML; postings appear to be JS-loaded. Needs a rendered-DOM fetch or the underlying ATS endpoint identified.",
+    "C0002": "Mack Group \u2014 mack.com/careers 404s. Correct careers URL not yet identified for the Mack Molding operating entity.",
+    "C0003": "Duke Manufacturing \u2014 dukemfg.com/careers returns 200, no ATS detected in server-rendered HTML. Same JS-loaded pattern as Midmark.",
+    "C0004": "Western Express \u2014 westernexp.com/careers 404s. Large truckload carriers typically run driver recruiting on Tenstreet or DriverReach, which are separate from any corporate ATS; needs discovery.",
+    "C0008": "CT Logistics \u2014 no careers source configured yet. Restored to the buyer universe 2026-09-01; discovery attempts it like any other company. (Was 'excluded from the research universe; not attempted', which is no longer true.)"
+  }
+}

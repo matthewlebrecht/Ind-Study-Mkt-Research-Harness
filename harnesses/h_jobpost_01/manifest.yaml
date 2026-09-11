@@ -1,0 +1,132 @@
+harness_id: H-JOBPOST-01
+module: h_jobpost_01
+name: Job Postings Modernization-Signal Extractor
+current_version: v1.4
+grandfathered_name: false
+
+signal_types: [job_posting, job_posting_system_mention, job_board_third_party]
+declared_evidence_families:
+  - 3_workforce_org_exhaust
+  # 5b (job postings naming an enterprise system) is a field on this harness rather than a
+  # separate family-5 harness -- docs/signal_taxonomy.md §5.
+  - 5_technology_stack_traces
+sources:
+  # The three legs are declared separately as of v1.1 because they have different ACCESS
+  # profiles, and a blocked leg must never share a coverage denominator with an open one.
+  # Probed 2026-09-01 rather than assumed:
+  - id: SRC-0009          # LinkedIn Jobs + company pages
+    role: supporting      # KNOWN-BLOCKED: robots.txt Disallow: / for this crawler identity
+  - id: SRC-0010          # Indeed + career pages -- read here as the INDEED leg only
+    role: supporting      # KNOWN-BLOCKED: /jobs, /viewjob? and /cmp/ all disallowed
+  - id: SRC-0049          # Company careers pages (own domain) -- the only open leg
+    role: primary
+  - id: SRC-0017          # Job postings naming systems (taxonomy 5b, a field not a harness)
+    role: primary
+
+versions:
+  - version: v1.4
+    date: 2026-09-03
+    reprocessing_required: false
+    summary: >
+      Session 10 item 7. Own-domain leg: (a) an ADP Workforce Now adapter -- the public
+      requisition endpoint, robots-permitted, paged by 50 with the total measured (4
+      companies); (b) an inline-list adapter for careers pages that list postings in
+      server HTML with no ATS -- re-measured against the archive with a strict rule, this
+      bucket is 1 company (OnTrac), not the 12 the audit's loose heuristic counted;
+      (c) Dayforce (6 companies) and UltiPro/UKG (4) boards are recorded as
+      access_blocked / source_limitation because their hosts refuse this crawler by
+      robots.txt (probed 2026-09-03), not as "no adapter"; (d) stored discovery configs
+      that cannot be acted on are re-discovered live. Session 9's deferred conversions:
+      J6 (volume under the 5-posting floor written at low grade), J13 (a vendor or
+      estate term -- AWS/Azure/GCP, mainframe, devops/SRE -- without migration language
+      writes the signal at low grade; the dictionary-word terms keep their identity
+      refusal), J32 (an iCIMS listing read to the 6-page bound is flagged truncated).
+      Classifier v1.3.
+    notes: >
+      The long tail measured: of 18 platforms in the audit, ADP is the only one with a
+      public machine-readable listing that permits this crawler; Jobvite and Taleo boards
+      are not reachable from the careers page, SuccessFactors serves a login page,
+      Tenstreet an application form, BambooHR a vendor homepage. Depth, not presence, is
+      the metric to track from here (session 9 finding).
+
+  - version: v1.3
+    date: 2026-09-03
+    reprocessing_required: false
+    summary: >
+      The third-party board leg runs (aggregator.py). Twelve boards probed through
+      core/robots.py under this crawler's identity: LinkedIn, Indeed, Glassdoor,
+      ZipRecruiter, SimplyHired, Google Jobs, Dice and Monster refuse by robots.txt;
+      Jooble, CareerJet and Adzuna permit but answer a bot challenge or a JavaScript
+      loader; Talent.com permits and answers. So the leg has one adapter: a Talent.com
+      keyword search per company, paginated, every card's employer field scored against
+      the canonical name at the standard resolution floor -- the identity gate is not
+      relaxed here, on purpose. Rows are B-graded (a cross-post is second-hand) and
+      carry no hiring-volume row (an aggregator's index size is not an open-role count).
+      Motivation: the platform audit (scripts/careers_platform_audit.py) found no ATS
+      worth an adapter -- Dayforce leads at 6 of 94 -- and 39 companies on a plain
+      WordPress page; a cross-post aggregator is the only lever that reaches them.
+    notes: >
+      reprocessing_required is FALSE: the own-domain leg and the classifier are
+      unchanged, so no existing row would be produced differently. Build_observations
+      gained source_label/source_grade/volume parameters with defaults equal to the
+      prior behaviour. Output quarantined on write per the audit gate.
+
+  - version: v1.2
+    date: 2026-09-02
+    reprocessing_required: false
+    summary: >
+      Classifier v1.2: four signal keys added -- cloud_infrastructure_hiring,
+      cybersecurity_hiring, workforce_enablement_hiring, ot_modernization_hiring -- each
+      mapped in core/topics.py BUYER_SIGNAL_TO_THEME, so the mapping now covers all ten
+      themes (it covered six). Authorised by Signal Advisor 2026-09-02 under four
+      conditions: presence-only until the careers-page readability denominator is
+      accepted (scripts/careers_readability.py: 14 of 108 readable on HR-0036), keys
+      land in the mapping, specific-tier terms from the start (a bare AWS/Azure/GCP is
+      not a signal), buyer-side patterns stay per-harness.
+    notes: >
+      reprocessing_required is FALSE for the same reason as v1.1: the change is purely
+      additive, every v1.1 term is untouched, so no existing row would classify
+      differently. Not re-run against the live sources this session; an offline replay
+      against the 2026-09-01 archive shows what the new keys would have found on the
+      14 readable careers pages (session 8 report).
+
+  - version: v1.1
+    date: 2026-09-01
+    reprocessing_required: false
+    summary: >
+      Scope expansion from 7 pilot companies to the full 108, not a rebuild. Adds
+      own-domain careers-URL discovery (discovery.py), greenhouse and lever adapters,
+      the core/attempts.py run-context (v1.0 wrote no Attempts rows at all, which is why
+      HR-0005 published no coverage rate), and separates the closed third-party board leg
+      from the open own-domain leg so they do not share a denominator. Classifier
+      hardened to v1.1.
+    notes: >
+      reprocessing_required is FALSE, and that was checked rather than assumed: the
+      classifier changes are all admission-tightening, and v1.0's 8 rows were re-run
+      against classifier v1.1 before the bump. Kenco reproduces 5 signal instances across
+      467 postings with identical titles, and all 8 pilot observations are unchanged, so
+      no prior row would be classified differently. Convention 37 -- the fix was checked
+      against the case that was already working, not only the case that broke.
+
+      LinkedIn and Indeed are both confirmed closed to this crawler identity (probed
+      2026-09-01: Disallow: / and /jobs + /viewjob? + /cmp/ respectively). Declared and
+      recorded as source refusals rather than dropped, so the access finding has a
+      denominator. Own-domain careers pages are therefore the only open family-3
+      job-posting source.
+  - version: v1.0
+    date: 2026-08-24
+    reprocessing_required: false
+    summary: >
+      Initial release. First harness against a non-API family. 8 observations across 3 of 7
+      companies -- Kenco (Workday), PLS (iCIMS), Venture (Paylocity). The other four are
+      documented coverage gaps in sources.json and reported every run: Midmark and Duke
+      need a rendered-DOM fetch, Mack and Western Express need careers-URL discovery.
+      Classification is deterministic rules behind a swappable interface so an LLM
+      classifier drops in without harness changes.
+    notes: >
+      At Kenco's 467 distinct postings only 5 were genuine modernization roles. That ratio
+      is itself the finding, and it is why an exclusion rule for ordinary operational
+      hiring matters more than the signal patterns do. A pattern bug (bare `Infor` matching
+      inside "Information Systems") briefly inflated Kenco's ERP signal from weak_clue to
+      repeated_pattern; signal_strength drives downstream finding weight, so loose patterns
+      manufacture confidence rather than merely adding noise.

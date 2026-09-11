@@ -1,0 +1,38 @@
+harness_id: H-VENDOR-01
+module: h_vendor_01
+name: Vendor & Partner Disclosure Reader
+current_version: v1.0
+grandfathered_name: false
+
+signal_types: [vendor_case_study_deployment_fact, vendor_case_study_buyer_quote]
+declared_evidence_families: [6_vendor_partner_disclosure]
+
+sources:
+  - id: SRC-0018
+    role: primary
+    notes: >
+      Vendor-published customer pages (case studies, customer stories, testimonials) that
+      name a buyer company. Not searched for: the seed list is the set of URLs
+      H-EXECVOICE-01 excluded as vendor_customer_content_family_6 while looking for
+      executive quotes, read from its run logs. Undated and silently revised, so
+      current_only reach (taxonomy §21.2). IC1 throughout (§24.3): the vendor is the
+      interested party. ST-VENDORFRAMING (the vendor's own framing of demand) is counted
+      per page and NOT written, because Observations keys company_id to Companies and the
+      vendor is not a company in the sheet.
+
+versions:
+  - version: v1.0
+    date: 2026-09-06
+    reprocessing_required: false
+    summary: >
+      First build (session 14 item 4), around the 24 vendor URLs H-EXECVOICE-01 logged.
+      Two written components per §24.1: ST-VENDORDEPLOY (buyer_acts, grade B, a sentence
+      naming the company with a deployment verb and a spine theme) and ST-VENDORQUOTE
+      (buyer_articulates, grade C -- capped one step below a reported executive quote --
+      a quoted passage attributed to a named person with a title whose attribution ties
+      them to the company; anonymous attributions counted and dropped per §24.2). Identity
+      gate is H-FIRSTPARTY-01's is_about_company on the fetched page; appsruntheworld.com
+      seeds are excluded as executive-data aggregator profiles, not vendor content;
+      provider-published seeds are H-SELLERCONTENT-01 material and are not read. Generic-tier
+      themes write at low grade with the standard marker. robots.txt honoured per host.
+      Not a theme instrument in core/composition.py: its silence licenses nothing.

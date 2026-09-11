@@ -1,0 +1,105 @@
+# The repo<->DB contract for this harness. scripts/validate_repo_db.py checks the
+# workbook against every field here; see docs/schema/repo_structure_spec.md §5.
+harness_id: H-FMCSA-01
+module: h_fmcsa_01
+name: FMCSA Carrier Registry & Safety Extractor
+current_version: v1.5
+
+# Named for a source, not a signal type, which is inconsistent with the H-{SIGNAL}-{NN}
+# convention adopted later. Deliberately NOT renamed: the ID is written into 27 committed
+# and human-reviewed Observations plus four run rows, and renaming breaks provenance on
+# reviewed evidence to fix a cosmetic inconsistency (spec §10 C3).
+grandfathered_name: true
+
+signal_types: [carrier_registry_status]
+declared_evidence_families: [10_logistics_supply_network]
+sources:
+  - id: SRC-0025          # FMCSA SAFER
+    role: primary
+  - id: SRC-0025
+    role: resolution_only
+    notes: >
+      The census/name-search endpoint is used only to resolve a company name to a USDOT
+      number. It is never cited in an Observation, so it is recorded separately from the
+      primary role -- otherwise "which harnesses depend on FMCSA" and "which Observations
+      cite FMCSA" return different sets with no way to explain the difference.
+
+versions:
+  - version: v1.6
+    date: 2026-09-06
+    reprocessing_required: false
+    summary: >
+      Session 14 item 8, the first live read with an FMCSA_WEBKEY. Three fixes on the
+      QCMobile path, no policy change: the key is now read through core.config (it was read
+      from os.environ directly, so the configured .env key never reached the harness and the
+      first live run silently took the SAFER HTML path); QCMobile serves the national-average
+      rates as strings, now coerced with every other numeric field; and the private-carriage
+      test matches "for hire" as both SAFER ("Auth. For Hire") and QCMobile ("Authorized For
+      Hire") spell it. Verified live on C0001 / C0004 / C0006 (dry run): Midmark reads
+      Private Property and its NOT AUTHORIZED status is explained as private carriage, the
+      two for-hire carriers read Authorized For Hire, no for-hire authority gap is asserted
+      and no unknown-classification skip fires (F15 / F26 resolve). Not committed: the
+      QCMobile record carries no entity-type field and its carrierOperation is "Interstate"
+      rather than the authority type, so operating_model text differs from the SAFER path
+      and a commit would re-open every reviewed pilot row. Logged for Week 4.
+  - version: v1.5
+    date: 2026-09-03
+    reprocessing_required: false
+    summary: >
+      Session 10 item 6 bug fixes, no policy change. F15/F26: the QCMobile path now reads
+      the operation-classification and cargo-carried sub-endpoints (untested here -- no
+      FMCSA_WEBKEY is configured), and `_is_private_carriage` is three-valued, so with no
+      classification the for-hire authority gap is NOT asserted and the skip is recorded.
+      F11/F14/F16/F23/F24: missing-field skips are recorded in known_issues instead of
+      silent. Offline replay: 0 new rows, 20 human-reviewed rows held as conflicts
+      (their "as of" text differs on replay), nothing changed.
+
+  - version: v1.4
+    date: 2026-09-03
+    reprocessing_required: false
+    summary: >
+      Corroboration-gate policy (session 9). Five refusals converted to low-grade writes
+      (grade C / weak_clue / confidence <= 0.4, "[low-grade:" marker in the excerpt,
+      organizational_state unknown): a nil fleet return; an out-of-service COUNT below the
+      20-inspection floor (no rate stated); zero crashes in the window against a real
+      fleet; an MCS-150 inside the second half of the biennial window; a driver count
+      exceeding headcount by less than the 25% band. Every identity gate -- the 55-point
+      acceptance score, token alignment, the city-scoped corporate family -- and every
+      existing downgrade (stale filing -0.10, <100 inspections -0.10, the 0.7 authority
+      cap) is unchanged, and every v1.3 row is proposed identically.
+    notes: >
+      Zero roadside inspections stays a skip: there is no claim to grade. The inactive
+      -15 and MCS-150-age scoring inside the identity test are logged as unclear (they
+      use record currency as identity evidence) and are unchanged.
+
+  - version: v1.0
+    date: 2026-08-22
+    reprocessing_required: false
+    summary: >
+      Initial release. 27 observations across the 8 pilots; 7 of 8 companies resolved to a
+      USDOT number, and CT Logistics correctly resolved to nothing (a freight-audit firm
+      operates no fleet).
+  - version: v1.1
+    date: 2026-08-22
+    reprocessing_required: false
+    summary: >
+      Idempotent writes. Re-runs reconcile on (company_id, harness_id, topic, source_url)
+      instead of appending; a row a human has reviewed is never overwritten, and a changed
+      claim on a reviewed row is reported as a conflict.
+  - version: v1.2
+    date: 2026-08-24
+    reprocessing_required: true
+    affected_topics: [operating_model]
+    summary: >
+      Material revision. A parser gap dropped FMCSA's Operating Authority Status for
+      private carriers, so those rows read "operating authority: none listed" where the
+      source says NOT AUTHORIZED. 7 operating_model rows re-derived.
+  - version: v1.3
+    date: 2026-08-24
+    reprocessing_required: true
+    affected_topics: [operating_model, safety_profile, fleet_scale]
+    summary: >
+      Re-derived all 27 rows onto SAFER's 08/23 snapshot after review found the source had
+      advanced mid-review. Review decisions preserved; reviewer_notes records the refresh.
+      The nine resulting corrections were source drift, not harness error -- extraction
+      accuracy at time of retrieval was 27/27 and resolution was 7/7.

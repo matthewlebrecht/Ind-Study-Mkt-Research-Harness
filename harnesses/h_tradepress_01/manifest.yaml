@@ -1,0 +1,310 @@
+harness_id: H-TRADEPRESS-01
+module: h_tradepress_01
+name: Vertical Trade Press Extractor
+current_version: v1.7
+grandfathered_name: false
+
+signal_types:
+  - exec_quote_reported
+  - exec_contributed_column
+  - exec_panel_coverage
+  - trade_press_profile
+  - trade_press_characterization
+  - wire_reprint_routed
+
+declared_evidence_families:
+  - 15_executive_candor_actor_networks
+  - 1_first_party_strategy_governance
+
+sources:
+  - id: SRC-0042
+    role: primary
+    notes: >
+      Industry Dive vertical titles (Construction Dive, Supply Chain Dive, Food Dive,
+      MedTech Dive, Utility Dive). Reported trade journalism carrying attributable
+      executive quotes. Shared platform, URL shape and robots policy, so the titles
+      succeed and fail together.
+  - id: SRC-0043
+    role: primary
+    notes: >
+      Trucking and freight trade press (Transport Topics, FleetOwner, CCJ, Overdrive,
+      Truckinginfo, FreightWaves). The Industry Dive network covers this half of the
+      universe less densely.
+  - id: SRC-0029
+    role: supporting
+    notes: >
+      The pre-existing generic "Trade publications" row. Retained as supporting so the
+      lineage from the original taxonomy entry is visible; the two specific rows above are
+      what this harness actually reads.
+  - id: SRC-0040
+    role: resolution_only
+    notes: >
+      Brave Search API, used to locate candidate articles within the outlet allowlist.
+      Never cited in an Observation -- the row always cites the article the result points
+      to. `site:` is not used because Brave's index does not honour it reliably across
+      these hosts, so results are filtered against the allowlist after the fact and every
+      off-list result is logged as excluded rather than silently dropped.
+
+versions:
+  - version: v1.7
+    date: 2026-09-06
+    reprocessing_required: false
+    summary: >
+      Session 15, from the O00604 ruling: a quotation span that runs out of the article
+      body into page furniture (an editors'-picks teaser, a byline with a date bullet, a
+      newsletter or share box) is rejected as `span_crosses_page_furniture` in the shared
+      quote extractor (harnesses/h_execvoice_01/quotes.py, PAGE_FURNITURE). O00604 was a
+      Construction Dive sidebar teaser about Novo Construction attributed to Walbridge's
+      Randy Abdallah by exactly such a span, admitted on the `PLC` suffix false positive;
+      judged unsupported and deleted. The row's real origin was harnesses/h_tradepress_01/
+      extract.py::article_body, whose end-of-article markers ("Editors' picks", "Recommended
+      Reading") are short lines the prose filter dropped before the footer cut could see
+      them; the body now ends at the first such marker line once prose has begun. Verified
+      on an offline replay: Walbridge proposes 1 row instead of 2 (13 instead of 14 in
+      total), every other row reproduces. No other rule changed.
+  - version: v1.6
+    date: 2026-09-06
+    reprocessing_required: false
+    summary: >
+      Session 15 item 2: the company scope is no longer a hand-seeded 15. Every buyer with
+      a Companies.industry_primary value is searched against that industry's outlet
+      verticals (INDUSTRY_TO_VERTICALS); the SUBSET table remains as an override for the 15
+      it names. industry_primary is populated by scripts/enrich_industry.py from NAICS codes
+      on OSHA / ECHO records the safety harness already attributed to the company, or from
+      an FMCSA for-hire carrier record -- never from a name. A company with no industry is
+      still not searched. Extraction rules identical to v1.5.
+  - version: v1.5
+    date: 2026-09-03
+    reprocessing_required: false
+    summary: >
+      Session 10 items 3 and 4. (3) Characterisation vs action, built: a new signal type
+      ST-PRESSCHAR (trade_press_characterization, IC2) carries the company DESCRIBING
+      itself or its intent as reported -- "says it is integrating", "plans to deploy",
+      "has integrated" -- as buyer_articulates at grade C / weak_clue / 0.4, with the
+      organizational_state read from the sentence (an intent reads target_state).
+      INTENT_RE is where "integrated" and the future tense live; ACTION_RE is unchanged,
+      so ST-PRESSPROFILE still admits only witnessed behaviour. Journalist-only framing
+      still generates nothing and is logged. A sentence must name the company (the same
+      is_about_company rule the action route applies). (4) Outlet allowlist expanded
+      from the measured off-allowlist host counts: truckingdive, supplychain247,
+      foodlogistics, grocerydive, andnowuknow, commercialobserver, acppubs by vertical;
+      cio, pymnts, itdigest for every vertical. Aggregators, vendor sites, wires and
+      company domains stay excluded (scoping document in docs/diagnostics).
+    notes: >
+      Also session 10 item 6: quote rejections are kept in the page note (T46) and the
+      page-budget cap is logged (T10). Staleness window now imported from core/windows.py
+      (five years, the project standard).
+
+  - version: v1.4
+    date: 2026-09-03
+    reprocessing_required: false
+    summary: >
+      Corroboration-gate policy (session 9). The "two distinct terms or a headline
+      mention" admission on both the wire-reprint route and the ST-PRESSPROFILE action
+      route now writes at grade C / weak_clue / confidence 0.4 with the "[low-grade:"
+      marker instead of dropping the theme; the quote route inherits quotes.py's
+      short-quote and generic-tier-theme low-grade admissions (grade C). Identity gates
+      -- is_about_company, speaker resolution, eponymous attribution, wire-vs-reported
+      provenance, outlet allowlist -- are unchanged.
+    notes: >
+      Every v1.3 row is proposed identically. The 5-year window and the characterisation
+      -vs-action rule are logged as unclear and unchanged.
+
+  - version: v1.3
+    date: 2026-09-02
+    reprocessing_required: false
+    summary: >
+      Follows the shared spine's two-tier admission change (core/topics.py, pattern-fix
+      brief 2026-09-02) and the buyer-voice "AI" term in quotes.py that it made necessary:
+      a dry run under the demoted spine proposed 0 rows against 3 committed, all three
+      human-audited AI quotes ("AI is a transformative force", "an agentic AI system").
+      "agentic AI" / "AI agents" also joined the spine's SPECIFIC tier, the same class as
+      "generative AI". Offline replay after both: all 3 rows reproduce unchanged.
+    notes: >
+      Not re-run live; the 15-company subset and the 5-year window are unchanged.
+
+  - version: v1.2
+    date: 2026-09-01
+    reprocessing_required: false
+    affected_topics: []
+    summary: >
+      THE SHARED ATTRIBUTION FIX. `harnesses/h_execvoice_01/quotes.py` scored
+      name-then-verb attribution FOLLOWING a quote -- `"...," Broderick said.` -- as
+      `proximity` rather than `explicit`. It is the commonest attribution shape in American
+      journalism. `explicit_after` matched only verb-then-name ("said Broderick"), and
+      `explicit_before` matched name-then-verb but is anchored to the text PRECEDING the
+      quote, so nothing matched the ordinary case.
+
+      Two consequences, and the second is a correctness error rather than lost yield.
+      An article whose only quote is attributed that way routed to ST-PRESSPROFILE and
+      produced nothing. And at an EPONYMOUS firm -- McGough, Gilbane, Mack -- convention
+      31's corollary rejects a `proximity` quote outright, so a genuinely and explicitly
+      attributed quote was thrown away entirely.
+
+      THE GUARD THAT MAKES THE FIX SAFE. Accepting name-then-verb naively would accept
+      `"...," McGough Construction said.` as the PERSON speaking when it is the company.
+      That would trade the error convention 31's corollary exists to catch for the one this
+      fix removes. `_explicit_following` refuses the match where the text between the
+      surname and the verb carries another token of the company name. Verified separable:
+
+          "...," McGough said.               -> explicit   (was: thrown away)
+          "...," McGough Construction said.  -> REJECTED   (unchanged)
+          bare proximity at an eponymous firm -> REJECTED  (unchanged)
+
+      SCOPE: attribution classification only. No admission threshold, theme matching or
+      identity rule was touched, so the re-audit measures one change.
+
+      ROW DELTA: 2 observations before, 3 after. The new row is the false refusal this
+      fix was found by -- Gilbane's CEO on his firm's agentic-AI platform, in Construction
+      Dive, `buyer_articulates` / `data_analytics_ai`, grade B. v1.0 refused the whole
+      article as "no admissible claim" because the quote scored `proximity`, which routed
+      it to ST-PRESSPROFILE, whose branch never looks at quotes at all.
+
+      reprocessing_required is FALSE: no prior row changes. The two v1.0 rows are
+      `accepted`/`human`, were preserved by delete_observations(keep_reviewed=True), and
+      reconciled unchanged -- "1 inserted, 2 unchanged". Human review survived a
+      delete-and-rewrite, which is convention 1 and convention 35 working together.
+
+  - version: v1.1
+    date: 2026-09-01
+    reprocessing_required: false
+    affected_topics: []
+    summary: >
+      TWO CHANGES, AND NO PRIOR ROW IS INVALIDATED -- v1.1 proposes exactly the same two
+      observations v1.0 did (Gilbane, Penske; both ST-EXECQUOTE-REPORTED), so
+      reprocessing_required is false. What changes is the REFUSAL record and the routing.
+
+      1. IDENTITY WINDOW SIZED BY DOCUMENT SHAPE (brief Task 4). v1.0 refused 28 articles
+      as not_about_company, and 26 of them NAME the company -- just past the 2,500-char
+      prefix. RYCON sits at 7,609 in ENR's Top 400 Contractors, LEPRINO at 15,533 in a Top
+      150 processors table, GILBANE at 4,563 in Construction Exec's "New Names and Faces".
+      A refusal saying an article is not about a company, when the article names it, is a
+      false statement in the record (convention 12).
+
+      Identity matching is NOT loosened globally -- that is the change that broke Midmark.
+      `shape.is_multi_subject` widens the window only for documents with no single subject,
+      on three narrow signals (listing URL, ranking/roundup title, or >=6 distinctly named
+      organisations in the BODY). 18 windows widened on the subset, all reading correctly.
+      Convention 31 still governs downstream: a common dictionary word still needs the full
+      company phrase wherever found, so nothing changes for Prime Inc. at any window size.
+
+      A TABULAR CLAUSE WAS TRIED AND REMOVED. Scoring a document tabular when most of its
+      lines are short fired on 28 of 28 refusals, including the two that are CORRECTLY
+      refused. `html_lines` returns the whole page and every page is mostly navigation, so
+      the measure was reading site furniture -- the MedTech Dive defect in a new place.
+      A detector that fires on everything is not a detector.
+
+      AN ACTION SENTENCE MUST NAME THE COMPANY. Widening the window let the company into a
+      rankings piece; it must not also let the company inherit the document's claims. The
+      first v1.1 run added two rows and both were false: Rycon credited with AI adoption
+      off five sentences quoting GRAY CONSTRUCTION's CEO, and Kenco credited off a survey
+      statistic ("Thirty-two percent are using these technologies..."). Applied
+      unconditionally rather than only to multi-subject documents, because the Kenco post
+      is single-subject and the defect was never about shape -- it was about attributing an
+      action to a company the sentence does not say performed it. Convention 31's
+      corollary. Costs recall on pronoun sentences; every drop is logged.
+
+      2. LINKEDIN ROUTED, NOT DISCARDED (brief Task 5.5). v1.0 dropped every LinkedIn URL
+      as off-allowlist, throwing away an executive's own published words without recording
+      that it had. LinkedIn is now on the allowlist for every vertical and DECLARED IN
+      SCOPE, so the run context closes out companies with no LinkedIn URL as not_covered
+      and the access finding has a denominator (convention 5).
+
+      IT IS AN ACCESS FINDING, and recorded as one: LinkedIn's robots.txt publishes
+      `Disallow: /` for this crawler identity, so all 8 routed URLs are refused. That is a
+      true statement about the source and belongs in the database exactly as Glassdoor's
+      does (convention 38). No user-agent switched, no authenticated access attempted, no
+      third-party mirror or scraper service used -- an evaded refusal is not evidence.
+
+      Registered as ST-LINKEDINPOST, IC1, NOT folded into ST-EXECQUOTE-REPORTED. A LinkedIn
+      post is self-published and topic-chosen by the speaker; ST-EXECQUOTE-REPORTED is IC2
+      and scored higher precisely because a reporter elicited it and an editor ran it. Per
+      taxonomy patch 4.6.1 an IC1 absence licenses no inference, so this does not count as
+      progress against the articulation-bias gap. Company-page posts are marked as
+      first-party corporate speech rather than executive candor.
+
+      3. OFF-ALLOWLIST URLS ARE NOW COUNTED BY HOST. v1.0 dropped 239 with no breakdown, so
+      nobody could see what was in there. Convention 7: whether the allowlist should expand
+      is a fact about which hosts keep appearing, not a matter of opinion.
+
+      Also: a not_about_company refusal now records the article TITLE, not just the URL --
+      the gap session 3 closed for stale refusals, closed here too (convention 12).
+
+  - version: v1.0
+    date: 2026-08-31
+    reprocessing_required: false
+    summary: >
+      First build. The second `buyer_articulates` instrument, built deliberately ahead of
+      the four Priority-2 API harnesses: all four of those produce `buyer_acts`, and the
+      evidence base is 185 buyer_acts to 87 buyer_articulates, so adding to the long leg
+      does not answer the governing question.
+
+      First harness in the project where extraction is genuinely per-claim rather than
+      per-document (taxonomy patch rev 2 §2.4). One article can yield observations at two
+      evidence families and two roles.
+
+      Run against a 15-company subset spanning the industry mix, not the full 108. The
+      purpose of a first run is an auditable output small enough to review properly, not a
+      coverage number.
+    notes: >
+      QUARANTINED. This version has produced no published coverage number and must not,
+      until an audit artifact exists at harness_output/audits/H-TRADEPRESS-01__v1.0.json
+      (docs/gates/gate_new_harness_output.md). Row counts only.
+
+      TWO COMPANIES IN THE SUBSET ARE ADVERSARIAL, chosen because they are the two cases
+      that have already broken a harness in this project:
+
+        A054 Prime Inc.        -- name reduces to the single common token PRIME. Produced
+                                  four wrong-company rows in H-FIRSTPARTY-01 v1.0 (Digital
+                                  Prime Technologies, Prime Data Centers, Primech, Prime
+                                  Electric). Guarded by article.is_about_company.
+        A098 McGough Construction -- the CEO's surname is also the company name, so
+                                  proximity attribution is satisfied by every mention of
+                                  the employer. Produced a misattributed quote in
+                                  H-EXECVOICE-01 v1.0. Guarded by the eponymous-surname
+                                  rule in quotes.extract_quotes.
+
+      If either guard regressed, this run says so rather than the defect being found three
+      harnesses later.
+
+      GRADE LADDER. "Full" reliability in §8.1 maps to source_grade B, "capped -1" maps to
+      C. A is not reachable from this source: H-EXECVOICE-01 fixed B as the honest ceiling
+      for journalist-mediated content, and trade press is journalist-mediated by
+      definition. ST-EXECCOLUMN is the arguable case -- the executive authored it, which
+      is the A criterion -- and is still graded B, because the column passed through an
+      outlet's editing and grading it A would rest on an inference about an editorial
+      process nobody checked. Its distinguishing property is recorded as signal type plus
+      instrument_class IC1 instead. Flagged for Signal Advisor.
+
+      WIRE REPRINTS ARE ROUTED, NOT FILTERED (§8.2). Excluding them would make them
+      invisible and silently drop their contribution to signal_strength, and repetition is
+      the entire evidence for `repeated_pattern` (convention 19). A detected reprint is
+      reclassified to family 1 and run through the redundancy check on (company_id, topic)
+      -- the natural key of a claim is what it is about (convention 30), not the URL, and
+      a release reprinted at a trade outlet has a different URL from the same release on
+      the wire. Already held becomes `suppressed_redundant_judged`'s deterministic sibling
+      `suppressed_redundant_key`; not held is admitted as genuinely new first-party
+      evidence.
+    known_limitations: >
+      ST-PRESSPROFILE's evidence_family is registered as 15 in Signal_Types, but taxonomy
+      patch §7 marks it "varies" -- the family of a reported action properly depends on
+      what the action was about. The registry's one-family-per-signal-type shape cannot
+      express that. This version narrows the harness to match the registry rather than the
+      reverse: ST-PRESSPROFILE rows are written at family 15 only. That is the
+      conservative direction (it narrows what is admitted) but it is a real narrowing, and
+      it is an open item for Harness Advisor.
+
+      The industry-to-outlet mapping in SUBSET is hand-seeded, not derived, because
+      `Companies.industry_primary` is blank for all 100 Anvil rows. Making the harness
+      guess an industry from a company name would be exactly the silent inference
+      convention 13 forbids. The table is visible and checkable, in the spirit of
+      data/company_aliases.json.
+
+      The outlet allowlist is not exhaustive and is biased toward US national verticals.
+      A company covered only by a regional trade title is invisible to this version, and
+      its `absent_confirmed` says "absent from THIS outlet set" for that reason.
+
+      Trade outlets increasingly serve paywalled or partially-rendered article bodies. A
+      truncated body reduces to "no admissible claim" rather than a distinct outcome, so
+      this version cannot separate "the outlet had nothing" from "the outlet had something
+      behind a paywall". That is the most likely source of understated yield.
