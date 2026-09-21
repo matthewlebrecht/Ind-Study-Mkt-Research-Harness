@@ -8,6 +8,9 @@ position) and their invalidity is recorded in Observation_Validity_History (core
 
 BATCHES
   o00303-2026-09-15       O00303 (applied 2026-09-15, commit 0b1628f; kept as the record of what ran)
+  front-line-2026-09-20  the three rows citing the Front Line Power Construction press release:
+                          O00530 (its first determination) plus O00350 and O00531, whose
+                          extraction-defect status is superseded by the true reason, wrong entity.
   hr0083-overstated-2026-09-17
                           the 8 rows of HR-0083's 97 whose recorded status names the wrong cause: 6
                           are wrong-entity rows (the article never names the company) and 2 are
@@ -138,6 +141,32 @@ def _aged_out(oid, cid, topic, url):
 
 
 BATCHES = {
+    "front-line-2026-09-20": {
+        "record": "harness_output/audits/VALIDITY_2026-09-20_front_line.json",
+        "rows": [
+            {"observation_id": "O00530", "source": "live",
+             "expect": {"company_id": "A073", "harness_id": "H-FIRSTPARTY-01",
+                        "topic": "digital_transformation_process", "source_url": 'https://www.prnewswire.com/news-releases/front-line-power-construction-announces-strategic-investment-from-ariel-alternatives-302691595.html'},
+             "validity_status": "invalidated_wrong_entity", "as_of_date": "2026-09-20",
+             "determined_by": "Matthew Lebrecht",
+             "basis": 'Identity: the press release (PR Newswire, 2026-02-18, \'Front Line Power Construction Announces Strategic Investment from Ariel Alternatives\') is about FRONT LINE POWER CONSTRUCTION, a Houston utility-infrastructure contractor, not A073 Power Construction, a general contractor in Chicago (powerconstruction.net). Counts read from the cached page (core/tests/fixtures/firstparty_pages/) on 2026-09-20: \'Front Line Power Construction\' 6 occurrences; \'Power Construction\' NOT preceded by \'Front Line\' 0; \'Houston\' 3 and \'Texas\' 2; \'Chicago\' 0, \'Illinois\' 0 and \'powerconstruction.net\' 0. The company matched only as a SUBSTRING of the other firm\'s name -- convention 11, a single matching fragment is not an identity. Reviewer verdict, Matthew Lebrecht 2026-09-20: "This is a wrong identity case, seems like it should be Front Line Power Construction." Decision sheet harness_output/audits/DECISION_O00530_front_line_identity.md.',
+             "notes": "Determination on a row that exists; the row is unchanged (convention 45). A `supported` audit verdict applied to this row from a blanket approval on 2026-09-20 was RETRACTED the same day (scripts/retract_misattributed_verdict.py) because the question is identity, not strength; this determination is the reviewer's direct call on that question."},
+            {"observation_id": "O00350", "source": "live",
+             "expect": {"company_id": "A073", "harness_id": "H-FIRSTPARTY-01",
+                        "topic": "data_analytics_ai", "source_url": 'https://www.prnewswire.com/news-releases/front-line-power-construction-announces-strategic-investment-from-ariel-alternatives-302691595.html'},
+             "validity_status": "invalidated_wrong_entity", "as_of_date": "2026-09-20",
+             "determined_by": "Matthew Lebrecht",
+             "basis": 'Identity: the press release (PR Newswire, 2026-02-18, \'Front Line Power Construction Announces Strategic Investment from Ariel Alternatives\') is about FRONT LINE POWER CONSTRUCTION, a Houston utility-infrastructure contractor, not A073 Power Construction, a general contractor in Chicago (powerconstruction.net). Counts read from the cached page (core/tests/fixtures/firstparty_pages/) on 2026-09-20: \'Front Line Power Construction\' 6 occurrences; \'Power Construction\' NOT preceded by \'Front Line\' 0; \'Houston\' 3 and \'Texas\' 2; \'Chicago\' 0, \'Illinois\' 0 and \'powerconstruction.net\' 0. The company matched only as a SUBSTRING of the other firm\'s name -- convention 11, a single matching fragment is not an identity. Reviewer verdict, Matthew Lebrecht 2026-09-20: "This is a wrong identity case, seems like it should be Front Line Power Construction." Decision sheet harness_output/audits/DECISION_O00530_front_line_identity.md.',
+             "notes": 'Supersedes the invalidated_extraction_defect this row received from the HR-0083 run on 2026-09-15. The row stays invalid and unchanged -- only the recorded REASON moves, from extraction to identity, which is the same correction applied to eight other HR-0083 rows on 2026-09-17. It cites the same press release as O00530 and fails for the same reason.'},
+            {"observation_id": "O00531", "source": "live",
+             "expect": {"company_id": "A073", "harness_id": "H-FIRSTPARTY-01",
+                        "topic": "workforce_enablement", "source_url": 'https://www.prnewswire.com/news-releases/front-line-power-construction-announces-strategic-investment-from-ariel-alternatives-302691595.html'},
+             "validity_status": "invalidated_wrong_entity", "as_of_date": "2026-09-20",
+             "determined_by": "Matthew Lebrecht",
+             "basis": 'Identity: the press release (PR Newswire, 2026-02-18, \'Front Line Power Construction Announces Strategic Investment from Ariel Alternatives\') is about FRONT LINE POWER CONSTRUCTION, a Houston utility-infrastructure contractor, not A073 Power Construction, a general contractor in Chicago (powerconstruction.net). Counts read from the cached page (core/tests/fixtures/firstparty_pages/) on 2026-09-20: \'Front Line Power Construction\' 6 occurrences; \'Power Construction\' NOT preceded by \'Front Line\' 0; \'Houston\' 3 and \'Texas\' 2; \'Chicago\' 0, \'Illinois\' 0 and \'powerconstruction.net\' 0. The company matched only as a SUBSTRING of the other firm\'s name -- convention 11, a single matching fragment is not an identity. Reviewer verdict, Matthew Lebrecht 2026-09-20: "This is a wrong identity case, seems like it should be Front Line Power Construction." Decision sheet harness_output/audits/DECISION_O00530_front_line_identity.md.',
+             "notes": 'Supersedes the invalidated_extraction_defect this row received from the HR-0083 run on 2026-09-15. The row stays invalid and unchanged -- only the recorded REASON moves, from extraction to identity, which is the same correction applied to eight other HR-0083 rows on 2026-09-17. It cites the same press release as O00530 and fails for the same reason.'},
+        ],
+    },
     "hr0083-overstated-2026-09-17": {
         "record": "harness_output/audits/VALIDITY_2026-09-17_hr0083_overstated.json",
         "rows": [

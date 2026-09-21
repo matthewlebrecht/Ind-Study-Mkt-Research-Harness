@@ -176,8 +176,13 @@ def main() -> int:
     }
     machine = sorted(o for o, st in invalid.items() if st == "invalidated_extraction_defect"
                      and rows[o]["harness_id"] == "H-FIRSTPARTY-01" and "Matthew Lebrecht" not in det[o]["determined_by"])
-    check(f"the run's extraction-defect rows are the 89 it fits, all by the harness and not a reviewer",
-          len(machine) == 89 and all(det[o]["determined_by"].startswith("H-FIRSTPARTY-01") for o in machine))
+    # 97 recorded by the run, minus the 8 superseded on 2026-09-17 (wrong entity / aged out), minus
+    # O00350 and O00531, superseded on 2026-09-20 when Matthew ruled the Front Line Power Construction
+    # press release a wrong-entity case -- the second time an extraction-defect label was found to be
+    # carrying an identity failure. Each subtraction is a REVIEWER moving a row out of the machine's
+    # status, which is why the filter excludes rows determined by a person.
+    check(f"the run's extraction-defect rows are the 87 it still fits, all by the harness and not a reviewer",
+          len(machine) == 87 and all(det[o]["determined_by"].startswith("H-FIRSTPARTY-01") for o in machine))
     check("all 8 corrected rows now carry the superseding status, recorded by a reviewer",
           all(invalid.get(o) == want and "Matthew Lebrecht" in det[o]["determined_by"]
               for o, want in CORRECTED.items()))

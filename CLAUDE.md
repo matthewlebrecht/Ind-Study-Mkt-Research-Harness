@@ -342,14 +342,14 @@ requires rendering JavaScript or crossing a robots line. See `session11_report.m
 
 ## Evidence base snapshot (as of 2026-09-15)
 
-**722 observations** (of which **210 low-grade**; every observation ever deleted whose claim has no other live row is restored -- the seven 2026-09-15 page-furniture rows, O00604, O00612 and O00564 -- and **111 carry a current validity determination** (119 determinations, 8 superseded 2026-09-17): 100 `invalidated_extraction_defect`, 7 `invalidated_wrong_entity`, 3 `invalidated_not_reproduced`, 1 `invalidated_duplicate`), 108 companies with evidence, **6,972 attempts
+**722 observations** (of which **210 low-grade**; every observation ever deleted whose claim has no other live row is restored -- the seven 2026-09-15 page-furniture rows, O00604, O00612 and O00564 -- and **112 carry a current validity determination** (122 determinations, 10 superseded): 98 `invalidated_extraction_defect`, 10 `invalidated_wrong_entity`, 3 `invalidated_not_reproduced`, 1 `invalidated_duplicate`), 108 companies with evidence, **6,972 attempts
 logged**, 84 harness runs, 6,480 rows in `Company_State_History` (DR-0001 and DR-0002, both appended 2026-09-06), **931 executives** in `Company_Executives` (821 confirmed across 63 companies, 110 low-grade `unconfirmed` from EXECID v1.1).
 242 observations human-reviewed, 480 unreviewed (2026-09-15, after HR-0083). 33 signal types registered. **6,972 attempts, 84 runs** (HR-0084 wrote none -- see the H-FMCSA-01 attempts gap below).
 **719 released, 3 quarantined** (2026-09-20, after H-FIRSTPARTY-01 v1.3 was audited and published: **every valid row is now released**, and the only quarantined rows left are the 3 restored rows that are themselves recorded invalid. Was 716/3 as of 2026-09-15, after H-PROCUREMENT-01 v1.4's release -- 11 of the 716 are released AND invalidated, because publication_state is walled off from validity. Quarantined: O00564 (H-EXECVOICE-01 v1.4), O00604 (H-TRADEPRESS-01 v1.6) and O00612 (H-BREACHPORTAL-01 v1.0), each restored in the quarantined state it was deleted in and recorded invalid; O00791 (H-PROCUREMENT-01 v1.4) released 2026-09-15; H-BREACHPORTAL-01 v1.2, HR-0082, population 0, published the same day; H-SEC8K-01 v1.0's HR-0073, which wrote no row, stays permanently quarantined). 10 themes (THEME-01..10) in `core/topics.py`; one theme
 key retired so far (`cybersecurity_ot` -> `cybersecurity`, 2026-09-02, four machine rows
 rewritten by `migrate_schema.py::rename_topic_keys`).
 
-Observations as three measurements (2026-09-20, after v1.3's release): 722 total = 611 valid + 111 invalid; released 719 = 611 valid + 108 invalid; quarantined 3 = 0 valid + 3 invalid (`python scripts/published_coverage.py` prints the same line).
+Observations as three measurements (2026-09-20, after the Front Line wrong-entity ruling): 722 total = 610 valid + 112 invalid; released 719 = 610 valid + 109 invalid; quarantined 3 = 0 valid + 3 invalid (`python scripts/published_coverage.py` prints the same line).
 
 By harness (released rows, 2026-09-15 after HR-0083, computed from the workbook; invalid in brackets, valid = total minus invalid): H-FIRSTPARTY-01 203 [108], H-SAFETY-ENV-01 131, H-LOCALRECORDS-01 129, H-SELLERCONTENT-01 44, H-PROCUREMENT-01 41, H-FMCSA-01 40, H-JOBPOST-01 32, H-WAYBACK-01 31, H-TRADEPRESS-01 13, H-EXECVOICE-01 10, H-BREACHPORTAL-01 9, H-PRODUCTQUALITY-01 3, H-VENDOR-01 2, H-LEGAL-01 1. Quarantined: H-FIRSTPARTY-01 30 (v1.3), H-EXECVOICE-01 1, H-TRADEPRESS-01 1, H-BREACHPORTAL-01 1.
 
@@ -757,7 +757,12 @@ stale on its own, and the old check could not tell that apart from the database 
   the hold on FIRSTPARTY and TRADEPRESS stands until the extraction fix lands; (2) the 12 Company_State_History rows
   (DR-0001/DR-0002, 2026-W35/W36; A015, A046, A051) now cite rows that exist and are flagged invalid, which check 15
   warns on; (3) O00349 (Power Construction, same Bechtel/Kiewit article as O00529): Matthew confirmed `wrong_entity`
-  2026-09-15, recorded OVH-0011.
+  2026-09-15, recorded OVH-0011. **A second Power Construction identity case CLOSED 2026-09-20:** the three
+  rows citing the Front Line Power Construction press release (O00530, and O00350 / O00531 whose
+  extraction-defect status was superseded) are all `invalidated_wrong_entity` -- the release is about a
+  Houston utility contractor, and A073's name matched only as a SUBSTRING of it. Batch
+  `front-line-2026-09-20`, OVH-0120..0122. A073 is now the company whose name has produced two separate
+  wrong-entity cases, both from its two dictionary words.
 - **NO HARNESS IS HELD (2026-09-15). Both holds set that day were lifted the same day by Matthew Lebrecht:**
   H-TRADEPRESS-01 once its v1.8 marker fix replayed with no live-row change (item 9), H-FIRSTPARTY-01 once v1.3 read
   themes from the article body and its dry run was measured (item 22), after which v1.3 was run and committed

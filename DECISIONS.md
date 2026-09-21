@@ -346,3 +346,25 @@ question now sits in `harness_output/audits/DECISION_O00530_front_line_identity.
 **The general rule this establishes:** a blanket approval covers only sheets whose verdict vocabulary
 it actually fits. A role review (`correct` / `buyer_acts` / …) and an identity question are not audit
 verdicts, and neither may be inferred from "all supported".
+
+### D43 · 2026-09-20 · O00530 is a wrong-entity row, and so are the two beside it
+**Matthew Lebrecht:** *"This is a wrong identity case, seems like it should be Front Line Power
+Construction."*
+**Why.** The press release behind all three rows is about **Front Line Power Construction**, a
+Houston utility-infrastructure contractor. A073 is **Power Construction**, a Chicago general
+contractor. The cached page names "Front Line Power Construction" six times and "Power Construction"
+standalone **zero** times; it mentions Houston and Texas and never mentions Chicago, Illinois, or
+A073's domain. The company matched only as a *substring* of the other firm's name.
+**Consequence.** All three recorded `invalidated_wrong_entity` (batch `front-line-2026-09-20`,
+OVH-0120..0122). O00530 takes its first determination; **O00350 and O00531 are superseded** from
+`invalidated_extraction_defect` to the true reason — the same correction made to eight HR-0083 rows
+on 2026-09-17, and the second time this project has found the extraction label carrying an identity
+failure. `digital_transformation_process` loses one valid buyer row (46 → 45) and one buyer company
+(30 → 29).
+
+**What makes this the tenth instance of D14, and the sharpest.** A073's name is two dictionary words,
+and it has now produced **two separate wrong-entity cases** from two different sources: O00349, where
+"Power Construction" was assembled out of a Bechtel/Kiewit article about a *power* project, and these
+three, where it sat inside a longer company name. Convention 11 says a single common token is never
+an identity; A073 shows the same is true of a common *phrase*. Any future instrument reading company
+names needs a containment test, not just a token test.
