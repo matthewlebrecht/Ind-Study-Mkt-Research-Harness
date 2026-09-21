@@ -7,15 +7,16 @@ reviewer are flagged, not made.
 
 ---
 
-## A. Waiting on Matthew — judgment, not work
+## A. Was waiting on Matthew — ALL CLOSED as of 2026-09-20
 
-These cannot be closed by anyone else: an audit verdict and a role verdict are human-sourced by
-construction (`review_source = human`; check 14 enforces it for role reviews).
+These could not be closed by anyone else: an audit verdict and a role verdict are human-sourced by
+construction (`review_source = human`; check 14 enforces it for role reviews). Every one is now
+judged; A4's design question is the only entry that remains, and it is a decision, not a review.
 
 | # | Item | Size | State |
 |---|---|---|---|
 | ~~A1~~ | ~~H-FIRSTPARTY-01 v1.3 audit~~ | 30 rows | **CLOSED 2026-09-20.** Matthew judged all 30 `supported`; artifact written, version published, coverage 97.2% now quoted |
-| A2 | **Business-journal role census** — `ROLE_REVIEW_business_journal_census_2026-09-15.md` | 7 rows | Drawn 2026-09-15, unjudged. The stratum's earlier estimate rests entirely on rows now recorded invalid, so this census is what replaces it |
+| ~~A2~~ | ~~Business-journal role census~~ | 7 rows | **CLOSED 2026-09-20 (Matthew): all 7 `correct`.** Recorded in `Observation_Role_Reviews` as a CENSUS -- exact rate, nothing left unreviewed in the stratum. It replaces the 2026-09-15 estimate, whose 8 judged rows are all now invalid |
 | ~~A3~~ | ~~O00530 — Front Line identity~~ | 1 row | **CLOSED 2026-09-20 (Matthew): wrong entity.** "This is a wrong identity case, seems like it should be Front Line Power Construction." Recorded `invalidated_wrong_entity`; O00350 and O00531 superseded from extraction-defect to the same true reason (OVH-0120..0122) |
 | A4 | **Composition provenance — option A/B/C/D** | design | `docs/analysis/brief_composition_provenance_2026-09-20.md`. Recommendation is A for this submission |
 | ~~A5~~ | ~~Coherence pilot — four decisions~~ | — | **CLOSED AS MOOT 2026-09-20 (Matthew).** The disposition was finalised without them: framework built and scoped, insufficient evidence volume to execute meaningfully, written up in the report appendix. The four questions only ever mattered to a run that is not happening, so they are not pending a resolution |
@@ -56,6 +57,6 @@ construction (`review_source = human`; check 14 enforces it for role reviews).
 - **722 observations**: 719 released (611 valid, 108 invalid), 3 quarantined — **every valid row is
   now released**, and the only quarantined rows left are the 3 restored rows that are themselves
   recorded invalid.
-- **One item waits on Matthew**: the business-journal role census (A2, 7 rows). Its vocabulary is
-  `correct` / `buyer_acts` / …, not `supported`, so it was deliberately not inferred from the blanket
-  ruling. Every other review sheet and identity question is closed.
+- **Nothing waits on Matthew.** Every review sheet is judged and every identity question is
+  settled. What remains open is design work, listed in section B and in the composition-provenance
+  brief, none of which blocks report writing.

@@ -368,3 +368,26 @@ and it has now produced **two separate wrong-entity cases** from two different s
 three, where it sat inside a longer company name. Convention 11 says a single common token is never
 an identity; A073 shows the same is true of a common *phrase*. Any future instrument reading company
 names needs a containment test, not just a token test.
+
+### D44 · 2026-09-20 · The business-journal role census: all 7 `correct`
+**Matthew Lebrecht:** *"Ah those 7 are all correct."*
+**Why it needed its own ruling.** The blanket "all manual review rows are supported" of the same week
+did not reach this sheet: a role review's vocabulary is `correct` / `buyer_acts` /
+`provider_market_responds`, and `supported` is not in it (D42). The verdict was held rather than
+translated, and this is the reviewer using the role vocabulary directly.
+**Consequence.** Recorded as run `role_review_business_journal_census_2026-09-20` in
+`Observation_Role_Reviews`; `Observations` untouched and verified identical before and after, because
+a role verdict re-clears neither identity nor extraction (D27). Check 14 now holds 66 verdicts across
+two runs.
+
+**What it replaces.** The 2026-09-15 review estimated this stratum from 8 of 42 rows: 1 misclassified,
+12.5%, a 95% upper bound of 18 of 42. **Every one of those 8 judged rows has since been recorded
+invalid**, so that estimate rested on no valid row. This census covers all 7 rows that remain valid,
+which is the whole stratum — so the rate is **exact**, not estimated, there is no upper bound to
+carry, and **no valid business-journal row shows a role defect**. The earlier figure must not be
+quoted.
+
+**A note on what a census bought here.** The 2026-09-15 sample's single miss, O00303, drove a bound
+of "up to 17 of 34 unreviewed rows could be misclassified" — a real constraint on how much weight the
+channel could carry. That bound is now gone, replaced by a count. The evidence base got smaller and
+the claim about it got stronger.

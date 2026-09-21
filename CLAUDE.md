@@ -706,8 +706,13 @@ stale on its own, and the old check could not tell that apart from the database 
   bound were computed entirely on rows now recorded invalid and must not be quoted again without
   saying so. The remaining review population is the **7 valid rows** (5 released, 2 quarantined at
   v1.3), drawn as a CENSUS in
-  `harness_output/audits/ROLE_REVIEW_business_journal_census_2026-09-15.md` -- unjudged, verdicts are
-  human-only. `scripts/role_review_sheet.py` gained `--sub-kind-contains`, `--exclude-invalid`,
+  `harness_output/audits/ROLE_REVIEW_business_journal_census_2026-09-15.md`. **JUDGED 2026-09-20
+  (Matthew): all 7 `correct`** -- "Ah those 7 are all correct" -- recorded as run
+  `role_review_business_journal_census_2026-09-20` (artifact
+  `ROLE_REVIEW_business_journal_census_2026-09-20_verdicts.json`), `Observations` untouched and verified
+  identical. Being a CENSUS, the stratum's rate is now EXACT and nothing in it is unreviewed: 0 of 7
+  misclassified, so the business-journal channel shows no role defect on any valid row. Check 14: 66
+  verdicts across 2 runs. `scripts/role_review_sheet.py` gained `--sub-kind-contains`, `--exclude-invalid`,
   `--exclude-reviewed` and `--stem` so a second pass is drawn from the current base; every filter and
   the ids it dropped are printed on the sheet.
   (historical) Business journal 1 of 8 of 42 (12.5%), 95% upper bound 18 of 42 -- up to 17 of its 34
