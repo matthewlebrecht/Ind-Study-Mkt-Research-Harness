@@ -568,8 +568,10 @@ stale on its own, and the old check could not tell that apart from the database 
   2 on valid rows**. At that size the 60% threshold resolves to 2-of-3 or 2-of-2 and one tagging
   judgment on one company decides it. COHP-0001 has also drifted -- it names A019 as A048's
   comparison; the script now derives A032. Tagging the 66 cohort observations is not worth it until
-  the cohort is bigger. Four decisions listed for Matthew, starting with whether the pilot counts
-  invalid rows (today it does, because it may not read validity).
+  the cohort is bigger. **The four decisions listed in that diagnostic were CLOSED AS MOOT 2026-09-20
+  (Matthew): the disposition was finalised without them** -- framework built and scoped, evidence
+  volume insufficient to execute, written up in the report appendix -- so they are not pending a
+  ruling and are kept only as the record of what executing the pilot would have required.
 - **H-PRODUCTQUALITY-01's coverage rate is the length of its population map, not a measurement**
   (2026-09-15 evening, `docs/diagnostics/productquality_attempts_control_2026-09-15.md`). Its
   denominator is the 15-company hand-seeded map, not 108, and its yield is 3 of 15. `coverage_rate`

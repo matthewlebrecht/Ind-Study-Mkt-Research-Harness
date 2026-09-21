@@ -109,7 +109,12 @@ the validity determinations. The cheapest thing that would make this pilot infor
 over-firing cohort — which means either lowering the floor below 3 (and stating that the cohort is
 then dominated by the low-grade tier) or waiting for more `systems_integration` evidence.
 
-Decisions needed from Matthew, in order:
+**CLOSED AS MOOT, 2026-09-20 (Matthew).** The disposition below was finalised without answering
+these: the framework is built and scoped, the evidence volume is insufficient to execute the test
+meaningfully, and that is what the report appendix records
+(`docs/report_appendix_dispositions.md` §A). The four questions only bear on a run that is not
+going to happen, so they are not open items awaiting a ruling. They are kept here as the record
+of what executing the pilot would have required:
 
 1. Does the pilot count observations recorded invalid? (Today it does, because it may not read
    validity — so this is a design question, not a bug.)

@@ -314,3 +314,35 @@ that have provenance and rows that never can.
 | **`H-PATENTS-01` not built** | PatentsView was retired by USPTO on 2026-03-20; this needs a new source decision (Open Data Portal bulk data), not an access fix |
 | **No JavaScript rendering, no robots-line crossing** | Repeatedly the cheapest way to raise coverage, repeatedly refused. Dayforce and UltiPro serve `Disallow: /`; the job-posting ceiling (17 deep, 58 reachable of 108) is a *structural* finding because of this |
 | **No blended project-wide coverage figure** | The harnesses have different denominators and different instrument biases, so a mean over them names nothing (convention 21a) |
+
+---
+
+## Appended after the build closed
+
+### D41 · 2026-09-20 · The coherence pilot's four open questions are closed as MOOT
+**Matthew Lebrecht.** **Why.** D31 settled the pilot's disposition — framework built and scoped,
+evidence volume insufficient to execute meaningfully — and that disposition was written into the
+report appendix without needing any of the four questions answered. Leaving them on the open-items
+register implied the disposition was provisional, pending a ruling. It was not.
+**Consequence.** The four questions (does the pilot count invalid rows; is COHP-0001 refrozen or
+re-derived; is the over-firing floor still 3; who assigns a dimension candidate) are kept in
+`docs/diagnostics/coherence_pilot_execution_2026-09-15.md` as the record of what executing the pilot
+*would* have required, explicitly not as items awaiting an answer. Nothing about the appendix
+disposition changes.
+
+### D42 · 2026-09-20 · An audit verdict applied from a blanket ruling was retracted
+**Matthew Lebrecht.** **Why.** "I review all manual review rows and they are all supported" was
+applied to the 30 rows of the H-FIRSTPARTY-01 v1.3 audit census — correct, that sheet's verdict
+vocabulary is exactly `supported` — and also to **O00530**, which is not an audit-census row. The
+question O00530 carries is *which company the release is about*, not whether a claim is supported at
+the strength stated. That call is the reviewer's to make directly, and it had not been made.
+**Consequence.** `scripts/retract_misattributed_verdict.py` restored the row to its exact pre-verdict
+state, guarded in both directions and verified to change no other row. **This is not a breach of
+"never overwrite human review"** (convention 1): that rule protects a judgment a person actually
+made, and here the stored judgment was itself the error — a `review_source = human` recording a
+verdict nobody gave. A false attribution in the evidence base is worse than its absence. The narrowed
+question now sits in `harness_output/audits/DECISION_O00530_front_line_identity.md`.
+
+**The general rule this establishes:** a blanket approval covers only sheets whose verdict vocabulary
+it actually fits. A role review (`correct` / `buyer_acts` / …) and an identity question are not audit
+verdicts, and neither may be inferred from "all supported".
