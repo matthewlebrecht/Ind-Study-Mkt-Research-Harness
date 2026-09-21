@@ -374,6 +374,29 @@ endpoint is the source's. A TLS error, a DNS failure, or a timeout on one host i
 unattributed until it reproduces from somewhere else. `scripts/probe_sources.py` records
 the evidence and writes nothing to the workbook.
 
+*Amended 2026-09-13 (Week 4): the USASpending attribution above was wrong both times, and
+the decision to write nothing was right both times.* It was never the network. The
+"Web Page Blocked!" page with a client IP and an Attack ID was served by USASpending's own
+web application firewall, behind its F5 load balancer: it arrived inside a TLS session
+verified against Treasury's genuine Entrust certificate, with the load balancer's
+`BIGipServer~api.usaspending.gov` cookie set on the block response, and nothing on this
+network can answer inside a verified session. The trigger was the probe's User-Agent,
+`IndStudyResearchBot/1.0 (...)`: the WAF matches the token `ResearchBot` (`Bot`, `crawler`,
+`Googlebot`, curl, python-requests and an empty UA all pass), and the harness UA got HTTP 200
+from the same egress IP on every endpoint. The 2026-09-01 "different network" was not one:
+the egress IP named on that day's block page is the egress IP today. PatentsView, the other
+half of the same entry, is the source's too: USPTO retired the PatentSearch API on
+2026-03-20 and removed `search.patentsview.org` from public DNS (NXDOMAIN from Cloudflare
+DoH as well as the local resolver). The Texas breach-portal "timeout" (session 16) did not
+reproduce on either Texas host and is not the same root cause.
+
+Two refinements to the rule, both from this case. **A block page that names your IP is
+not evidence the block is local** -- server-side WAFs echo the client IP too; the test is
+whether the page arrived inside a TLS session verified to the source's own certificate. And
+**vary one request property at a time before blaming a route** (User-Agent, method, path,
+host): the whole diagnosis was a 13-row User-Agent table, and a week of "blocked here"
+sat on a string only the probe sent.
+
 **39. Suppression must be auditable, so record which kind it was.**
 `suppressed_redundant` conflated "the natural key already holds this" -- deterministic,
 cheap, always right -- with "a classifier judged this instance to add nothing new", which
@@ -512,4 +535,66 @@ both renumbered surviving claims and could hand a deleted claim's number to a ne
 the next run. Five ids had to be acknowledged by hand with `check_run_ledger.py --retired`
 in session 10; the FMCSA 20 kept their ids in session 12.5 only because the refresh path
 updates in place. The registry makes the property structural rather than a habit.
+
+**44. An optional classification of an observation lives in its own linked table.** Any
+non-blocking tag on `Observations` -- a classification that no gate requires and that not every
+row needs -- is stored in a dedicated table keyed BY `observation_id` (one row per tag, with
+`tagged_at` as the load date and a `tagging_run_id` naming the harness, session or batch that
+produced it), never as a new column on `Observations`. This holds whether or not the tag's
+vocabulary is expected to churn, so the question is not re-opened field by field. Every such
+table sits behind the convention 41 wall: no module that computes `review_status`,
+`audit_verdict`, `publication_state` or `reprocessing_required` may read it, directly or by join,
+and `validate_repo_db.py` asserts that as a failure. Tags are sparse by design -- an untagged row
+is untagged, not a default value -- and adding one corrects nothing on the row it describes.
+
+Origin: `Observation_Coherence_Tags` (build handoff 2026-09-08) took this shape because the
+coherence framework is falsifiable and expected to churn; the evidence-directionality handoff
+(2026-09-15, Signal Advisor) confirmed the same shape as the standing pattern for tags that are
+not expected to churn either, when `Observation_Directionality_Tags` was built (check 13,
+`core/directionality.py`). The finding behind it: H-PROCUREMENT-01 and H-LOCALRECORDS-01
+independently placed buyers on the selling side of their records, which `evidence_role` has no
+axis to say.
+
+Applied to a review, not a tag (2026-09-15, Matthew Lebrecht): `Observation_Role_Reviews` (check 14,
+`core/role_review.py`) holds role-classification verdicts on a stratified sample. The only verdict
+writer on `Observations`, `apply_audit_verdict`, could not express a role verdict and would have set
+`review_source = human` on 39 machine-reviewed rows, making their extraction read as human-cleared.
+So a review whose question is narrower than the audit's lives beside the row, states its scope and
+sample basis on every line, and must agree with its committed artifact -- a verdict recorded where it
+can be read as more than it was is a claim nobody made.
+
+**45. No observation is ever hard-deleted.** (Matthew Lebrecht, standing rule, 2026-09-15.) An observation found to
+be bad keeps its row and its id; its invalidity is a determination appended to `Observation_Validity_History`
+(`core/validity.py`, check 15) -- one row per determination, forward-only `superseded_by`, the discipline of the SEC
+reporting-status history. Anything citing the observation stays structurally valid and points at something flagged
+invalid rather than at nothing. The table sits behind the convention 41 wall like the other observation overlays.
+A row deleted before the rule is restored exactly through `core/db.py::restore_observation` and then recorded.
+
+The rule is retroactive and covers every removal path. **Retirement is invalidation:** a row a run no longer produces
+is recorded `invalidated_not_reproduced` (`core/validity.py::invalidate_unreproduced`, within the run's company scope,
+human-reviewed rows held), not removed; the delete-and-rewrite harnesses reconcile in place and then call it. A
+reviewer's `unsupported` or `wrong_entity` verdict is a determination too. Every `core/db.py` delete path refuses.
+Mechanically: check 15 fails on any retired id whose claim has no live row, and on `delete_rows(` in `core/db.py`.
+A retired id whose claim IS live under a newer id (pre-convention-43 renumbering) is not a deletion of evidence and is
+not restored -- restoring it would give one claim two ids. Its row records the id the claim now carries
+(`Observation_Ids.current_id`, Matthew Lebrecht, 2026-09-15), so a claim's history is traceable across the
+renumbering; check 15 fails if that is missing or wrong. A determination is permanent: no status reinstates a row.
+
+**An invalid row is read as invalid, and every count reports three measurements** (Matthew Lebrecht, 2026-09-15).
+Composition, published coverage and the reconciler exclude an invalid observation from what they compute, and each
+count they publish -- derivation evidence, observation totals, coverage beside the rows it rests on, the run summary's
+proposed rows, the gap report's companies -- states total, valid and invalid separately, so an exclusion is seen, not
+a number that quietly shrank. This amends the convention 41 wall rather than removing it: those three modules read
+validity only through `core/validity.py::invalid_observation_ids` (the reconciler only in `sync_observations`), no
+other gate module reads it, and validity feeds no review_status, audit_verdict, publication_state or
+reprocessing_required. A re-proposed invalid row is left exactly as recorded, because refreshing it would overwrite the
+evidence its determination describes. Audit artifacts are historical records: a count an artifact recorded is what
+was true on its audit date and is never rewritten or quoted as a live figure; live numbers are recomputed by the
+scripts. Before the change every published number it could move was measured, and the before/after is in CLAUDE.md.
+
+Origin: seven H-FIRSTPARTY-01 rows judged `unsupported` for a page-furniture theme match were hard-deleted on
+2026-09-15 (commit 9641128), leaving 12 immutable Company_State_History rows citing observations that no longer
+existed and a deleted claim that an unchanged harness run would re-insert under its old id. O00303 was converted the
+same day; Matthew then made the rule retroactive over all retirements, and the other six, O00604, O00612 and O00564
+were restored and recorded, and every deleting path withdrawn, the same day.
 

@@ -54,7 +54,7 @@ import openpyxl
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from core import composition, topics  # noqa: E402
+from core import composition, topics, validity  # noqa: E402
 from core.attempts import COVERAGE_OUTCOMES  # noqa: E402
 
 DEFAULT_DB = ROOT / "data" / "market_intel_db.xlsx"
@@ -165,9 +165,20 @@ def main() -> int:
     # rows briefly counted as six cybersecurity buyers here before this filter existed.
     quarantined = [r for r in rows if str(r.get("publication_state") or "") != "released"]
     rows = [r for r in rows if str(r.get("publication_state") or "") == "released"]
-    low_grade = [r for r in rows if str(r.get("evidence_excerpt") or "").startswith(topics.LOW_GRADE_MARK)]
+    # 2026-09-15 (Matthew, item 19): a released row recorded INVALID in Observation_Validity_History is read as
+    # invalid -- it counts for no theme -- and the table reports valid, total and invalid-only companies as three
+    # separate measurements, so an exclusion is visible rather than a count that quietly shrank.
+    invalid = validity.invalid_observation_ids(openpyxl.load_workbook(args.db, read_only=True, data_only=True))
+    released_all = rows
+    invalid_rows = [r for r in rows if str(r.get("observation_id")) in invalid]
+    rows = [r for r in rows if str(r.get("observation_id")) not in invalid]
+
+    def is_lg(r):
+        return str(r.get("evidence_excerpt") or "").startswith(topics.LOW_GRADE_MARK)
+    low_grade = [r for r in rows if is_lg(r)]
+    counted_all = released_all if args.include_low_grade else [r for r in released_all if not is_lg(r)]
     if not args.include_low_grade:
-        rows = [r for r in rows if not str(r.get("evidence_excerpt") or "").startswith(topics.LOW_GRADE_MARK)]
+        rows = [r for r in rows if not is_lg(r)]
 
     buyer = defaultdict(set)     # theme -> company_ids
     seller = defaultdict(set)    # theme -> provider_ids
@@ -197,6 +208,18 @@ def main() -> int:
                        if r.get("evidence_role") == "provider_market_responds"})
     n_buyers = len({r["company_id"] for r in rows
                     if r.get("evidence_role") in ("buyer_acts", "buyer_articulates")})
+    buyer_total = defaultdict(set)   # theme -> company_ids, counting invalid rows too (the total measurement)
+    seller_total = defaultdict(set)
+    for r in counted_all:
+        t = theme_of(r)
+        if not t:
+            continue
+        if r.get("evidence_role") == "provider_market_responds":
+            seller_total[t].add(r.get("company_id"))
+        elif r.get("evidence_role") in ("buyer_acts", "buyer_articulates"):
+            buyer_total[t].add(r.get("company_id"))
+    n_buyers_total = len({r["company_id"] for r in counted_all
+                          if r.get("evidence_role") in ("buyer_acts", "buyer_articulates")})
 
     table = []
     for theme in topics.THEMES:
@@ -227,8 +250,12 @@ def main() -> int:
         table.append({
             "theme": theme.key,
             "providers_messaging": s,
+            "providers_messaging_total": len(seller_total.get(theme.key, set())),
+            "providers_invalid_only": len(seller_total.get(theme.key, set()) - seller.get(theme.key, set())),
             "provider_share": f"{s / n_providers:.0%}" if n_providers else "-",
             "buyer_companies": b,
+            "buyer_companies_total": len(buyer_total.get(theme.key, set())),
+            "buyer_companies_invalid_only": len(buyer_total.get(theme.key, set()) - buyer.get(theme.key, set())),
             "buyer_detectable": theme.buyer_detectable,
             "status": status,
             "absence_licensing_instruments": ";".join(lic["licensing"]) or "",
@@ -239,21 +266,29 @@ def main() -> int:
 
     w = max(len(t["theme"]) for t in table)
     print(f"Buyer signal vs provider messaging   "
-          f"({n_providers} providers, {n_buyers} buyer companies)\n")
-    print(f"  {'theme'.ljust(w)}  sellers  share  buyers  status                 low-grade only (S/B)")
-    print(f"  {'-' * w}  -------  -----  ------  ---------------------  --------------------")
+          f"({n_providers} providers, {n_buyers} buyer companies on valid rows; {n_buyers_total} counting "
+          f"rows recorded invalid)\n")
+    print(f"  {'theme'.ljust(w)}  sellers  share  buyers  total S/B  inv-only S/B  status                 low-grade only (S/B)")
+    print(f"  {'-' * w}  -------  -----  ------  ---------  ------------  ---------------------  --------------------")
     for t in table:
         print(f"  {t['theme'].ljust(w)}  {t['providers_messaging']:7d}  "
-              f"{t['provider_share']:>5}  {t['buyer_companies']:6d}  {t['status']:<21s}  "
+              f"{t['provider_share']:>5}  {t['buyer_companies']:6d}  "
+              f"{t['providers_messaging_total']:>4d}/{t['buyer_companies_total']:<4d}  "
+              f"{t['providers_invalid_only']:>6d}/{t['buyer_companies_invalid_only']:<5d}  {t['status']:<21s}  "
               f"{t['low_grade_sellers']:>3d} / {t['low_grade_buyers']:<3d}")
+    print(f"\n  sellers / buyers = companies on VALID rows. total = counting rows recorded invalid too; inv-only = "
+          f"companies carried only by invalid rows (total = valid + inv-only).")
     if quarantined:
         print(f"\n  {len(quarantined)} quarantined row(s) EXCLUDED (unaudited; the gate "
               f"says they count for nothing yet).")
+    print(f"\n  released rows: {len(released_all)} total = {len(released_all) - len(invalid_rows)} valid + "
+          f"{len(invalid_rows)} recorded invalid (Observation_Validity_History); invalid rows count for no theme"
+          + (f" ({sum(1 for r in invalid_rows if is_lg(r))} of them low-grade)." if invalid_rows else "."))
     n_lg = len(low_grade)
     if n_lg:
-        print(f"\n  {n_lg} low-grade row(s) {'INCLUDED in' if args.include_low_grade else 'EXCLUDED from'} "
+        print(f"\n  {n_lg} valid low-grade row(s) {'INCLUDED in' if args.include_low_grade else 'EXCLUDED from'} "
               f"the counts above (grade C, '[low-grade:' excerpt; 2026-09-03 corroboration-gate policy). "
-              f"The last column is companies/providers a theme would gain from low-grade rows alone.")
+              f"The last column is companies/providers a theme would gain from valid low-grade rows alone.")
 
     print("\nreading the table")
     universal = [t for t in table if t["provider_share"] == "100%"]

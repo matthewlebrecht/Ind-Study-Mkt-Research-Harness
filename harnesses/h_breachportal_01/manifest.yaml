@@ -1,7 +1,7 @@
 harness_id: H-BREACHPORTAL-01
 module: h_breachportal_01
 name: State AG Breach-Notification Portal Reader
-current_version: v1.1
+current_version: v1.2
 grandfathered_name: false
 
 signal_types: [state_ag_breach_notice]
@@ -24,6 +24,16 @@ sources:
       Licensed absence claimed only for companies headquartered in Washington.
 
 versions:
+  - version: v1.2
+    date: 2026-09-15
+    reprocessing_required: false
+    summary: >
+      HQ correction, no code change. Goodfellow Bros (A024) was scoped in HR-0069 (v1.1) as
+      California-headquartered on the session 16 ruling, which rested on an EPA facility record, so
+      its scoped absence was claimed against the California DOJ list. Its hq_state is corrected to WA
+      (Wenatchee) by Matthew's decision 2026-09-15, so the scoped attempt belongs on the Washington AG
+      list. Re-run for A024 only; HR-0069 stays published with the stale basis recorded in its
+      known_issues.
   - version: v1.1
     date: 2026-09-06
     reprocessing_required: false

@@ -1,0 +1,80 @@
+harness_id: H-LOCALRECORDS-01
+module: h_localrecords_01
+name: Fragmented Public Records Reader (WARN, permits, council, website tech)
+current_version: v1.2
+grandfathered_name: false
+
+signal_types: [state_warn_notice, municipal_permit_as_contractor, council_matter_title_mention, website_technology_fingerprint]
+declared_evidence_families: [3_workforce_org_exhaust, 8_physical_footprint_capacity, 16_local_community_records, 5_technology_stack_traces]
+
+sources:
+  - id: SRC-0011
+    role: primary
+    notes: >
+      State WARN notice lists reached from this network: Texas Workforce Commission yearly
+      xlsx listings (2020 onward), Utah DWS HTML notice table (2009 onward), California EDD
+      current fiscal-year xlsx (earlier years are PDFs, not parsed). IC4 statutory notices.
+      Missouri (Incapsula challenge) and Minnesota (perfdrive redirect) refuse automated
+      readers; Washington's linked data page is gone; Illinois not located; Tennessee reset
+      the connection (unattributed). Sub-scope `warn`.
+  - id: SRC-0021
+    role: primary
+    notes: >
+      City open-data building permits (Socrata): Chicago (ydr8-5enu, typed contacts),
+      Seattle (76t5-zqzr, contractor company name), Austin (3syk-w9eu, contractor company
+      name). The buyers appear as CONTRACTOR, so rows record seller-side project volume;
+      owner-role hits are counted and not written. Salt Lake City's state open-data domain
+      is decommissioned. Sub-scope `permits`.
+  - id: SRC-0035
+    role: primary
+    notes: >
+      Seattle City Council matters through the Legistar web API (webapi.legistar.com),
+      matter titles only. Chicago and Salt Lake City are not Legistar web API clients.
+      Sub-scope `council`.
+  - id: SRC-0052
+    role: primary
+    notes: >
+      Company homepages as served, read from H-EXECID-01's dated archive (no new fetch):
+      specific front-end technology markers (asset hosts, generator tags, platform paths).
+      Front end only, current_only. Sub-scope `techstack`.
+
+versions:
+  - version: v1.2
+    date: 2026-09-15
+    reprocessing_required: false
+    summary: >
+      identity_ok refuses a name listed under not_variants in data/company_aliases.json as
+      confirmed_different_entity, before any other test, so a settled non-match is logged as
+      settled. First entry (Matthew, 2026-09-15): the Austin/Hutto "CLAYCO CONSTRUCTION" (small
+      residential contractor, electrician license, no SAM/USASpending record) is not Clayco
+      (A035). No accepted name changes, so no row changes; not re-committed (a Clayco re-run would
+      only move its Chicago row's window date).
+  - version: v1.1
+    date: 2026-09-14
+    reprocessing_required: false
+    summary: >
+      Alias resolution (session 17 follow-up brief). identity_ok now accepts an exact form of a
+      verified legal name or source-record alias BEFORE name_matches, which refuses initials
+      ("MA Mortenson Company") as an extra token. Source-record aliases seeded in
+      data/company_aliases.json:
+      Mortenson (M. A. MORTENSON COMPANIES, INC., USASpending's parent entity, and M. A.
+      MORTENSON COMPANY, the recipient legal name on the same record) and McShane Construction
+      Company (the Chicago permit record's own contact address is Rosemont, IL, the company's
+      HQ). Clayco Construction stays refused: its Austin permit address is Hutto, TX and no
+      SAM / USASpending record names it. Versioned so the rows the alias change adds or alters
+      are audited under their own version. Re-run for McShane, Clayco and Mortenson (permits).
+  - version: v1.0
+    date: 2026-09-13
+    reprocessing_required: false
+    summary: >
+      First build (Week 4 item 4): permits, local records, WARN and techstack as ONE
+      harness with per-jurisdiction sub-scopes sharing one access layer (robots per host,
+      bot-challenge detection, backoff, request-fingerprinted dated archive). Scope measured
+      before building: WARN readable in TX, UT, CA; permits structured in Chicago, Seattle,
+      Austin, with the buyers as contractor (seller direction, as in H-PROCUREMENT-01);
+      Seattle the only HQ city on the Legistar web API; all 108 homepages archived. Identity
+      reuses H-PROCUREMENT-01's name rule after removing record markers, state codes,
+      directionals and facility words. Scoped absence only where the empty result is a
+      claim: WARN for companies headquartered in a reached state, permits for companies
+      headquartered in a reached city, council for Seattle, techstack for all. No theme is
+      routed; not a theme instrument in core/composition.py.

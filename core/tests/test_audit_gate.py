@@ -154,9 +154,13 @@ def main() -> int:
     check(find_row(db, oid)["observation_text"] == "REVISED after a harness fix",
           "the human-owned row was left untouched")
 
-    removed = db.delete_observations("H-GATETEST-01", keep_reviewed=False)
-    check(db.wb["Observations"].max_row == baseline,
-          f"test rows cleaned up ({removed} removed)")
+    try:
+        db.delete_observations("H-GATETEST-01", keep_reviewed=False)
+        refused_delete = False
+    except Exception:
+        refused_delete = True
+    check(refused_delete and db.wb["Observations"].max_row > baseline,
+          "deleting the test rows is refused -- no observation is hard-deleted (convention 45)")
 
     print("\n5. the stop rule")
     a = artifact()
@@ -223,7 +227,7 @@ def main() -> int:
     import openpyxl
     from scripts.validate_repo_db import validate
 
-    def run_check9(rows, artifacts_on_disk=None):
+    def run_check9(rows, artifacts_on_disk=None, date_run="2026-08-31"):
         """Stand up a workbook + audit dir and return check 9's failures."""
         d = Path(tempfile.mkdtemp())
         book = d / "db.xlsx"
@@ -234,7 +238,7 @@ def main() -> int:
         for hid, ver, status in rows:
             vals = {"harness_run_id": f"HR-{8000 + hr.max_row}", "harness_id": hid,
                     "version": ver, "publication_status": status,
-                    "records_excluded_by_audit": 0, "date_run": "2026-08-31"}
+                    "records_excluded_by_audit": 0, "date_run": date_run}
             hr.append([vals.get(h) for h in headers])
         wb.save(book)
 
@@ -288,6 +292,27 @@ def main() -> int:
     fails = run_check9([("H-FMCSA-01", "v1.3", "published")])
     check(not any("NO audit artifact" in f for f in fails),
           "a grandfathered pair needs no artifact")
+
+    # A GRANDFATHERED VERSION IS NOT A CLOSED SET (2026-09-17). The exemption records a hand
+    # audit of the output that existed on its date_added. A later run writing under the same
+    # version label produces rows nobody audited, which would inherit the exemption -- so a
+    # grandfathered version with a run dated after date_added is audited like any other.
+    # H-WAYBACK-01 v1.0 is grandfathered (date_added 2026-08-31) and has no artifact on disk,
+    # so it isolates exactly this variable.
+    added = audit.grandfathered_added_on()
+    check(added.get(("H-WAYBACK-01", "v1.0")) == "2026-08-31"
+          and added.get(("H-FMCSA-01", "v1.3")) == "2026-08-31",
+          "the registry's date_added is readable per pair")
+
+    fails = run_check9([("H-WAYBACK-01", "v1.0", "published")], date_run="2026-08-30")
+    check(not any("NO audit artifact" in f for f in fails),
+          "a grandfathered version whose runs all predate the exemption stays exempt")
+
+    fails = run_check9([("H-WAYBACK-01", "v1.0", "published")], date_run="2026-09-14")
+    check(any("NO audit artifact" in f and "GRANDFATHERED" in f for f in fails),
+          "a grandfathered version with a run written AFTER the exemption is audited anyway")
+    check(any("after its exemption on 2026-08-31" in f for f in fails),
+          "and the failure names the exemption date the run postdates")
 
     # `superseded` -- the disposition added 2026-09-01 for a version that a later one
     # fully replaced. It must silence the artifact requirement (there is nothing live to

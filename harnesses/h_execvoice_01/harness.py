@@ -472,20 +472,6 @@ def main() -> int:
             print(f"  [00] {cid} {name}: {evaluated} result(s), no attributable quote")
         log["companies"].append(entry)
 
-    if args.commit:
-        # v1.2 supersedes v1.1's rows, so they are REMOVED rather than reconciled.
-        #
-        # sync_observations only touches rows the run actually proposes, so a corrected
-        # harness that stops believing a row leaves the stale one sitting in the sheet --
-        # a defect that REMOVES rows otherwise survives its own fix silently. Established
-        # by H-PRODUCTQUALITY-01 v1.1's stale Midmark row.
-        #
-        # keep_reviewed=True: human review is never destroyed by a re-run (convention 1),
-        # so a reviewed row survives the delete and is reconciled normally. Both
-        # H-TRADEPRESS-01 rows are `accepted`/`human` and are protected by exactly this.
-        removed = db.delete_observations(HARNESS_ID, keep_reviewed=True)
-        if removed:
-            print(f"  removed {removed} row(s) from superseded version(s) before writing")
     refresh_ids = ({i.strip() for i in args.refresh_ids.split(",") if i.strip()}
                    if args.refresh_ids else None)
     refresh_note = (
@@ -495,6 +481,17 @@ def main() -> int:
     report = db.sync_observations(proposed, refresh_reviewed=args.refresh_reviewed,
                                   refresh_note=refresh_note, refresh_ids=refresh_ids)
     run.observations_written = report.written
+    if args.commit:
+        # Convention 45 (2026-09-15): no observation is hard-deleted. v1.2 used to delete this harness's unreviewed
+        # rows before writing; now the run reconciles in place and a row it no longer proposes (for a company in its
+        # scope) is recorded invalid -- invalidated_not_reproduced -- keeping its row and id.
+        from core import validity
+        invalidated = validity.invalidate_unreproduced(db, HARNESS_ID, VERSION, proposed,
+                                                       company_ids={c["company_id"] for c in companies})
+        if invalidated["invalidated"] or invalidated["held"]:
+            print(f"  not reproduced: {len(invalidated['invalidated'])} machine row(s) recorded invalid "
+                  f"(convention 45; nothing deleted) {invalidated['invalidated']}; "
+                  f"{len(invalidated['held'])} human-reviewed row(s) held")
     summary = run.close()
 
     print()

@@ -6,7 +6,7 @@ Stable observation ids (session 14, convention 43).
 Works on a temporary copy of the workbook. Asserts the three properties that make an id
 stable: a claim keeps its id across delete-and-rewrite; a retired id is never handed to a
 different claim; and the registry stays in step with the live sheet through both delete
-paths (delete_observations and retire_unreproduced).
+paths. Since convention 45 nothing deletes, so a PRE-RULE deletion is simulated to exercise id reuse.
 """
 
 from __future__ import annotations
@@ -64,8 +64,17 @@ def main() -> int:
     ida, idb = a.observation_id, b.observation_id
     check("fresh ids allocated above every id ever assigned",
           int(ida[1:]) == highest_before + 1 and int(idb[1:]) == highest_before + 2)
-    removed = db.delete_observations("H-STABLETEST", keep_reviewed=True)
-    check("delete_observations removed both", removed == 2)
+    try:
+        db.delete_observations("H-STABLETEST", keep_reviewed=True)
+        refused_delete = False
+    except Exception:
+        refused_delete = True
+    check("delete_observations itself refuses (convention 45)", refused_delete)
+    ws = db.wb["Observations"]
+    for oid in (ida, idb):          # a pre-rule deletion, simulated, to exercise the registry's id reuse
+        r = next(r for r in range(2, ws.max_row + 1) if ws.cell(r, 1).value == oid)
+        ws.delete_rows(r)
+        db._retire_observation_id(oid, "test: simulated pre-rule deletion")
     reg = db._registry()
     check("both ids are RETIRED in the registry, not forgotten",
           reg["by_id"][ida]["status"] == "retired" and reg["by_id"][idb]["status"] == "retired")
@@ -82,11 +91,11 @@ def main() -> int:
     check("a NEW claim skips the retired id and takes the next number",
           c.observation_id != idb and int(c.observation_id[1:]) == highest_before + 3)
 
-    print("3. retire_unreproduced retires through the registry too")
-    res = db.retire_unreproduced("H-STABLETEST", proposed=[c])
-    check("the unreproduced row was removed", res["removed"] == [ida])
-    check("... and its id is retired in the registry",
-          db._registry()["by_id"][ida]["status"] == "retired")
+    print("3. an unreproduced row is reported, not removed (convention 45)")
+    res = db.unreproduced_observations("H-STABLETEST", proposed=[c])
+    check("the unreproduced row is eligible for invalidation", res["eligible"] == [ida])
+    check("... and nothing was removed: its id stays live in the registry",
+          db._registry()["by_id"][ida]["status"] == "live")
     check("the reproduced row is untouched and live",
           db._registry()["by_id"][c.observation_id]["status"] == "live")
 

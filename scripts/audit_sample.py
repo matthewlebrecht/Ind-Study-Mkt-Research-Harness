@@ -268,7 +268,7 @@ def main() -> int:
         "strata": [{"stratum_id": s["stratum_id"],
                     "selection_rule": s["selection_rule"],
                     "population_n": s["population_n"],
-                    "rows": [{k: (str(v)[:600] if v is not None else None)
+                    "rows": [{k: (str(v) if v is not None else None)
                               for k, v in r.items()} for r in s["rows"]]}
                    for s in strata],
     }
@@ -311,10 +311,18 @@ def main() -> int:
         "- **supported** — the evidence supports the claim, at the strength claimed, "
         "about the company named.",
         "- **overgraded** — the claim is real but overstated. Survives at lower strength.",
-        "- **unsupported** — the evidence does not support the claim at all. "
-        "**Exclude the row** (convention 32 — do not downgrade to `weak_clue`).",
+        # NOTE: this module is a gate module behind the convention 41 wall, so it must not
+        # name the validity table even in prose -- the wall scan is a literal one and it
+        # caught exactly that on 2026-09-15. Say what the reviewer must know, name the
+        # convention, and leave the table to docs/conventions.md.
+        "- **unsupported** — the evidence does not support the claim at all. The row is "
+        "**recorded invalid**: not downgraded to `weak_clue` (convention 32), and since "
+        "convention 45 (2026-09-15) not deleted either — no observation is ever "
+        "hard-deleted, so it keeps its row and its id and a dated determination is "
+        "appended against it.",
         "- **wrong_entity** — wrong company, or a statement attributed to someone who did "
-        "not make it. **Exclude, and the whole run stays quarantined.**",
+        "not make it. Recorded invalid the same way, **and the whole run stays "
+        "quarantined.**",
         "",
         "---",
         "",
@@ -336,6 +344,10 @@ def main() -> int:
             "lower strength.",
             "",
         ]
+    # Nothing on this sheet or in the strata file is capped. Claim, Evidence and Reviewer
+    # notes were cut at 900 characters and every strata field at 600, silently: on
+    # H-PROCUREMENT-01 v1.0 O00632 lost its joint-venture exclusion and its page-cap
+    # floor caveat, and the reviewer judged the row without them. Removed 2026-09-15.
     for i, r in enumerate(control, 1):
         terms = matched_terms(r)
         excerpt = re.sub(r"\s*\|\s*matched:.*$", "",
@@ -347,8 +359,8 @@ def main() -> int:
             "",
             f"| | |",
             f"|---|---|",
-            f"| **Claim** | {str(r.get('observation_text') or '')[:900]} |",
-            f"| **Evidence** | {excerpt[:900]} |",
+            f"| **Claim** | {str(r.get('observation_text') or '')} |",
+            f"| **Evidence** | {excerpt} |",
             f"| **Source** | <{r.get('source_url')}> |",
             f"| **Matched terms** | {', '.join(terms) if terms else '(none recorded)'} |",
             f"| **Role / family** | {r.get('evidence_role')} / {r.get('evidence_family')} |",
@@ -367,7 +379,7 @@ def main() -> int:
                 f"| **RECORDED VERDICT** | **{verdict}** "
                 f"(review_status `{r.get('review_status')}`, "
                 f"source `{r.get('review_source')}`) |",
-                f"| **Reviewer notes** | {notes[:900]} |",
+                f"| **Reviewer notes** | {notes} |",
                 f"| **Publication state** | `{r.get('publication_state')}` |",
             ]
         else:

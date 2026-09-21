@@ -122,9 +122,12 @@ _NATURAL_KEY_FIELDS = ["company_id", "harness_id", "topic", "source_url"]
 # Observation_Ids -- the id registry (session 14, convention 43). One row per id ever
 # assigned. `natural_key` is the four _NATURAL_KEY_FIELDS joined by "|" after _norm, so
 # the registry can answer "which id did this claim have" without the row existing.
+# `current_id` (Matthew Lebrecht, 2026-09-15, item 20): on a RETIRED id, the live id its claim now carries (the
+# pre-convention-43 renumberings), so a claim's history is traceable across the renumbering; blank on a live id.
+# Filled by scripts/record_id_lineage.py; check 15 enforces it.
 OBSERVATION_ID_COLUMNS = [
     "observation_id", "natural_key", "company_id", "harness_id", "topic", "source_url",
-    "first_assigned", "status", "retired_at", "retired_note",
+    "first_assigned", "status", "retired_at", "retired_note", "current_id",
 ]
 
 
@@ -192,19 +195,27 @@ class SyncReport:
     # dropped. Reported rather than silent: it is the signal that a harness fix has
     # invalidated part of an audit and the gate has to be re-run for that version.
     verdicts_cleared: list = field(default_factory=list)
+    # 2026-09-15 (Matthew, item 19): re-proposed claims whose existing row is recorded invalid. Counted separately
+    # and left as recorded -- neither refreshed nor held -- so the run summary reports total, valid and invalid.
+    invalid: list = field(default_factory=list)
 
     @property
     def written(self) -> int:
         return len(self.inserted) + len(self.updated)
+
+    @property
+    def valid(self) -> int:
+        return len(self.inserted) + len(self.updated) + len(self.unchanged) + len(self.conflicts)
 
     def summary(self) -> str:
         extra = (f" (incl. {len(self.refreshed_reviewed)} reviewed rows refreshed by "
                  f"explicit opt-in)" if self.refreshed_reviewed else "")
         cleared = (f", {len(self.verdicts_cleared)} audit verdict(s) cleared by content "
                    f"change" if self.verdicts_cleared else "")
-        return (f"{len(self.inserted)} inserted, {len(self.updated)} refreshed, "
+        return (f"{self.valid + len(self.invalid)} proposed = {self.valid} valid "
+                f"({len(self.inserted)} inserted, {len(self.updated)} refreshed, "
                 f"{len(self.unchanged)} unchanged, {len(self.conflicts)} held for "
-                f"review{extra}{cleared}")
+                f"review{extra}{cleared}) + {len(self.invalid)} recorded invalid (left as recorded)")
 
 
 @dataclass
@@ -498,6 +509,8 @@ class MarketIntelDB:
                 ws = reg["ws"]
                 ws.cell(rec["row"], OBSERVATION_ID_COLUMNS.index("status") + 1).value = "live"
                 ws.cell(rec["row"], OBSERVATION_ID_COLUMNS.index("retired_at") + 1).value = None
+                if ws.max_column >= OBSERVATION_ID_COLUMNS.index("current_id") + 1:
+                    ws.cell(rec["row"], OBSERVATION_ID_COLUMNS.index("current_id") + 1).value = None
                 rec["status"] = "live"
             return oid
         live = [r for r in reg["by_key"].get(key, []) if _norm(r.get("status")) == "live"]
@@ -590,6 +603,12 @@ class MarketIntelDB:
         existing = self._observation_rows()
         report = SyncReport()
         registry = self._registry()
+        # 2026-09-15 (Matthew, item 19): the reconciler reads an observation recorded invalid AS invalid. A re-proposed
+        # claim whose row is recorded invalid is counted under `invalid` and left exactly as recorded: the
+        # determination is about that row's evidence, and refreshing it would overwrite what the determination
+        # describes. The one permitted read of validity in this module (convention 41 wall, check 15).
+        from core import validity
+        invalid = validity.invalid_observation_ids(self.wb)
 
         for obs in observations:
             proposed = asdict(obs)
@@ -606,6 +625,10 @@ class MarketIntelDB:
                 continue
 
             obs.observation_id = str(prior["values"].get("observation_id") or "")
+            if obs.observation_id in invalid:
+                report.invalid.append({"observation_id": obs.observation_id,
+                                       "validity_status": invalid[obs.observation_id]})
+                continue
             if _fingerprint(proposed) == prior["fingerprint"]:
                 report.unchanged.append(obs)
                 continue
@@ -679,8 +702,8 @@ class MarketIntelDB:
         if verdict in ("unsupported", "wrong_entity"):
             raise SchemaError(
                 f"{verdict!r} means the row should not exist at any strength "
-                f"(convention 32). Remove it with delete_observations() and record the "
-                f"removal in the audit artifact -- do not park it here at a lower grade.")
+                f"(convention 32). Record it invalid through the observation validity writer "
+                f"(convention 45: nothing is deleted) -- do not park it here at a lower grade.")
         if verdict == "overgraded" and not field_updates:
             raise SchemaError(
                 "an 'overgraded' verdict means the row survives at a LOWER strength, so "
@@ -723,6 +746,105 @@ class MarketIntelDB:
         after = {c: ws.cell(row, headers.index(c) + 1).value for c in before}
         changed = {c: (before[c], after[c]) for c in before if before[c] != after[c]}
         return {"observation_id": observation_id, "verdict": verdict, "changed": changed}
+
+    def apply_role_correction(self, observation_id: str, evidence_role: str, reviewer: str,
+                              notes: str) -> dict:
+        """Record a person's correction of one Observation's `evidence_role`, in place.
+
+        Deliberately NOT apply_audit_verdict. That method always writes an `audit_verdict`, and
+        its four verdicts judge a claim's support, identity and strength -- none of which a role
+        correction assesses. Routing a role change through it would stamp an extraction verdict
+        nobody gave. This changes one content field and the provenance that protects it:
+
+          * `evidence_role` -> the corrected role (in Lookups, and different from the row's);
+          * `review_source = human`, `review_status = corrected` -- a person changed this row, so
+            its harness's next run HOLDS it as a conflict instead of re-deriving the old role
+            (convention 35; the FMCSA precedent). If the harness still proposes the old role, the
+            conflict recurs on every run until the harness or the decision changes;
+          * `reviewer_notes` gains a dated stamp naming the reviewer, both roles and the reason.
+
+        `audit_verdict`, `publication_state` and every other field are left exactly as they
+        were. A role correction re-assesses neither extraction nor identity. Not a new version:
+        the harness's output did not change, a person's reading of one row did.
+        """
+        if evidence_role not in self.vocab.get("evidence_role", set()):
+            raise SchemaError(f"evidence_role={evidence_role!r} is not in Lookups. "
+                              f"Allowed: {sorted(self.vocab.get('evidence_role', []))}")
+        if not _norm(reviewer):
+            raise SchemaError("a role correction must name its reviewer")
+        if not _norm(notes):
+            raise SchemaError("a role correction must say why")
+        ws = self.wb["Observations"]
+        headers = [ws.cell(1, c).value for c in range(1, ws.max_column + 1)]
+        row = next((r for r in range(2, ws.max_row + 1)
+                    if _norm(ws.cell(r, 1).value) == observation_id), None)
+        if row is None:
+            raise SchemaError(f"no Observation with id {observation_id!r}")
+
+        def col(name):
+            return headers.index(name) + 1
+
+        old = _norm(ws.cell(row, col("evidence_role")).value)
+        if old == evidence_role:
+            raise SchemaError(f"{observation_id} is already {evidence_role!r}; nothing to correct")
+        ws.cell(row, col("evidence_role")).value = evidence_role
+        ws.cell(row, col("review_source")).value = "human"
+        ws.cell(row, col("review_status")).value = "corrected"
+        stamp = (f"[{today()} role correction by {reviewer}: evidence_role {old} -> "
+                 f"{evidence_role}; audit_verdict, identity and extraction not re-assessed] "
+                 f"{notes}").strip()
+        existing = _norm(ws.cell(row, col("reviewer_notes")).value)
+        ws.cell(row, col("reviewer_notes")).value = f"{existing} {stamp}".strip() if existing else stamp
+        return {"observation_id": observation_id, "from": old, "to": evidence_role}
+
+    def apply_text_correction(self, observation_id: str, old_text: str, new_text: str,
+                              reviewer: str, notes: str) -> dict:
+        """Record a person's correction of one Observation's `observation_text`, in place.
+
+        The companion of apply_role_correction, for a row whose claim text no longer matches a
+        human decision about it (O00303: reclassified to buyer_acts while its text still read as a
+        company announcement). Refuses unless the row still holds exactly `old_text` -- a
+        correction is written against the text a person read, never against whatever is there now.
+
+          * `observation_text` -> `new_text`;
+          * `review_source = human`, `review_status = corrected`, so the harness's next run holds
+            the row rather than regenerating its template text (convention 35);
+          * `reviewer_notes` gains a dated stamp.
+
+        `audit_verdict`, `evidence_role`, `evidence_family`, `evidence_excerpt` and every other
+        field are left alone: a text correction re-assesses neither identity nor extraction, and
+        the new text must not be read as if it had.
+        """
+        if not _norm(new_text):
+            raise SchemaError("a text correction needs the new text")
+        if not _norm(reviewer):
+            raise SchemaError("a text correction must name its reviewer")
+        if not _norm(notes):
+            raise SchemaError("a text correction must say why")
+        ws = self.wb["Observations"]
+        headers = [ws.cell(1, c).value for c in range(1, ws.max_column + 1)]
+        row = next((r for r in range(2, ws.max_row + 1)
+                    if _norm(ws.cell(r, 1).value) == observation_id), None)
+        if row is None:
+            raise SchemaError(f"no Observation with id {observation_id!r}")
+
+        def col(name):
+            return headers.index(name) + 1
+
+        current = ws.cell(row, col("observation_text")).value or ""
+        if current != old_text:
+            raise SchemaError(f"{observation_id}'s observation_text is not the text being replaced; "
+                              f"re-read the row before correcting it")
+        if new_text == current:
+            raise SchemaError(f"{observation_id}'s observation_text already reads that way")
+        ws.cell(row, col("observation_text")).value = new_text
+        ws.cell(row, col("review_source")).value = "human"
+        ws.cell(row, col("review_status")).value = "corrected"
+        stamp = (f"[{today()} text correction by {reviewer}; audit_verdict, identity and extraction "
+                 f"not re-assessed; previous text: \"{current}\"] {notes}").strip()
+        existing = _norm(ws.cell(row, col("reviewer_notes")).value)
+        ws.cell(row, col("reviewer_notes")).value = f"{existing} {stamp}".strip() if existing else stamp
+        return {"observation_id": observation_id, "from": current, "to": new_text}
 
     def set_version_publication(self, harness_id: str, version: str, status: str,
                                 *, require_artifact: bool = True) -> dict:
@@ -808,91 +930,122 @@ class MarketIntelDB:
         return {"harness_id": harness_id, "version": version, "status": status,
                 "runs": runs, "observations": rows}
 
-    def retire_unreproduced(self, harness_id: str, proposed: list) -> dict:
-        """Remove this harness's MACHINE rows whose claim the current run no longer makes.
+    def unreproduced_observations(self, harness_id: str, proposed: list,
+                                  company_ids: set | None = None,
+                                  source_urls: set | None = None) -> dict:
+        """This harness's rows whose claim the current run did not reproduce. REMOVES NOTHING.
 
-        `sync_observations` is insert-or-refresh: a claim the harness used to make and
-        now does not simply stays in the sheet, published, under the old version. That is
-        the wrong default after an ADMISSION change -- the 2026-09-02 pattern fix removed
-        the bare-word matches that six `systems_integration` provider rows rested on, and
-        a row whose only evidence has been ruled inadmissible is not a finding that
-        happens to be stale; it was never a finding. So the harness re-run retires it.
+        Convention 45 (Matthew Lebrecht, 2026-09-15, retroactive): no observation is ever hard-deleted. This used to
+        be `retire_unreproduced`, which deleted the rows; it now only says which rows a run no longer produces, and the
+        caller records them invalid through the observation validity writer, so every row and id persists.
 
-        Unlike `delete_observations` this is keyed on the natural key of what the run
-        proposed, so surviving rows keep their observation_ids (no renumbering -- the
-        session 4 side effect). A human-reviewed row is never removed: it is HELD and
-        returned, because a person's verdict on a row is a decision this code cannot
-        overrule (convention 35).
+        Keyed on the natural key of what the run proposed. `company_ids` / `source_urls` narrow eligibility to the
+        run's scope and the pages it actually re-read; None means no restriction. A human-reviewed row is never
+        eligible: it comes back under `held` (convention 35).
 
-        Returns {"removed": [observation_id...], "held": [observation_id...]}.
+        Returns {"eligible": [observation_id...], "held": [observation_id...]}.
         """
         keep = {tuple(_norm(getattr(o, f)) for f in _NATURAL_KEY_FIELDS) for o in proposed}
-        registry = self._registry()
         ws = self.wb["Observations"]
         headers = [ws.cell(1, c).value for c in range(1, len(OBSERVATION_COLUMNS) + 1)]
-        removed: list[str] = []
+        eligible: list[str] = []
         held: list[str] = []
-        for r in range(ws.max_row, 1, -1):
+        for r in range(2, ws.max_row + 1):
             values = {h: ws.cell(r, i + 1).value for i, h in enumerate(headers)}
-            if _norm(values.get("harness_id")) != harness_id:
+            oid = _norm(values.get("observation_id"))
+            if not oid or _norm(values.get("harness_id")) != harness_id:
                 continue
-            key = tuple(_norm(values.get(f)) for f in _NATURAL_KEY_FIELDS)
-            if key in keep:
+            if tuple(_norm(values.get(f)) for f in _NATURAL_KEY_FIELDS) in keep:
                 continue
-            oid = str(values.get("observation_id") or "")
-            if is_human_authored(values):
-                held.append(oid)
+            if company_ids is not None and _norm(values.get("company_id")) not in company_ids:
                 continue
-            ws.delete_rows(r)
-            self._retire_observation_id(oid, f"retire_unreproduced by {harness_id}", registry)
-            removed.append(oid)
-        return {"removed": sorted(removed), "held": sorted(held)}
+            if source_urls is not None and _norm(values.get("source_url")) not in source_urls:
+                continue
+            (held if is_human_authored(values) else eligible).append(oid)
+        return {"eligible": sorted(eligible), "held": sorted(held)}
 
-    def delete_observation_ids(self, observation_ids: list[str], note: str) -> list[str]:
-        """Remove NAMED rows -- the audit gate's `unsupported` / `wrong_entity` outcome
-        (convention 32: such a claim should not exist at any strength). Refuses a row a
-        human has reviewed, because a verdict that deletes is itself the human decision
-        and must be recorded on the artifact, not overwritten in the sheet. Retires each
-        id in the registry (convention 43) with the note. Returns the ids removed."""
-        ws = self.wb["Observations"]
-        headers = [ws.cell(1, c).value for c in range(1, len(OBSERVATION_COLUMNS) + 1)]
-        wanted = {str(i) for i in observation_ids}
-        registry = self._registry()
-        removed: list[str] = []
-        for r in range(ws.max_row, 1, -1):
-            oid = _norm(ws.cell(r, 1).value)
-            if oid not in wanted:
-                continue
-            values = {h: ws.cell(r, i + 1).value for i, h in enumerate(headers)}
-            if is_human_authored(values):
-                raise SchemaError(f"{oid} carries a human review; record the exclusion "
-                                  f"on the audit artifact rather than deleting it here")
-            ws.delete_rows(r)
-            self._retire_observation_id(oid, note, registry)
-            removed.append(oid)
-        missing = sorted(wanted - set(removed))
+    _NO_HARD_DELETE = ("no observation is ever hard-deleted (convention 45, Matthew Lebrecht, 2026-09-15, "
+                       "retroactive): record the row invalid through the observation validity writer instead; the "
+                       "row and its id persist")
+
+    def retire_unreproduced(self, *args, **kwargs):
+        """WITHDRAWN (convention 45). Used to delete unreproduced rows; use unreproduced_observations()."""
+        raise SchemaError(f"retire_unreproduced refused: {self._NO_HARD_DELETE}")
+
+    def delete_observation_ids(self, observation_ids: list[str] = (), note: str = "") -> list[str]:
+        """WITHDRAWN (convention 45). Removed named rows for an `unsupported` / `wrong_entity` audit verdict; made
+        all-or-nothing on 2026-09-15 after it deleted five rows before refusing on O00303. Refuses; changes nothing."""
+        raise SchemaError(f"delete_observation_ids refused: {self._NO_HARD_DELETE}")
+
+    def delete_by_reviewer_verdict(self, observation_ids: list[str] = (), verdict: str = "", reviewer: str = "",
+                                   reviewer_words: str = "", note: str = "") -> dict:
+        """WITHDRAWN (convention 45). Added 2026-09-15 to delete O00303 on Matthew's verdict (commit 9641128), and
+        withdrawn the same day: a reviewer's deleting verdict is now an invalidation determination. Refuses."""
+        raise SchemaError(f"delete_by_reviewer_verdict refused: {self._NO_HARD_DELETE}")
+
+    def restore_observation(self, snapshot: dict, reason: str, before_id: str | None = None) -> dict:
+        """Put a hard-deleted observation back, exactly as it was, under its own id.
+
+        Matthew Lebrecht's standing rule (2026-09-15): no observation is ever hard-deleted. Rows deleted before the
+        rule are restored through here and then recorded as invalid elsewhere; this method only puts the row back.
+
+        Refuses unless: the snapshot carries every Observations column; a reason is given; the id is in the
+        Observation_Ids registry and RETIRED; the snapshot's natural key is the one registered for that id (anything
+        else would hand the id to a different claim -- convention 43); and no live row holds that id or that natural
+        key. The row is written with the snapshot's values unchanged -- at the position of `before_id` when that row
+        exists (so sheet order matches never having deleted it), otherwise appended -- and the registry id goes back
+        to `live` with `retired_at` and `retired_note` cleared, exactly as a never-retired id reads. The registry keeps
+        no history of the retirement, so the caller must record it; the prior registry values are returned for that.
+        """
+        missing = [c for c in OBSERVATION_COLUMNS if c not in snapshot]
         if missing:
-            raise SchemaError(f"no Observations row for {missing}")
-        return sorted(removed)
-
-    def delete_observations(self, harness_id: str, keep_reviewed: bool = True) -> int:
-        """Remove a harness's rows. Used only by an explicit --force-rewrite."""
+            raise SchemaError(f"snapshot lacks column(s) {missing}; a restore must be exact")
+        if not _norm(reason):
+            raise SchemaError("a restore must say why")
+        oid = _norm(snapshot["observation_id"])
+        reg = self._registry()
+        if reg["ws"] is None:
+            raise SchemaError("Observation_Ids sheet missing; run scripts/migrate_schema.py")
+        rec = reg["by_id"].get(oid)
+        if rec is None:
+            raise SchemaError(f"{oid} was never assigned; there is nothing to restore")
+        if _norm(rec.get("status")) != "retired":
+            raise SchemaError(f"{oid} is {rec.get('status')!r} in the registry, not retired; nothing to restore")
+        key = natural_key_of(snapshot)
+        if _norm(rec.get("natural_key")) != key:
+            raise SchemaError(f"the snapshot's natural key differs from the one registered for {oid}; restoring it "
+                              f"would hand the id to a different claim (convention 43)")
+        if [r for r in reg["by_key"].get(key, []) if _norm(r.get("status")) == "live"]:
+            raise SchemaError(f"a live id already holds {oid}'s claim; restoring would fork it")
         ws = self.wb["Observations"]
-        headers = [ws.cell(1, c).value for c in range(1, len(OBSERVATION_COLUMNS) + 1)]
-        h_idx = headers.index("harness_id") + 1
-        r_idx = headers.index("review_status") + 1
-        registry = self._registry()
-        removed = 0
-        for r in range(ws.max_row, 1, -1):
-            if _norm(ws.cell(r, h_idx).value) != harness_id:
-                continue
-            if keep_reviewed and _norm(ws.cell(r, r_idx).value).lower() in REVIEWED_STATUSES:
-                continue
-            oid = _norm(ws.cell(r, 1).value)
-            ws.delete_rows(r)
-            self._retire_observation_id(oid, f"delete_observations by {harness_id}", registry)
-            removed += 1
-        return removed
+        ids = {_norm(ws.cell(r, 1).value): r for r in range(2, ws.max_row + 1)}
+        if oid in ids:
+            raise SchemaError(f"{oid} already has an Observations row")
+        values = [snapshot[c] for c in OBSERVATION_COLUMNS]
+        if before_id and _norm(before_id) in ids:
+            row = ids[_norm(before_id)]
+            ws.insert_rows(row)
+            for i, v in enumerate(values, start=1):
+                ws.cell(row, i).value = v
+        else:
+            ws.append(values)
+            row = ws.max_row
+        rws = reg["ws"]
+        fields_ = ("status", "retired_at", "retired_note", "current_id")
+        col = {c: OBSERVATION_ID_COLUMNS.index(c) + 1 for c in fields_}
+        prior = {c: rws.cell(rec["row"], col[c]).value for c in fields_}
+        rws.cell(rec["row"], col["status"]).value = "live"
+        rws.cell(rec["row"], col["retired_at"]).value = None
+        rws.cell(rec["row"], col["retired_note"]).value = None
+        rws.cell(rec["row"], col["current_id"]).value = None
+        rec["status"] = "live"
+        return {"observation_id": oid, "sheet_row": row, "registry_prior": prior, "reason": _norm(reason)}
+
+    def delete_observations(self, harness_id: str = "", keep_reviewed: bool = True) -> int:
+        """WITHDRAWN (convention 45). Was the delete-and-rewrite path (EXECVOICE, LEGAL, PRODUCTQUALITY, TRADEPRESS on
+        --commit; FMCSA --force-rewrite). Those harnesses now reconcile in place and record unreproduced rows invalid.
+        Refuses; changes nothing."""
+        raise SchemaError(f"delete_observations refused: {self._NO_HARD_DELETE}")
 
     # ---------- executives ----------
 
@@ -1161,6 +1314,80 @@ class MarketIntelDB:
             ids.append(row["state_id"])
         self._warn_validation_range(ws, "Company_State_History", ceiling=250_000)
         return ids
+
+    # ---------- SEC reporting status history (session 17 wrap-up) ----------
+
+    def sec_status_rows(self) -> list[dict]:
+        from core import sec_status
+        if sec_status.SHEET not in self.wb.sheetnames:
+            raise SchemaError(f"{sec_status.SHEET} missing; run scripts/migrate_schema.py --apply")
+        return sec_status.rows_from_sheet(self.wb[sec_status.SHEET])
+
+    def append_sec_status(self, determinations: list[dict]) -> dict:
+        """Append SEC reporting-status determinations. APPEND-ONLY.
+
+        Every determination is a new row; nothing is updated except `superseded_by`, the
+        forward pointer a historical row gets when a later determination replaces it. Per
+        determination, in order:
+
+          * refused if it violates the vocabulary or the evidence rules
+            (core/sec_status.py::problems_with -- including the identity-doubt vs
+            status-doubt distinction);
+          * a no-op if the identical row already exists anywhere in the table (same company,
+            status, as_of_date and source_reference), so a re-run of a seed never writes twice;
+          * a no-op if the company's CURRENT status is already this status -- re-confirming an
+            unchanged status writes nothing;
+          * refused if its as_of_date is earlier than the current row's: an older finding may
+            not supersede a newer one (supersession points forward only);
+          * otherwise appended, and the company's previous current row gets `superseded_by`.
+
+        Returns {"appended": [ids], "noop": [(company_id, status, why)], "superseded": [(old, new)]}.
+        """
+        from core import sec_status
+
+        ws = self.wb[sec_status.SHEET] if sec_status.SHEET in self.wb.sheetnames else None
+        if ws is None:
+            raise SchemaError(f"{sec_status.SHEET} missing; run scripts/migrate_schema.py --apply")
+        rows = sec_status.rows_from_sheet(ws)
+        known = {str(c["company_id"]) for c in self.companies()}
+        report = {"appended": [], "noop": [], "superseded": []}
+        for d in determinations:
+            d = {**d, "determined_at": d.get("determined_at") or today(), "superseded_by": None}
+            problems = sec_status.problems_with(d, known)
+            if problems:
+                raise SchemaError(f"SEC status determination refused for {d.get('company_id')}: "
+                                  + "; ".join(problems))
+            cid, status = str(d["company_id"]), d["sec_reporting_status"]
+            dup = next((r for r in rows if str(r["company_id"]) == cid
+                        and r["sec_reporting_status"] == status
+                        and str(r["as_of_date"]) == str(d["as_of_date"])
+                        and _norm(r["source_reference"]) == _norm(d["source_reference"])), None)
+            if dup:
+                report["noop"].append((cid, status, f"identical row {dup['id']} already recorded"))
+                continue
+            cur = sec_status.current_rows(rows).get(cid)
+            if cur and cur["sec_reporting_status"] == status:
+                report["noop"].append((cid, status, f"unchanged: current row {cur['id']} already says {status}"))
+                continue
+            if cur and str(d["as_of_date"]) < str(cur["as_of_date"]):
+                raise SchemaError(
+                    f"{cid}: a determination as of {d['as_of_date']} cannot supersede the current row "
+                    f"{cur['id']} as of {cur['as_of_date']} -- supersession points forward only")
+            new_id = "SRS-%04d" % self._next_id(sec_status.SHEET, "SRS-", 4)
+            d["id"] = new_id
+            ws.append([d.get(c) for c in sec_status.COLUMNS])
+            if cur:
+                i_id = sec_status.COLUMNS.index("id") + 1
+                i_sup = sec_status.COLUMNS.index("superseded_by") + 1
+                for r in range(2, ws.max_row + 1):
+                    if _norm(ws.cell(r, i_id).value) == cur["id"]:
+                        ws.cell(r, i_sup).value = new_id
+                        break
+                cur["superseded_by"] = new_id
+                report["superseded"].append((cur["id"], new_id))
+            rows.append({c: d.get(c) for c in sec_status.COLUMNS})
+            report["appended"].append(new_id)
+        return report
 
     def latest_derivation_id(self) -> str | None:
         ws = self.wb["Company_State_History"]

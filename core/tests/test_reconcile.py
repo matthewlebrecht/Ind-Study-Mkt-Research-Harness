@@ -135,16 +135,18 @@ def main() -> int:
     check(len(rep.inserted) == 1 and len(rep.unchanged) == 1, "second copy deduped")
     check(row_count(db) == 3, "only one gamma row exists")
 
-    print("\n6. force-rewrite deletes unreviewed rows and keeps reviewed ones")
-    removed = db.delete_observations(TEST_HARNESS, keep_reviewed=True)
-    check(removed == 2, "two unreviewed rows removed")
-    check(row_count(db) == 1, "the accepted row survived")
-    check(find_row(db, a_id)["review_status"] == "accepted", "survivor is the reviewed row")
+    print("\n6. deletion is refused -- no observation is hard-deleted (convention 45)")
+    try:
+        db.delete_observations(TEST_HARNESS, keep_reviewed=True)
+        refused_delete = False
+    except Exception:
+        refused_delete = True
+    check(refused_delete, "delete_observations refuses")
+    check(row_count(db) == 3, "every test row is still there")
+    check(find_row(db, a_id)["review_status"] == "accepted", "the reviewed row is untouched")
 
     print("\n7. the rest of the evidence base was not disturbed")
-    db.delete_observations(TEST_HARNESS, keep_reviewed=False)
-    check(row_count(db) == 0, "test rows cleaned up")
-    check(db.wb["Observations"].max_row == baseline, "row count back to baseline")
+    check(db.wb["Observations"].max_row == baseline + 3, "only the three test rows were added")
 
     print(f"\nAll {checks_run} checks passed. (worked on {tmp})")
     return 0

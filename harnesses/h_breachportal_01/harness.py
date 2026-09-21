@@ -59,7 +59,7 @@ from core.robots import RobotsGate  # noqa: E402
 
 HARNESS_ID = "H-BREACHPORTAL-01"
 HARNESS_NAME = "State AG Breach-Notification Portal Reader"
-VERSION = "v1.1"
+VERSION = "v1.2"
 SIGNAL = "state_ag_breach_notice"
 FAMILY = "9_industrial_safety_environmental"
 THEME = "cybersecurity"

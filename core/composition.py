@@ -111,6 +111,12 @@ THEME_INSTRUMENTS = {
     # portal's state IS licensed -- an organisation that breached 500+ residents of that
     # state and did not appear would be breaking the law, not being quiet.
     "state_ag_breach_notice": ("H-BREACHPORTAL-01", ["cybersecurity"]),
+    # Session 17 wrap-up: Form 8-K Item 1.05, the IC4 instrument taxonomy §26 names for the
+    # SEC-reporter subset. Scoped attempts exist only for companies whose CURRENT row in
+    # SEC_Reporting_Status_History is active_reporter (derived, core/sec_status.py), so its
+    # silence licenses absence for those companies and says nothing about the rest. Reads
+    # nothing until a run is audited and published (attempts from published runs only).
+    "sec_8k_item_105_cybersecurity": ("H-SEC8K-01", ["cybersecurity"]),
 }
 # Signal Advisor condition 1 (CLAUDE.md, "PRESENCE ONLY"): no absence claim from any
 # H-JOBPOST-01 key until the careers-page readability denominator is accepted.
@@ -144,6 +150,7 @@ class Inputs:
                                     #                "realized_reach_effective_from"}
     instrument_class: dict          # attempted_signal -> IC1..IC4
     themes: list = field(default_factory=lambda: list(topics.THEMES))
+    invalid: dict = field(default_factory=dict)   # observation_id -> current validity_status (invalid rows only)
 
 
 @dataclass
@@ -260,6 +267,33 @@ def absence_licensing(theme_key: str, instrument_class: dict) -> dict:
 # the derivation
 # ---------------------------------------------------------------------------------------
 
+def _informing(candidates: list, harness_reach: dict, b: Bucket, stale_days: int) -> list:
+    """The observations among `candidates` that speak to bucket `b`: published in time, not stale, read by a source
+    whose realized reach covers the bucket. Returns [(observation, reach kind)]."""
+    out = []
+    for o in candidates:
+        reach = harness_reach.get(str(o.get("harness_id") or "")) or {}
+        retrieved = _d(o.get("retrieval_date"))
+        pub = _d(o.get("publication_date")) or retrieved
+        if pub is None or pub > b.end or (b.end - pub).days > stale_days:
+            continue
+        if not reach_covers(reach, retrieved, b):
+            continue
+        out.append((o, str(reach.get("realized_reach"))))
+    return out
+
+
+EVIDENCE_NOTE = "evidence: {total} total, {valid} valid, {invalid} invalid"
+
+
+def evidence_note(informing: list, excluded: list, invalid: dict) -> str:
+    """Three measurements for a bucket some invalid observation would have informed, naming what was excluded."""
+    ids = "; ".join(f"{o.get('observation_id')} {invalid.get(str(o.get('observation_id')), '')}".strip()
+                    for o, _ in sorted(excluded, key=lambda p: str(p[0].get("observation_id"))))
+    return (EVIDENCE_NOTE.format(total=len(informing) + len(excluded), valid=len(informing), invalid=len(excluded))
+            + f" (excluded as recorded invalid: {ids})")
+
+
 def derive(inputs: Inputs, derived_at: _dt.date | None = None,
            derivation_id: str = "DR-0000") -> list[dict]:
     derived_at = derived_at or _dt.date.today()
@@ -282,8 +316,11 @@ def derive(inputs: Inputs, derived_at: _dt.date | None = None,
         att.setdefault((str(a.get("company_id")), sig), []).append(
             (_d(a.get("attempt_timestamp")), THEME_INSTRUMENTS[sig][0]))
 
-    # index observations: (company, theme_key) -> [obs]
+    # index observations: (company, theme_key) -> [obs]. Since 2026-09-15 (Matthew, item 19) an observation recorded
+    # invalid is read AS invalid: it supports no bucket, and a bucket it would have informed says so in its notes --
+    # evidence total, valid and invalid, with the excluded ids -- so the exclusion is visible, not a silent net.
     obs: dict[tuple, list] = {}
+    obs_invalid: dict[tuple, list] = {}
     for o in inputs.observations:
         if str(o.get("publication_state") or "") != "released":
             continue
@@ -292,7 +329,8 @@ def derive(inputs: Inputs, derived_at: _dt.date | None = None,
         tk = theme_of_topic(str(o.get("topic") or ""))
         if not tk:
             continue
-        obs.setdefault((str(o.get("company_id")), tk), []).append(o)
+        target = obs_invalid if str(o.get("observation_id")) in inputs.invalid else obs
+        target.setdefault((str(o.get("company_id")), tk), []).append(o)
 
     rows: list[dict] = []
     seq = 0
@@ -335,17 +373,10 @@ def derive(inputs: Inputs, derived_at: _dt.date | None = None,
                             covering[sig] = str(reach.get("realized_reach"))
                             break
 
-                informing = []
-                for o in obs.get((cid, theme.key), []):
-                    hid = str(o.get("harness_id") or "")
-                    reach = inputs.harness_reach.get(hid) or {}
-                    retrieved = _d(o.get("retrieval_date"))
-                    pub = _d(o.get("publication_date")) or retrieved
-                    if pub is None or pub > b.end or (b.end - pub).days > stale_days:
-                        continue
-                    if not reach_covers(reach, retrieved, b):
-                        continue
-                    informing.append((o, str(reach.get("realized_reach"))))
+                informing = _informing(obs.get((cid, theme.key), []), inputs.harness_reach, b, stale_days)
+                excluded = _informing(obs_invalid.get((cid, theme.key), []), inputs.harness_reach, b, stale_days)
+                if excluded:
+                    row["notes"] = evidence_note(informing, excluded, inputs.invalid)
 
                 if not covering and not informing:
                     row["reason"] = REASON_NO_REACH
@@ -430,9 +461,11 @@ def load_inputs(wb) -> Inputs:
     published = {str(r["harness_run_id"]) for r in sheet("Harness_Runs")
                  if str(r.get("publication_status") or "") == "published"}
     attempts = [a for a in sheet("Attempts") if str(a.get("run_id")) in published]
+    # 2026-09-15 (Matthew, item 19): observations recorded invalid are read as invalid.
+    from core import validity
     return Inputs(companies=companies, attempts=attempts,
                   observations=sheet("Observations"), harness_reach=harness_reach,
-                  instrument_class=ic)
+                  instrument_class=ic, invalid=validity.invalid_observation_ids(wb))
 
 
 def _vkey(v: str) -> tuple:
@@ -448,4 +481,21 @@ def summarize(rows: list[dict]) -> dict:
     for r in rows:
         out["by_theme"].setdefault(r["theme_key"], Counter())[r["reason"]] += 1
         out["by_bucket"].setdefault(r["bucket_id"], Counter())[r["reason"]] += 1
+    # Evidence citations (observation x bucket) as three measurements, from each row's evidence_count and, where an
+    # invalid observation was excluded, its notes.
+    import re
+    pat = re.compile(r"evidence: (\d+) total, (\d+) valid, (\d+) invalid")
+    ev = {"total": 0, "valid": 0, "invalid": 0, "buckets_with_invalid_excluded": 0}
+    for r in rows:
+        m = pat.search(str(r.get("notes") or ""))
+        if m:
+            ev["total"] += int(m.group(1))
+            ev["valid"] += int(m.group(2))
+            ev["invalid"] += int(m.group(3))
+            ev["buckets_with_invalid_excluded"] += 1
+        else:
+            n = int(r.get("evidence_count") or 0)
+            ev["total"] += n
+            ev["valid"] += n
+    out["evidence"] = ev
     return out

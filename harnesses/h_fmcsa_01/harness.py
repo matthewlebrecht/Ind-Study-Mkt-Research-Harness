@@ -69,7 +69,7 @@ from harnesses.h_fmcsa_01.source import (  # noqa: E402
 
 HARNESS_ID = "H-FMCSA-01"
 HARNESS_NAME = "FMCSA Carrier Registry & Safety Extractor"
-HARNESS_VERSION = "v1.6"
+HARNESS_VERSION = "v1.7"
 TARGET_EVIDENCE_FAMILY = "10_logistics_supply_network"
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -801,6 +801,11 @@ def run(args) -> int:
             ],
             "rejected_examples": res.rejected_examples[:5],
             "snapshot_source": snap.get("_source"),
+            # v1.7 hybrid provenance: every way the QCMobile overlay can fail to apply, or
+            # disagree with SAFER, is recorded here rather than resolved silently.
+            "qcmobile_error": snap.get("_qcmobile_error"),
+            "numeric_overlay_skipped": snap.get("_numeric_overlay_skipped"),
+            "source_disagreements": snap.get("_source_disagreements"),
             "observations": [
                 {"topic": o.topic, "evidence_family": o.evidence_family,
                  "signal_strength": o.signal_strength,
@@ -836,13 +841,17 @@ def run(args) -> int:
         f"from one coherent source date. Manual review decision preserved."
     ) if args.refresh_reviewed else ""
 
-    if args.commit and args.force_rewrite:
-        removed = db.delete_observations(HARNESS_ID, keep_reviewed=True)
-        print(f"  --force-rewrite: removed {removed} unreviewed {HARNESS_ID} rows "
-              f"(reviewed rows kept)")
     # Dry runs reconcile too, so --commit holds no surprises.
     report = db.sync_observations(all_obs, refresh_reviewed=args.refresh_reviewed,
                                   refresh_note=refresh_note)
+    if args.commit and args.force_rewrite:
+        # Convention 45 (2026-09-15): --force-rewrite no longer deletes. Rows this run no longer proposes are recorded
+        # invalid (invalidated_not_reproduced); human-reviewed rows are held.
+        from core import validity
+        inv = validity.invalidate_unreproduced(db, HARNESS_ID, HARNESS_VERSION, all_obs,
+                                               company_ids={c["company_id"] for c in companies})
+        print(f"  --force-rewrite: {len(inv['invalidated'])} unreproduced {HARNESS_ID} row(s) recorded invalid, "
+              f"{len(inv['held'])} human-reviewed held (no row deleted -- convention 45)")
 
     if report.conflicts:
         issues.append(

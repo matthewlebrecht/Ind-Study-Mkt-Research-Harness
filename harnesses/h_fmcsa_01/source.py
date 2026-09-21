@@ -124,37 +124,33 @@ class FmcsaClient:
 
     # ---------- per-carrier snapshot ----------
 
+    # HYBRID (v1.7, Matthew 2026-09-16). SAFER is the authoritative record: entity type,
+    # operating-authority status and scope, classification, cargo, MCS-150 fields, the data
+    # date, the crash window AND the national-average OOS rates. QCMobile, when a webkey is
+    # configured, overlays only the carrier's own counts and rates below -- one extra fetch
+    # per carrier. Measured live on the 8 resolving carriers (2026-09-16): every field in
+    # this tuple agreed exactly between the two sources on the same day.
+    #
+    # National averages are deliberately NOT overlaid. QCMobile serves them from a 2009-2010
+    # benchmark (`oosRateNationalAverageYear: 2009-2010`: 20.72 / 5.51) where SAFER serves the
+    # current ones (22.26 / 6.67 on 2026-09-16). The OOS rows state a carrier's distance from
+    # the national average, so taking QCMobile's would measure carriers against a sixteen-
+    # year-old baseline -- which the v1.6 QCMobile-only path did.
+    QCMOBILE_NUMERIC_OVERLAY = (
+        "power_units", "drivers",
+        "vehicle_inspections", "driver_inspections", "vehicle_oos", "driver_oos",
+        "vehicle_oos_pct", "driver_oos_pct",
+        "crashes_fatal", "crashes_injury", "crashes_tow", "crashes_total",
+    )
+
+    def _partition_of(self, key: str) -> str:
+        return self.cache.replayed_from.get(key, self.cache.retrieval_date)
+
     def carrier_snapshot(self, dot_number: str) -> dict:
-        """Return a normalized carrier record for one USDOT number."""
-        if self.webkey:
-            body, _ = self._cached(
-                f"qc_{dot_number}", ".json",
-                lambda: self._get(QCMOBILE_URL.format(dot=dot_number),
-                                  {"webKey": self.webkey}).text,
-            )
-            rec = _parse_qcmobile(json.loads(body))
-            if rec:
-                rec["_source"] = "qcmobile"
-                # Session 10 item 6 (F15/F26): the basic carrier object carries no
-                # operation classification, which left `_is_private_carriage` blind on
-                # this path. QCMobile publishes the classification and cargo lists on
-                # sub-endpoints; read them, and record a failure rather than pretending.
-                for sub, field, key in (("operation-classification", "operationClassDesc",
-                                         "operation_classification"),
-                                        ("cargo-carried", "cargoClassDesc", "cargo_carried")):
-                    try:
-                        sb, _ = self._cached(
-                            f"qc_{dot_number}_{sub}", ".json",
-                            lambda s=sub: self._get(QCMOBILE_URL.format(dot=dot_number) + "/" + s,
-                                                    {"webKey": self.webkey}).text)
-                        content = (json.loads(sb) or {}).get("content") or []
-                        rec[key] = [str(x.get(field) or "").strip() for x in content
-                                    if isinstance(x, dict) and x.get(field)]
-                    except Exception as exc:  # noqa: BLE001
-                        rec[f"{key}_error"] = f"{type(exc).__name__}: {exc}"[:120]
-                return rec
+        """Return a normalized carrier record for one USDOT number (SAFER + QCMobile numerics)."""
+        safer_key = f"safer_{dot_number}"
         body, _ = self._cached(
-            f"safer_{dot_number}", ".html",
+            safer_key, ".html",
             lambda: self._post(SAFER_QUERY_URL, {
                 "searchtype": "ANY",
                 "query_type": "queryCarrierSnapshot",
@@ -164,6 +160,49 @@ class FmcsaClient:
         )
         rec = parse_safer_snapshot(body)
         rec["_source"] = "safer"
+        if not rec.get("found") or not self.webkey:
+            return rec
+
+        qc_key = f"qc_{dot_number}"
+        try:
+            qbody, _ = self._cached(
+                qc_key, ".json",
+                lambda: self._get(QCMOBILE_URL.format(dot=dot_number),
+                                  {"webKey": self.webkey}).text)
+            qc = _parse_qcmobile(json.loads(qbody))
+        except Exception as exc:  # noqa: BLE001 -- recorded, SAFER numerics stand
+            rec["_qcmobile_error"] = f"{type(exc).__name__}: {exc}"[:160]
+            return rec
+        if not qc:
+            rec["_qcmobile_error"] = "QCMobile returned no carrier record"
+            return rec
+        if str(qc.get("dot_number") or "") != str(dot_number):
+            rec["_qcmobile_error"] = f"QCMobile returned USDOT {qc.get('dot_number')}, not {dot_number}"
+            return rec
+        # An offline replay can hold the two responses in different dated partitions (the
+        # archive has QCMobile only from 2026-09-06). Overlaying one day's counts onto
+        # another day's record would silently mix two snapshots, so it is skipped and said.
+        sp, qp = self._partition_of(safer_key), self._partition_of(qc_key)
+        if sp != qp:
+            rec["_numeric_overlay_skipped"] = f"SAFER from {sp}, QCMobile from {qp}"
+            return rec
+        disagreements = {}
+        for field in self.QCMOBILE_NUMERIC_OVERLAY:
+            qv, sv = qc.get(field), rec.get(field)
+            if qv is None:
+                continue          # QCMobile silent on this field: SAFER's value stands
+            # QCMobile computes rates to full float precision (30.495969394726057); SAFER
+            # publishes them to one decimal (30.5), and the observation text prints the value.
+            # Rounded to SAFER's precision BEFORE comparing, or every rate would read as a
+            # disagreement and print sixteen decimals into a reviewed row.
+            if field.endswith("_pct") and isinstance(qv, float):
+                qv = round(qv, 1)
+            if sv is not None and sv != qv:
+                disagreements[field] = {"safer": sv, "qcmobile": qv}
+            rec[field] = qv
+        rec["_source"] = "safer+qcmobile"
+        if disagreements:
+            rec["_source_disagreements"] = disagreements
         return rec
 
     # ---------- transport ----------
@@ -361,6 +400,20 @@ def _parse_crashes(lines: list[str]) -> dict:
     return out
 
 
+# QCMobile reports each kind of for-hire operating authority separately, as a one-letter
+# status: "A" active, "I" inactive, absent/None never held. SAFER collapses the active ones
+# into its "AUTHORIZED FOR:" line, so the same collapse is done here and nowhere else.
+_AUTHORITY_FIELDS = (("commonAuthorityStatus", "Common"),
+                     ("contractAuthorityStatus", "Contract"),
+                     ("brokerAuthorityStatus", "Broker"))
+
+
+def _authorities(c: dict) -> list[str]:
+    """The for-hire authority types this carrier actively holds, in SAFER's order."""
+    return [label for field, label in _AUTHORITY_FIELDS
+            if str(c.get(field) or "").strip().upper() == "A"]
+
+
 def _parse_qcmobile(payload: dict) -> dict | None:
     """Normalize the QCMobile JSON carrier object onto the SAFER field names."""
     carrier = (payload or {}).get("content")
@@ -393,15 +446,31 @@ def _parse_qcmobile(payload: dict) -> dict | None:
         "legal_name": c.get("legalName"),
         "dba_name": c.get("dbaName"),
         "usdot_status": "ACTIVE" if c.get("allowedToOperate") == "Y" else "NOT ALLOWED",
-        "operating_authority_status": ("AUTHORIZED" if c.get("allowedToOperate") == "Y"
-                                       else "NOT AUTHORIZED"),
-        "authorized_for": c.get("carrierOperation", {}).get("carrierOperationDesc"),
+        # v1.6 field mappings (2026-09-15). Both fields were recorded in the manifest as
+        # ABSENT from the QCMobile record. They are not absent; they were being read from
+        # the wrong keys, and the two wrong readings were not merely cosmetic:
+        #
+        #  * `operating_authority_status` was derived from `allowedToOperate`, which is the
+        #    USDOT registration status, NOT for-hire authority. Midmark has
+        #    allowedToOperate = "Y" and holds no for-hire authority at all, so the QCMobile
+        #    path asserted "AUTHORIZED" where SAFER reports "NOT AUTHORIZED" -- the exact
+        #    distinction `_is_private_carriage` exists to protect. Authority lives in the
+        #    three authority-status fields (A = active, I = inactive, absent = never held).
+        #  * `authorized_for` was read from `carrierOperationDesc`, which is the JURISDICTION
+        #    ("Interstate"/"Intrastate"), not the authority granted. SAFER's "AUTHORIZED FOR:"
+        #    names the authority types, which is what these three fields carry.
+        "operating_authority_status": ("AUTHORIZED" if _authorities(c) else "NOT AUTHORIZED"),
+        "authorized_for": ", ".join(_authorities(c)) or None,
+        # SAFER's "Entity Type:" -- QCMobile publishes it as censusTypeId.censusTypeDesc.
+        "entity_type": ((c.get("censusTypeId") or {}).get("censusTypeDesc") or None),
         "power_units": _int(c.get("totalPowerUnits")),
         "drivers": _int(c.get("totalDrivers")),
         "safety_rating": c.get("safetyRating"),
         "safety_rating_date": c.get("safetyRatingDate"),
         "vehicle_inspections": _int(c.get("vehicleInsp")),
         "driver_inspections": _int(c.get("driverInsp")),
+        "vehicle_oos": _int(c.get("vehicleOosInsp")),
+        "driver_oos": _int(c.get("driverOosInsp")),
         "vehicle_oos_pct": _num(c.get("vehicleOosRate")),
         "driver_oos_pct": _num(c.get("driverOosRate")),
         "vehicle_natl_avg_pct": _num(c.get("vehicleOosRateNationalAverage")),

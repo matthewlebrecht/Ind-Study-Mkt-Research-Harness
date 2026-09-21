@@ -1,7 +1,7 @@
 harness_id: H-VENDOR-01
 module: h_vendor_01
 name: Vendor & Partner Disclosure Reader
-current_version: v1.0
+current_version: v1.2
 grandfathered_name: false
 
 signal_types: [vendor_case_study_deployment_fact, vendor_case_study_buyer_quote]
@@ -21,6 +21,38 @@ sources:
       vendor is not a company in the sheet.
 
 versions:
+  - version: v1.2
+    date: 2026-09-13
+    reprocessing_required: false
+    summary: >
+      Session 17 wrap-up, Matthew's design for the SpawGlass question left open by v1.1. A
+      deployment sentence that does not name the company is attributed to it only when (a)
+      the page title (title tag, og:title or first h1) names the company, and (b) the
+      sentence comes from the page body with nav, header, footer and aside blocks removed.
+      Chrome is now removed before every sentence scan, named or not. An attributed row says
+      so in its text and excerpt ("[page-subject attribution: ...]") and carries confidence
+      0.4; generic-tier themes still write at low grade. Measured on the Ardoq / SpawGlass
+      page before building: every theme-laden marketing line sits inside header/nav, the
+      customer story inside main/article. Tests: core/tests/test_vendor.py section 4.
+  - version: v1.1
+    date: 2026-09-13
+    reprocessing_required: false
+    summary: >
+      Week 4 (session 17). v1.0's population-0 result was checked page by page against the
+      archived HTML before being written up as an absence, and it was not one. Of the six
+      pages v1.0 read and called absent: two (SpawGlass, Melaleuca) were never matched in
+      prose because the sentence test demanded the full canonical string for a one-token
+      name; one (Autodesk's GRAHAM story) is a UK and Ireland contractor, not Graham
+      Construction of Omaha; one (Autodesk's PENTA story) serves only its header, the body
+      loading client-side; one is a University of Michigan dyslexia-help page, not vendor
+      content; one (Joeris / OpenSpace) is a genuine read with no theme. Fixes: a coined
+      one-token name stands alone in a sentence (convention 31); a one-distinctive-token
+      company on a third-party page needs a corroborator (website domain, HQ city or HQ state
+      name) or is refused as identity_uncorroborated; a page that passes identity but serves
+      no prose naming the company is not_covered / js_rendered_unreachable, never absent;
+      .edu / .gov hosts and business directories are not vendor content; seed dedupe ignores
+      a leading www. Seeds: 28 distinct (company, url) pairs across 20 companies from every
+      EXECVOICE run log (v1.0 saw 24). Tests: core/tests/test_vendor.py.
   - version: v1.0
     date: 2026-09-06
     reprocessing_required: false

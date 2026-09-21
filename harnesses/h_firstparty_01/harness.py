@@ -66,10 +66,11 @@ from harnesses.h_execid_01.extract import html_lines                   # noqa: E
 from harnesses.h_execid_01.source import AGGREGATOR_HOSTS, SiteClient  # noqa: E402
 from harnesses.h_execvoice_01.harness import VENDOR_CONTENT_RE, WIRE_HOSTS  # noqa: E402
 from harnesses.h_firstparty_01 import article                          # noqa: E402
+from harnesses.h_firstparty_01 import body as article_body             # noqa: E402
 
 HARNESS_ID = "H-FIRSTPARTY-01"
 HARNESS_NAME = "First-Party Announcement Extractor"
-VERSION = "v1.2"
+VERSION = "v1.3"
 SIGNAL_TYPE = "first_party_announcement"
 EVIDENCE_FAMILY = "1_first_party_strategy_governance"
 
@@ -252,14 +253,64 @@ def build_observation(company: dict, theme_key: str, hits: list[str], url: str,
     )
 
 
-def main() -> int:
+def build_parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(description="H-FIRSTPARTY-01 -- first-party announcements")
     ap.add_argument("--commit", action="store_true")
     ap.add_argument("--offline", action="store_true")
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--companies")
     ap.add_argument("--pause", type=float, default=0.6)
-    args = ap.parse_args()
+    ap.add_argument("--retire-stale", action="store_true",
+                    help="OPT-IN. After syncing, record invalid (convention 45: nothing is deleted) this harness's machine rows that this run no "
+                         "longer produces from a page it actually re-read. Human-reviewed rows are "
+                         "HELD and named, never invalidated (convention 35). Refused with --companies "
+                         "or --limit. The H-SELLERCONTENT-01 --retire-stale precedent.")
+    return ap
+
+
+def check_retire_args(args) -> None:
+    """--retire-stale is judged over the whole buyer set only: a --companies or --limit subset
+    leaves every other company's rows unproposed, and they would read as no longer produced."""
+    if args.retire_stale and (args.companies or args.limit):
+        raise SystemExit("ABORT: --retire-stale needs the full company set, not --companies/--limit")
+
+
+def retire_stale(db, proposed: list, company_ids, read_urls) -> dict:
+    """Record invalid (convention 45) this harness's rows the run no longer produces -- only where it had the evidence.
+
+    Keyed on the natural key of what the run proposed (core/db.py::unreproduced_observations), not
+    delete-and-rewrite: every row keeps its id and its place, and a row the run no longer produces is
+    recorded `invalidated_not_reproduced` in Observation_Validity_History (core/validity.py) rather
+    than removed (convention 45).
+
+    Stricter than the H-SELLERCONTENT-01 use: a row is eligible only if its company is in this run's
+    scope AND its source page was successfully re-read in this run. A company whose search failed,
+    or a page that was not fetched (page cap, fetch error, a result that no longer surfaces), is not
+    evidence that the claim is gone, so those rows are left alone. A human-reviewed row is never
+    invalidated: it is HELD and returned by name (convention 35).
+    """
+    from core import validity
+    # Matthew Lebrecht, 2026-09-15 (item 22): these rows are recorded for the REASON, not merely as "not reproduced".
+    # v1.2 classified themes on the whole page; v1.3 reads the article body; a row v1.3 does not reproduce from a page
+    # it re-read is one whose match was page furniture -- an extraction defect.
+    basis = (f"Extraction defect: {HARNESS_ID} {VERSION} reads themes, identity, state and quotes from the ARTICLE "
+             f"BODY only (harnesses/h_firstparty_01/body.py). This claim was written by an earlier version that "
+             f"classified the whole page -- navigation, teaser rails, footers, cookie banners -- and the page was "
+             f"re-read in this run without producing it, so its match lay outside the article. Status set by "
+             f"Matthew Lebrecht's instruction, 2026-09-15 (item 22); measured beforehand in "
+             f"docs/diagnostics/firstparty_v13_dryrun_2026-09-15.md.")
+    return validity.invalidate_unreproduced(db, HARNESS_ID, VERSION, proposed, company_ids={str(c) for c in company_ids},
+                                            source_urls={str(u) for u in read_urls},
+                                            status="invalidated_extraction_defect", basis=basis)
+
+
+def main() -> int:
+    args = build_parser().parse_args()
+    # ON HOLD since 2026-09-15 (core/holds.py): refuses every live run and every --commit before anything is
+    # opened; an offline dry replay is still allowed.
+    from core import holds
+    holds.enforce(HARNESS_ID, offline=args.offline, commit=args.commit)
+    check_retire_args(args)
 
     db = MarketIntelDB()
     companies = [c for c in db.companies()
@@ -284,6 +335,7 @@ def main() -> int:
                       signal_families={SIGNAL_TYPE: EVIDENCE_FAMILY}, commit=args.commit)
 
     proposed: list[Observation] = []
+    read_urls: set[str] = set()     # pages fetched successfully this run (--retire-stale eligibility)
     log = {"harness_id": HARNESS_ID, "version": VERSION, "date": stamp,
            "offline": args.offline, "companies": [], "suppressed_stale": []}
 
@@ -339,6 +391,7 @@ def main() -> int:
                 discarded += 1
                 entry["pages"].append({"url": r.url, "status": page.status})
                 continue
+            read_urls.add(r.url)
 
             lines = html_lines(page.html)
             is_article, why_not = article.looks_like_article(lines, r.url, r.title)
@@ -347,7 +400,22 @@ def main() -> int:
                 entry["pages"].append({"url": r.url, "status": page.status,
                                        "rejected": why_not})
                 continue
-            text = " ".join(lines)
+            # v1.3 (2026-09-15): identity, themes, state and quotes are read from the ARTICLE BODY only
+            # (body.py). v1.2 read the whole page -- navigation, teaser rails, footers, cookie banners -- and 109 of
+            # its 230 rows had no theme match in the article. The page-shape test above still reads the whole page:
+            # being a listing is a property of the page, not of its body.
+            extracted = article_body.extract(page.html)
+            text = extracted.text
+            body_info = {"body_chars": len(text), "end_marker": extracted.end_marker,
+                         "consent_elements_removed": extracted.consent_elements_removed,
+                         "consent_lines_dropped": extracted.consent_lines_dropped,
+                         "footer_notices_dropped": extracted.footer_notices_dropped,
+                         "footer_cut": extracted.footer_cut, "list_items_kept": extracted.list_items_kept}
+            if len(text) < article_body.MIN_BODY_CHARS:
+                discarded += 1
+                entry["pages"].append({"url": r.url, "status": page.status, "body": body_info,
+                                       "rejected": f"no article body extracted ({len(text)} chars)"})
+                continue
 
             # The article must be about THIS company, not merely surfaced by a search for
             # its name. See article.is_about_company for the Prime Inc. failure that set
@@ -384,7 +452,7 @@ def main() -> int:
             weak_themes = {k: v for k, (v, t) in tiered.items() if t == "weak"}
             if not themes and not weak_themes:
                 entry["pages"].append({"url": r.url, "status": page.status,
-                                       "source_class": source_class, "themes": []})
+                                       "source_class": source_class, "themes": [], "body": body_info})
                 continue
             state, cue = article.interpret_state(text)
             quote = has_named_quote(text)
@@ -395,7 +463,7 @@ def main() -> int:
             entry["pages"].append({"url": r.url, "status": page.status,
                                    "source_class": source_class, "grade": effective_grade,
                                    "published": pub, "themes": sorted(themes),
-                                   "has_quote": bool(quote)})
+                                   "has_quote": bool(quote), "body": body_info})
             for theme_key, hits in themes.items():
                 # Admission threshold: see article.theme_is_the_subject. A single generic
                 # word in a long release is not an announcement about that theme. Since
@@ -473,6 +541,9 @@ def main() -> int:
         log["companies"].append(entry)
 
     report = db.sync_observations(proposed)
+    retired = {"invalidated": [], "held": []}
+    if args.retire_stale:
+        retired = retire_stale(db, proposed, [c["company_id"] for c in companies], read_urls)
     run.observations_written = report.written
     summary = run.close()
 
@@ -484,6 +555,11 @@ def main() -> int:
           f"{summary['attempts_absent_confirmed']} absent_confirmed, "
           f"{summary['attempts_not_covered']} not_covered)")
     print(f"  dedupe: {report.summary()}")
+    if args.retire_stale:
+        print(f"  not reproduced: {len(retired['invalidated'])} machine row(s) no longer produced from a re-read "
+              f"page recorded invalid (convention 45; nothing deleted) [{', '.join(retired['invalidated'])}]"
+              + (f"; {len(retired['held'])} human-reviewed row(s) HELD, not invalidated "
+                 f"[{', '.join(retired['held'])}]" if retired["held"] else ""))
     if log["suppressed_stale"]:
         print(f"  stale articles suppressed (>{article.MAX_AGE_DAYS // 365}y): "
               f"{len(log['suppressed_stale'])}")
@@ -492,6 +568,7 @@ def main() -> int:
 
     log["summary"] = summary
     log["dedupe"] = report.summary()
+    log["retired"] = retired
     log["search_stats"] = search.stats()
     path = OUTPUT_DIR / f"run-{stamp}{'' if args.commit else '-dryrun'}.json"
     path.write_text(json.dumps(log, indent=2, default=str), encoding="utf-8")

@@ -83,6 +83,10 @@ def main() -> int:
               f"from={r['realized_reach_effective_from']}")
     print("  by status:", dict(s["by_status"]))
     print("  by reason:", dict(s["by_reason"]))
+    ev = s["evidence"]
+    print(f"  evidence cited (observation x bucket): {ev['total']} total, {ev['valid']} valid, {ev['invalid']} invalid "
+          f"-- invalid excluded in {ev['buckets_with_invalid_excluded']} bucket(s); {len(inputs.invalid)} "
+          f"observation(s) recorded invalid")
     print("  by bucket:")
     for b, c in sorted(s["by_bucket"].items()):
         print(f"    {b}: {dict(c)}")
@@ -92,15 +96,21 @@ def main() -> int:
 
     if existing:
         prev = previous_rows(wb, existing[-1])
+        # 2026-09-15: the evidence a row rests on is compared too, so a change in what supports a bucket (an
+        # observation recorded invalid, say) is seen move even when the status does not.
         changed, keys = 0, ("status", "reason", "organizational_state",
                             "min_retrospective_reach", "definition_hash")
+        evidence_only = 0
         for r in rows:
             p = prev.get((r["company_id"], r["theme_id"], r["bucket_id"]))
             if p is None or any(str(p.get(k)) != str(r.get(k)) for k in keys):
                 changed += 1
+            elif any(str(p.get(k) or "") != str(r.get(k) or "") for k in ("supporting_observation_ids", "evidence_count")):
+                changed += 1
+                evidence_only += 1
         new_buckets = {r["bucket_id"] for r in rows} - {k[2] for k in prev}
-        print(f"  vs {existing[-1]}: {changed} row(s) differ or are new; new buckets "
-              f"{sorted(new_buckets) or 'none'}")
+        print(f"  vs {existing[-1]}: {changed} row(s) differ or are new ({evidence_only} differ only in supporting "
+              f"evidence); new buckets {sorted(new_buckets) or 'none'}")
         if not changed and not args.force and args.apply:
             print("  identical to the latest derivation -- not appended (use --force)")
             return 0

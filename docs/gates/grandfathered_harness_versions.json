@@ -9,109 +9,140 @@
       "harness_id": "H-FMCSA-01",
       "harness_version": "v1.0",
       "reason": "Pre-gate (Week 1). 27 observations human-reviewed 2026-08-24; extraction accuracy 27/27 at time of retrieval. The only harness in the set with a completed human review.",
-      "date_added": "2026-08-31"
+      "date_added": "2026-08-31",
+      "population_at_exemption": 7
     },
     {
       "harness_id": "H-FMCSA-01",
       "harness_version": "v1.1",
       "reason": "Pre-gate (Week 1). 27 observations human-reviewed 2026-08-24; extraction accuracy 27/27 at time of retrieval. The only harness in the set with a completed human review.",
-      "date_added": "2026-08-31"
+      "date_added": "2026-08-31",
+      "population_at_exemption": 0
     },
     {
       "harness_id": "H-FMCSA-01",
       "harness_version": "v1.2",
       "reason": "Pre-gate (Week 1). 27 observations human-reviewed 2026-08-24; extraction accuracy 27/27 at time of retrieval. The only harness in the set with a completed human review.",
-      "date_added": "2026-08-31"
+      "date_added": "2026-08-31",
+      "population_at_exemption": 0
     },
     {
       "harness_id": "H-FMCSA-01",
       "harness_version": "v1.3",
       "reason": "Pre-gate (Week 1). 27 observations human-reviewed 2026-08-24; extraction accuracy 27/27 at time of retrieval. The only harness in the set with a completed human review.",
-      "date_added": "2026-08-31"
+      "date_added": "2026-08-31",
+      "population_at_exemption": 20
     },
     {
       "harness_id": "H-JOBPOST-01",
       "harness_version": "v1.0",
       "reason": "Pre-gate (Week 1). 8 observations, partially reviewed.",
-      "date_added": "2026-08-31"
+      "date_added": "2026-08-31",
+      "population_at_exemption": 8
     },
     {
       "harness_id": "H-SELLERCONTENT-01",
       "harness_version": "v1.0",
       "reason": "Pre-gate (Week 2 named deliverable). v1.0's inflated coverage from homepage substitutes was found and fixed in v1.1/v1.2 by the same row-level audit the gate now formalises.",
-      "date_added": "2026-08-31"
+      "date_added": "2026-08-31",
+      "population_at_exemption": 0
     },
     {
       "harness_id": "H-SELLERCONTENT-01",
       "harness_version": "v1.1",
       "reason": "Pre-gate (Week 2 named deliverable). v1.0's inflated coverage from homepage substitutes was found and fixed in v1.1/v1.2 by the same row-level audit the gate now formalises.",
-      "date_added": "2026-08-31"
+      "date_added": "2026-08-31",
+      "population_at_exemption": 0
     },
     {
       "harness_id": "H-SELLERCONTENT-01",
       "harness_version": "v1.2",
       "reason": "Pre-gate (Week 2 named deliverable). v1.0's inflated coverage from homepage substitutes was found and fixed in v1.1/v1.2 by the same row-level audit the gate now formalises.",
-      "date_added": "2026-08-31"
+      "date_added": "2026-08-31",
+      "population_at_exemption": 43
     },
     {
       "harness_id": "H-SAFETY-ENV-01",
       "harness_version": "v1.0",
       "reason": "Pre-gate. OSHA truncation and absent_confirmed defects found and fixed across v1.0-v1.1 by hand audit.",
-      "date_added": "2026-08-31"
+      "date_added": "2026-08-31",
+      "population_at_exemption": 118
     },
     {
       "harness_id": "H-SAFETY-ENV-01",
       "harness_version": "v1.1",
       "reason": "Pre-gate. OSHA truncation and absent_confirmed defects found and fixed across v1.0-v1.1 by hand audit.",
-      "date_added": "2026-08-31"
+      "date_added": "2026-08-31",
+      "population_at_exemption": 13
     },
     {
       "harness_id": "H-WAYBACK-01",
       "harness_version": "v1.0",
       "reason": "Pre-gate. v1.0's dated-news false positives found and fixed in v1.1 by hand audit.",
-      "date_added": "2026-08-31"
+      "date_added": "2026-08-31",
+      "population_at_exemption": 8
     },
     {
       "harness_id": "H-WAYBACK-01",
       "harness_version": "v1.1",
       "reason": "Pre-gate. v1.0's dated-news false positives found and fixed in v1.1 by hand audit.",
-      "date_added": "2026-08-31"
+      "date_added": "2026-08-31",
+      "population_at_exemption": 11
     },
     {
       "harness_id": "H-EXECID-01",
       "harness_version": "v1.0",
       "reason": "Pre-gate. Prerequisite harness (writes Company_Executives, not Observations). Four extraction defects ('How We', 'Become An', 'Corporate Governance Guidelines', Merit Medical displacement) found and fixed by hand audit during the 2026-08-31 session.",
-      "date_added": "2026-08-31"
+      "date_added": "2026-08-31",
+      "population_at_exemption": 0
     },
     {
       "harness_id": "H-EXECVOICE-01",
       "harness_version": "v1.0",
       "reason": "Pre-gate. v1.0 committed 10 rows, 2 wrong about who spoke; v1.1 cut to 8 by hand audit. Exactly the audit the gate now requires, performed before the gate existed.",
-      "date_added": "2026-08-31"
+      "date_added": "2026-08-31",
+      "population_at_exemption": 0
     },
     {
       "harness_id": "H-EXECVOICE-01",
       "harness_version": "v1.1",
       "reason": "Pre-gate. v1.0 committed 10 rows, 2 wrong about who spoke; v1.1 cut to 8 by hand audit. Exactly the audit the gate now requires, performed before the gate existed.",
-      "date_added": "2026-08-31"
+      "date_added": "2026-08-31",
+      "population_at_exemption": 8
     },
     {
       "harness_id": "H-FIRSTPARTY-01",
       "harness_version": "v1.0",
       "reason": "Pre-gate. v1.0's 248 rows cut to 79 in v1.1 by hand audit -- 163 rested on a single generic matched term. The incident that motivated building this gate.",
-      "date_added": "2026-08-31"
+      "date_added": "2026-08-31",
+      "population_at_exemption": 0
     },
     {
       "harness_id": "H-FIRSTPARTY-01",
       "harness_version": "v1.1",
       "reason": "Pre-gate. v1.0's 248 rows cut to 79 in v1.1 by hand audit -- 163 rested on a single generic matched term. The incident that motivated building this gate.",
-      "date_added": "2026-08-31"
+      "date_added": "2026-08-31",
+      "population_at_exemption": 79
     },
     {
       "harness_id": "H-EMPREVIEW-01",
       "harness_version": "v1.0",
       "reason": "Pre-gate build (2026-08-31), landing either side of the gate's introduction. Audit scheduled. Its family-4 run writes access_blocked attempts and no Observations, and its Harness_Runs row is quarantined, so it publishes no coverage number regardless.",
-      "date_added": "2026-08-31"
+      "date_added": "2026-08-31",
+      "population_at_exemption": 0
     }
+  ],
+  "_population_note": [
+    "`population_at_exemption` is the number of Observations the version held in the workbook committed on",
+    "2026-08-31 (commit f109174) -- the day every exemption below was granted, and the population each",
+    "`reason` describes. It is recorded because those populations have since MOVED: these harnesses rewrite",
+    "rows under the version that last wrote them, so a row's harness_version means 'the version that last",
+    "wrote it', not 'the version that was audited'. Measured 2026-09-20: 7 of the 18 pairs hold a different",
+    "number today and one (H-FMCSA-01 v1.3) holds rows written AFTER its exemption. Nothing was lost -- every",
+    "departed row moved to a newer version or is one of the 23 pre-rule renumberings recorded in",
+    "Observation_Ids.current_id. The `reason` texts are left exactly as written: they are dated statements",
+    "about what was audited, not descriptions of today. Full measurement:",
+    "docs/diagnostics/grandfathered_and_composition_exposure_2026-09-17.md.",
+    "check 9 reads only harness_id and harness_version from this file; these fields are documentation."
   ]
 }

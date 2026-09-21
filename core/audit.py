@@ -100,7 +100,13 @@ def gate_doc_hash(path: Path | None = None) -> str:
 # Files the sampler writes alongside an artifact, in the same directory and with the same
 # `harness_id` / `harness_version` fields inside them. They are inputs to human judgment,
 # never records of it, and `load_artifacts` must not mistake one for the other.
-SIDECAR_SUFFIXES = ("__strata.json",)
+# `__verdicts.json` is the judged input an artifact is BUILT FROM (scripts/write_audit_artifact.py
+# reads it). It carries the same harness_id / harness_version, so without this declaration
+# load_artifacts reports it as a misnamed artifact -- which it is not. Kept in version control
+# deliberately: it is the record of what was put in front of the reviewer, beside the artifact
+# recording what came back. Added 2026-09-20 after H-FMCSA-01 v1.7's verdicts file raised exactly
+# that warning.
+SIDECAR_SUFFIXES = ("__strata.json", "__verdicts.json")
 
 
 def audit_path(harness_id: str, harness_version: str) -> Path:
@@ -292,6 +298,24 @@ def validate_artifact(data: dict) -> list[str]:
     if data.get("verdict") not in ("pass", "fail"):
         problems.append(f"verdict must be 'pass' or 'fail', got {data.get('verdict')!r}")
     return problems
+
+
+def grandfathered_added_on(path: Path | None = None) -> dict:
+    """(harness_id, harness_version) -> the date_added recorded in the registry.
+
+    The exemption is a statement about the output that EXISTED when it was granted: every
+    entry rests on a hand audit performed on that date. A version is not a closed set,
+    though -- a later run can write new rows under the same version label, and those rows
+    would inherit an exemption nobody granted them. check 9 uses these dates to require an
+    audit artifact for exactly that case (H-FMCSA-01 v1.3, which gained 4 rows on
+    2026-09-01, a day after its exemption).
+    """
+    path = GRANDFATHER_REGISTRY if path is None else path
+    if not path.exists():
+        return {}
+    data = json.loads(path.read_text(encoding="utf-8"))
+    return {(e["harness_id"], e["harness_version"]): str(e.get("date_added") or "")
+            for e in data.get("grandfathered", [])}
 
 
 def load_artifacts(directory: Path | None = None) -> dict:

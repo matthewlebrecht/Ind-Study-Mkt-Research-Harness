@@ -81,7 +81,7 @@ from harnesses.h_tradepress_01 import extract, shape                   # noqa: E
 
 HARNESS_ID = "H-TRADEPRESS-01"
 HARNESS_NAME = "Vertical Trade Press Extractor"
-VERSION = "v1.7"
+VERSION = "v1.8"
 SIGNAL_TYPES = ["exec_quote_reported", "exec_contributed_column", "exec_panel_coverage",
                 "trade_press_profile", "wire_reprint_routed"]
 PRIMARY_SIGNAL = "exec_quote_reported"
@@ -447,6 +447,10 @@ def main() -> int:
     ap.add_argument("--companies")
     ap.add_argument("--pause", type=float, default=0.8)
     args = ap.parse_args()
+    # ON HOLD since 2026-09-15 (core/holds.py): refuses every live run and every --commit before anything is
+    # opened; an offline dry replay is still allowed.
+    from core import holds
+    holds.enforce(HARNESS_ID, offline=args.offline, commit=args.commit)
 
     db = MarketIntelDB()
     by_id = {c["company_id"]: c for c in db.companies()}
@@ -1002,21 +1006,18 @@ def main() -> int:
     # ---------------------------------------------------------------- write
     report = None
     if args.commit:
-        # v1.2 supersedes v1.1's rows, so they are REMOVED rather than reconciled.
-        #
-        # sync_observations only touches rows the run actually proposes, so a corrected
-        # harness that stops believing a row leaves the stale one sitting in the sheet --
-        # a defect that REMOVES rows otherwise survives its own fix silently. Established
-        # by H-PRODUCTQUALITY-01 v1.1's stale Midmark row.
-        #
-        # keep_reviewed=True: human review is never destroyed by a re-run (convention 1),
-        # so a reviewed row survives the delete and is reconciled normally. Both
-        # H-TRADEPRESS-01 rows are `accepted`/`human` and are protected by exactly this.
-        removed = db.delete_observations(HARNESS_ID, keep_reviewed=True)
-        if removed:
-            print(f"  removed {removed} row(s) from superseded version(s) before writing")
+        # Convention 45 (2026-09-15): no observation is hard-deleted. v1.2 used to delete this harness's unreviewed
+        # rows before writing; now the run reconciles in place and a row it no longer proposes (for a company in its
+        # scope) is recorded invalid -- invalidated_not_reproduced -- keeping its row and id.
         report = db.sync_observations(proposed)
         run.observations_written = report.written
+        from core import validity
+        invalidated = validity.invalidate_unreproduced(db, HARNESS_ID, VERSION, proposed,
+                                                       company_ids={cid for cid, _ in subset})
+        if invalidated["invalidated"] or invalidated["held"]:
+            print(f"  not reproduced: {len(invalidated['invalidated'])} machine row(s) recorded invalid "
+                  f"(convention 45; nothing deleted) {invalidated['invalidated']}; "
+                  f"{len(invalidated['held'])} human-reviewed row(s) held")
     run.material_revision_notes = (
         "v1.0 first build. Subset run over 15 companies spanning construction, trucking, "
         "logistics, food distribution, medical devices, energy and consumer goods. "

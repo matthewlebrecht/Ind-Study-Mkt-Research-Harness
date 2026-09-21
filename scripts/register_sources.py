@@ -31,6 +31,16 @@ DEFAULT_DB = ROOT / "data" / "market_intel_db.xlsx"
 # (source_id, evidence_family, source_name, access_type, private_company_applicable,
 #  expected_coverage, notes)
 NEW_SOURCES = [
+    # ---- 2026-09-13, Week 4: H-LOCALRECORDS-01's techstack sub-scope ----
+    # SRC-0016 is BuiltWith / Wappalyzer (paid, third-party detection). This is the company's
+    # own served homepage read for specific markers, a different source with different reach.
+    ("SRC-0052", "5_technology_stack_traces",
+     "Company homepage as served (own domain), technology markers",
+     "WEB", "Yes", "Strong",
+     "The company's own homepage HTML, read for specific front-end markers (asset hosts, "
+     "generator tags, platform paths such as /wp-content/ or js.hs-scripts.com), never bare "
+     "words. Front end only: what the public site is built on, not internal systems. "
+     "current_only. Read from H-EXECID-01's dated archive by H-LOCALRECORDS-01."),
     # ---- state AG breach-notification portals, for H-BREACHPORTAL-01 (session 16) ----
     # The portfolio's first IC4 instrument for the cybersecurity theme (taxonomy §26). The
     # taxonomy has no cyber family; these are regulatory disclosure records, so they are
@@ -287,6 +297,40 @@ NEW_SIGNAL_TYPES = [
     # journalist. IC2 like reported quotes -- mediated, but the words are the company's.
     ("ST-PRESSCHAR", "trade_press_characterization", "evidence",
      "15_executive_candor_actor_networks", "active", "IC2"),
+
+    # ---- 2026-09-13, Week 4: H-PROCUREMENT-01 (USASpending) ----
+    # Opaque numeric ids, continuing ST-0001..ST-0010: the name column carries the meaning,
+    # so the id never has to be renamed when the meaning is refined (convention 22).
+    # IC3 per taxonomy §20 ("procurement records" is the class's named example): an award
+    # is a byproduct of operating, reported by the government over no preference of the
+    # recipient's. Neither type is a THEME instrument -- in these records the company is
+    # the SELLER to the government, so the text describes work delivered, not the
+    # company's own estate -- and core/composition.py does not list them.
+    ("ST-0011", "federal_prime_contract_award", "evidence",
+     "7_procurement_contracting", "active", "IC3"),
+    ("ST-0012", "federal_assistance_award", "evidence",
+     "2_financial_capital_allocation", "active", "IC3"),
+
+    # ---- 2026-09-13, Week 4: H-LOCALRECORDS-01's four sub-scopes ----
+    # WARN notices are compelled by statute and published over the employer's preference: IC4.
+    # Permits, council matters and served-page markers are byproducts of operating: IC3.
+    # None is a theme instrument (core/composition.py is unchanged).
+    ("ST-0013", "state_warn_notice", "evidence",
+     "3_workforce_org_exhaust", "active", "IC4"),
+    ("ST-0014", "municipal_permit_as_contractor", "evidence",
+     "8_physical_footprint_capacity", "active", "IC3"),
+    ("ST-0015", "council_matter_title_mention", "evidence",
+     "16_local_community_records", "active", "IC3"),
+    ("ST-0016", "website_technology_fingerprint", "evidence",
+     "5_technology_stack_traces", "active", "IC3"),
+
+    # ---- 2026-09-13, session 17 wrap-up: H-SEC8K-01 ----
+    # Form 8-K Item 1.05 is compelled by rule and filed over the company's preference: IC4.
+    # Filed under family 1 with SEC EDGAR (SRC-0004); the taxonomy has no cyber family, the
+    # same note H-BREACHPORTAL-01 carries. A cybersecurity theme instrument in
+    # core/composition.py, scoped to current SEC reporters.
+    ("ST-0017", "sec_8k_item_105_cybersecurity", "evidence",
+     "1_first_party_strategy_governance", "active", "IC4"),
 ]
 
 

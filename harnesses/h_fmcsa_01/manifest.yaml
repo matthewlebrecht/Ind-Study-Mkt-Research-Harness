@@ -3,7 +3,7 @@
 harness_id: H-FMCSA-01
 module: h_fmcsa_01
 name: FMCSA Carrier Registry & Safety Extractor
-current_version: v1.5
+current_version: v1.7
 
 # Named for a source, not a signal type, which is inconsistent with the H-{SIGNAL}-{NN}
 # convention adopted later. Deliberately NOT renamed: the ID is written into 27 committed
@@ -25,6 +25,32 @@ sources:
       cite FMCSA" return different sets with no way to explain the difference.
 
 versions:
+  - version: v1.7
+    date: 2026-09-16
+    reprocessing_required: false
+    summary: >
+      HYBRID SNAPSHOT (Matthew, 2026-09-16). SAFER is the authoritative record for every
+      categorical and dated field -- entity type, operating-authority status and scope,
+      operation classification, cargo, MCS-150 date and mileage, the data date, the crash
+      window -- and for the national-average OOS rates. QCMobile, when a webkey is set,
+      overlays only the carrier's own counts and rates (power units, drivers, inspections,
+      OOS counts and rates, crashes): one extra fetch per carrier. The QCMobile
+      sub-endpoint reads (classification, cargo) are dropped; SAFER supplies both.
+      QCMobile's OOS counts (vehicleOosInsp, driverOosInsp) are now mapped -- the v1.6 parser
+      dropped them. The overlay is skipped, and says so in the run log, when QCMobile errors,
+      returns a different USDOT, or -- in an offline replay -- comes from a different dated
+      partition than the SAFER record; a field where the two sources disagree is overlaid
+      and the disagreement recorded.
+    notes: >
+      MEASURED LIVE 2026-09-16 on the 8 resolving carriers: every overlaid field agreed
+      exactly between SAFER and QCMobile on the same day (they read the same MCMIS data).
+      The one numeric difference is why national averages are NOT overlaid: QCMobile serves
+      them from a 2009-2010 benchmark (20.72 / 5.51, `oosRateNationalAverageYear:
+      2009-2010`) where SAFER serves the current ones (22.26 / 6.67). The OOS rows state a
+      carrier's distance from that average, so the v1.6 QCMobile-only path measured carriers
+      against a sixteen-year-old baseline. Not run; see the regression measurement in the
+      commit that introduced this version.
+
   - version: v1.6
     date: 2026-09-06
     reprocessing_required: false
@@ -38,10 +64,41 @@ versions:
       Hire") spell it. Verified live on C0001 / C0004 / C0006 (dry run): Midmark reads
       Private Property and its NOT AUTHORIZED status is explained as private carriage, the
       two for-hire carriers read Authorized For Hire, no for-hire authority gap is asserted
-      and no unknown-classification skip fires (F15 / F26 resolve). Not committed: the
-      QCMobile record carries no entity-type field and its carrierOperation is "Interstate"
-      rather than the authority type, so operating_model text differs from the SAFER path
-      and a commit would re-open every reviewed pilot row. Logged for Week 4.
+      and no unknown-classification skip fires (F15 / F26 resolve).
+    notes: >
+      THE TWO FIELD MAPPINGS, resolved 2026-09-15. The note carried here since 2026-09-06 --
+      "the QCMobile record carries no entity-type field and its carrierOperation is
+      'Interstate' rather than the authority type" -- was half wrong, and the half that was
+      wrong hid a correctness bug rather than a cosmetic one. Both fields ARE in the record;
+      they were being read from the wrong keys.
+
+      (1) FOR-HIRE AUTHORITY was derived from `allowedToOperate`, which is the USDOT
+      registration status, not authority. Midmark has allowedToOperate = "Y" and holds no
+      for-hire authority, so the QCMobile path asserted "AUTHORIZED" where SAFER reports
+      "NOT AUTHORIZED" -- collapsing exactly the private-versus-for-hire distinction
+      `_is_private_carriage` exists to protect. Authority is published in
+      `commonAuthorityStatus` / `contractAuthorityStatus` / `brokerAuthorityStatus`
+      (A active, I inactive, absent never held) and is now read there.
+      (2) ENTITY TYPE is published as `censusTypeId.censusTypeDesc`, not absent.
+
+      MEASURED against the 8 committed SAFER-derived carrier rows (live probe, 2026-09-15):
+      `operating_authority_status` now agrees on 8 of 8, including all four private-carriage
+      registrants. Two differences REMAIN and are properties of the sources, not parse bugs:
+      QCMobile's censusTypeDesc is single-valued ("CARRIER") where SAFER composes multi-role
+      types ("CARRIER/SHIPPER", "CARRIER/SHIPPER/BROKER"), and a pure broker (C0007) carries
+      no censusTypeId at all -- 4 of 8 differ; and SAFER's "AUTHORIZED FOR:" names the
+      authority SCOPE ("Motor Carrier of Property (Except Household Goods)") where QCMobile
+      names the authority KIND ("Common, Contract") -- 4 of 8 differ.
+
+      SO THE ORIGINAL CONCLUSION STANDS FOR A DIFFERENT REASON: a live run on the QCMobile
+      path still writes operating_model text unlike the reviewed rows, and under the session
+      12.5 precedent every one of those 20 rows would be HELD as a conflict for Matthew.
+      Still not committed as a version, and no row has changed. The open decision is which
+      source is authoritative for these two fields -- keep SAFER for entity type and
+      authority scope while QCMobile serves the numerics (a hybrid, one extra fetch per
+      carrier), or accept QCMobile's coarser vocabulary as a deliberate re-versioning
+      executed through --refresh-reviewed. That is a policy call, not a code gap.
+      Pinned by core/tests/test_fmcsa_qcmobile.py (15 checks).
   - version: v1.5
     date: 2026-09-03
     reprocessing_required: false

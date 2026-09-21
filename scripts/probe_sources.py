@@ -83,7 +83,16 @@ except ImportError:  # pragma: no cover - certifi ships with requests
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "harness_output" / "_source_probes"
 
-UA = "IndStudyResearchBot/1.0 (academic research; contact via repository)"
+# The harnesses' own identity, not a probe-only one. 2026-09-13: the probe's previous UA,
+# "IndStudyResearchBot/1.0 (...)", was the entire USASpending "block". USASpending's
+# server-side web application firewall (behind its F5 load balancer, answering inside a
+# TLS session verified against Treasury's own Entrust certificate) matches the token
+# "ResearchBot" and serves a "Web Page Blocked!" page with an Attack ID under HTTP 500. The
+# same request with this UA, a browser UA, python-requests' default or no UA at all gets
+# 200 from the same egress IP. The 2026-09-01 reading -- "a network appliance on this
+# egress" -- was convention 36 again: the page echoes the client IP, which reads like a
+# local filter, but a local appliance cannot answer inside a verified TLS session.
+UA = "Mozilla/5.0 (compatible; IndStudy-MarketIntel/1.0; +independent study, contact via repo)"
 TIMEOUT = 45
 
 # (label, url, body-or-None, what a success proves)
@@ -92,10 +101,17 @@ PROBES = [
      None, "H-PROCUREMENT-01 (task 5) -- federal award records"),
     ("sam_gov", "https://api.sam.gov/entity-information/v3/entities?samRegistered=Yes",
      None, "H-PROCUREMENT-01 (task 5) -- entity registration; expected to need a key"),
+    # PatentsView is RETIRED at the source, not blocked here (attributed 2026-09-13). USPTO
+    # shut the PatentSearch API down on 2026-03-20 and moved PatentsView to the Open Data
+    # Portal (data.uspto.gov); the host was removed from public DNS (NXDOMAIN from the
+    # system resolver AND from Cloudflare DoH, so not a local resolver), and patentsview.org
+    # / api.patentsview.org now redirect to data.uspto.gov/support/transition-guide/
+    # patentsview. Kept as probes so a return of the host is noticed; a replacement path is
+    # not guessed here (convention 36's NLRB lesson: invented API paths are not a probe).
     ("patentsview_search", "https://search.patentsview.org/api/v1/patent/?q=%7B%7D",
-     None, "H-PATENTS-01 (task 7) -- current PatentsView API"),
+     None, "H-PATENTS-01 -- PatentSearch API, retired by USPTO 2026-03-20 (expect dns_failure)"),
     ("patentsview_legacy", "https://api.patentsview.org/patents/query?q=%7B%7D",
-     None, "H-PATENTS-01 (task 7) -- legacy PatentsView API"),
+     None, "H-PATENTS-01 -- legacy host, now redirects to the ODP transition guide"),
     ("courtlistener", "https://www.courtlistener.com/api/rest/v4/search/?q=test&type=r",
      None, "H-LEGAL-01 (task 8) -- federal dockets"),
     # Expects text, not JSON -- see EXPECT_TEXT below.

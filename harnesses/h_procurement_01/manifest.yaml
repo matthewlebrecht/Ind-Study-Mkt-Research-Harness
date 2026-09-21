@@ -1,0 +1,99 @@
+harness_id: H-PROCUREMENT-01
+module: h_procurement_01
+name: Federal Award Records Reader (USASpending)
+current_version: v1.4
+grandfathered_name: false
+
+signal_types: [federal_prime_contract_award, federal_assistance_award]
+declared_evidence_families: [7_procurement_contracting, 2_financial_capital_allocation]
+
+sources:
+  - id: SRC-0020
+    role: primary
+    notes: >
+      USASpending.gov prime contract and IDV records (api.usaspending.gov, no key). The
+      federal award system of record, fed by FPDS: complete for prime contract actions above
+      the reporting threshold, so "no award in the window" for a resolved or unmatched name
+      is a read result. IC3. The company is the SELLER in these records, so no theme is
+      routed and no theme absence is licensed.
+  - id: SRC-0005
+    role: primary
+    notes: >
+      USASpending.gov prime assistance records (grants, loans), same API. IC3. Capital the
+      company received; routes to no theme.
+
+versions:
+  - version: v1.4
+    date: 2026-09-15
+    reprocessing_required: false
+    summary: >
+      HQ correction, no code change. Goodfellow Bros (A024) hq_state corrected CA -> WA, hq_city
+      Wenatchee, by Matthew's decision (scripts/correct_company_hq.py): the CA value rested on an EPA
+      facility record. Under the HQ-state gate the candidate changes: GOODFELLOW BROS. CALIFORNIA, LLC
+      (Livermore) is now an out-of-state registration and no longer a same-state near-miss, and
+      GOODFELLOW BROS, LLC (UEI CLAXYN5FDP93, Wenatchee WA) passes identity in the HQ state.
+      Versioned so the row the correction produces is audited on its own. Re-run for A024 only.
+  - version: v1.3
+    date: 2026-09-15
+    reprocessing_required: false
+    summary: >
+      Identity rulings by Matthew (2026-09-15). Code: a name listed under not_variants is excluded
+      from the registered-entity search (anchors and entities registered elsewhere) as well as from
+      award recipients -- v1.2 honoured not_variants only among recipients, so a confirmed different
+      firm registered out of state still blocked the no-registered-entity rule. Data
+      (data/company_aliases.json): HERZOG GROUP INC. (Compton, CA) confirmed unrelated to Herzog
+      Enterprises (A092); the six UEI near-misses for Austin Industries (A047) confirmed other firms,
+      so its registered entity with no location and no award stands as a resolved absence. Re-run
+      for A047 and A092.
+  - version: v1.2
+    date: 2026-09-14
+    reprocessing_required: false
+    summary: >
+      Two rulings by Matthew (2026-09-14). (1) No registered entity counts as an absence: when the
+      company has no UEI-bearing entity passing identity in its HQ state, and every such entity
+      registered elsewhere holds no award in the window (or there is none), same-state
+      near-misses WITHOUT a UEI are cleared, because a federal prime award requires a SAM
+      registration. A UEI-bearing near-miss still blocks. Measured before the run: Graham
+      Construction has GRAHAM CONSTRUCTION SERVICES, INC. (MN, parent GRAHAM GROUP LTD, no
+      award) and clears; Herzog Enterprises has HERZOG GROUP INC. (CA, its own parent, 1 contract
+      and 1 IDV) and does not -- the ruling was given on the premise "no registered entity at
+      all", which the directory does not bear out for Herzog, so it is referred back.
+      (2) Confirmed different firms seeded as not_variants in data/company_aliases.json: CAJUN
+      GROWERS INC (Cut Off, LA) for Cajun Industries and ANDERSON ENGINEERING OF MINNESOTA, LLC
+      (Minneapolis) for Anderson Trucking Service (data, not code). Re-run for A004, A026, A068,
+      A092. v1.1's five reviewed rows are unaffected (every one has an accepted recipient, and
+      the rule applies only when nothing is accepted).
+  - version: v1.1
+    date: 2026-09-14
+    reprocessing_required: false
+    summary: >
+      Alias resolution from source records (session 17 follow-up brief). Three identity paths
+      for names the exact-token rule refuses, none of which rescues a joint venture or a
+      professional practice and all of which still pass the HQ-state gate: (1) a recipient
+      whose name is exactly the form of a source-record alias in data/company_aliases.json;
+      (2) a same-state near-miss whose own USASpending recipient profile names a SAM parent
+      that passes identity for the company (Walbridge Aldinger -> The Walbridge Group; W. G.
+      Yates & Sons -> The Yates Companies; M. A. Mortenson Company -> M. A. Mortenson
+      Companies); (3) an anchor check -- when nothing is accepted, the company's own registered
+      entity is looked up and its awards counted, and if it holds none, near-misses with no UEI
+      are cleared (a name-only record cannot be a registered entity) while near-misses with a
+      UEI keep blocking, with the anchor evidence recorded. `not_variants` in the alias file
+      lets a human mark a near-miss as a confirmed different entity. Re-run only for the 12
+      companies that were near-misses in HR-0070.
+  - version: v1.0
+    date: 2026-09-13
+    reprocessing_required: false
+    summary: >
+      First build (Week 4). Built after the 2026-09-13 access diagnosis showed USASpending
+      was never blocked by the network: the probe's "IndStudyResearchBot" User-Agent tripped
+      the source's WAF on the token "ResearchBot", and the harness UA answers 200. Identity
+      is decided on the entities that hold awards in a five-year window (award records carry
+      recipient name, UEI and registered state): an exact-token name rule (initials
+      collapsed, dba split, JVs refused, a one-word common name matched in full), then
+      location corroboration against the company's HQ state. Same-named registrations in
+      other states are logged and not counted, so counts are floors. absent_confirmed only
+      when every variant was searched and no same-state recipient shares a distinctive
+      token; a same-state near-miss is not_covered / entity_below_threshold. Not a theme
+      instrument: the systems_integration absence-licensing question was examined and
+      answered no (award text describes work sold, the buyer-side subaward leg is empty
+      where measured and self-reported, and no statute compels disclosure).

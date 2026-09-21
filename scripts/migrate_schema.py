@@ -124,6 +124,26 @@ NEW_VOCABULARIES = {
                                  "successful_coherence_candidate", "not_applicable",
                                  "unknown_insufficient_evidence"]),
     "AB": ("coherence_pilot_cohort", ["over_firing", "comparison"]),
+    # ---- SEC reporting status, Harness Advisor design (session 17 wrap-up, 2026-09-13) ----
+    # Eight values, fixed by the design. `entity_unresolved` is IDENTITY doubt (a filer was
+    # found and cannot be confirmed to be the company; no status is asserted);
+    # `status_uncertain` is STATUS doubt (the filer is confirmed, its filings do not settle
+    # which status applies). Definitions and the writer's enforcement: core/sec_status.py.
+    "AC": ("sec_reporting_status", ["active_reporter", "form_d_only", "withdrawn_registration",
+                                    "never_registered", "insider_only", "deregistered",
+                                    "entity_unresolved", "status_uncertain"]),
+    # ---- evidence directionality, build handoff 2026-09-15 (Signal Advisor, finalized) ----
+    # Which side of a transaction the company sits on in the evidence. Optional and sparse:
+    # an untagged observation is untagged, not not_applicable. core/directionality.py.
+    "AD": ("evidence_directionality", ["buyer_side", "seller_side", "mixed", "not_applicable"]),
+    # ---- role-classification reviews, Matthew Lebrecht 2026-09-15 (convention 44) ----
+    # `correct` confirms the role under review; any other value names the role the reviewer
+    # found instead, or that it could not be placed. core/role_review.py.
+    "AE": ("role_review_verdict", ["correct", "buyer_acts", "buyer_articulates",
+                                   "provider_market_responds", "other", "cant_tell"]),
+    # ---- observation validity, Matthew Lebrecht 2026-09-15 (standing rule: no hard deletion) ----
+    # Additive-only: other invalidation reasons are appended as values. core/validity.py.
+    "AF": ("observation_validity_status", ["invalidated_extraction_defect"]),
     "W": ("state_status", ["observed", "absent", "null"]),
     "X": ("state_reason", ["observed", "absence_licensed_IC3", "absence_licensed_IC4",
                            "no_absence_license", "no_reach", "theme_not_detectable"]),
@@ -151,6 +171,9 @@ NEW_VOCABULARIES = {
 # key and the referential-integrity check stay simple, while leaving sellers trivially
 # separable in every query.
 VOCAB_ADDITIONS = {
+    # ---- observation validity statuses, 2026-09-15 (convention 45, Matthew: retirement becomes invalidation) ----
+    "AF": ("observation_validity_status", ["invalidated_not_reproduced", "invalidated_duplicate",
+                                          "invalidated_wrong_entity"]),
     "F": ("qualification_status", ["provider_benchmark"]),
     # ---- session 15 (2026-09-06): `industry` gains H-TRADEPRESS-01's outlet verticals so
     # Companies.industry_primary, populated from archived NAICS codes by
@@ -238,9 +261,53 @@ NEW_SHEETS = {
     "Coherence_Family_Dimensions": [
         "family_id", "dimension_id", "framework_version", "role_note",
     ],
+    # Build handoff 2026-09-15 (Signal Advisor, finalized). The STANDING PATTERN (convention
+    # 44): any optional, non-blocking classification of an observation lives in its own linked
+    # table keyed BY observation_id, never as a column on Observations, whether or not its
+    # vocabulary is expected to churn. Same convention 41 wall as Observation_Coherence_Tags
+    # (validate_repo_db check 13). Writer: core/directionality.py::append_tags.
+    "Observation_Directionality_Tags": [
+        "observation_id", "evidence_directionality", "tagged_at", "tagging_run_id", "notes",
+    ],
+    # Matthew Lebrecht, 2026-09-15 (option A of the buyer_articulates role-review report).
+    # Role-classification verdicts, the directionality table's shape (convention 44): keyed BY
+    # observation_id, never written to Observations, so a role verdict re-clears neither identity
+    # nor extraction and leaves review_source / review_status alone. Each row carries its
+    # numeric sample basis and names the committed verdicts artifact it must agree with.
+    # Same convention 41 wall (validate_repo_db check 14). Writer: core/role_review.py.
+    "Observation_Role_Reviews": [
+        "observation_id", "role_at_review", "role_verdict", "review_scope", "reviewer",
+        "review_source", "reviewed_at", "review_run_id", "sample_design", "sample_n",
+        "population_n", "stratum", "stratum_sampled_n", "stratum_population_n",
+        "reviewer_words", "artifact", "notes",
+    ],
+    # Matthew Lebrecht, 2026-09-15: no observation is ever hard-deleted again. An invalid observation keeps its row
+    # and id; each determination is a new row here. Append-only like SEC_Reporting_Status_History: nothing is
+    # updated except the forward pointer `superseded_by`. Convention 41 wall (validate_repo_db check 15). Writer:
+    # core/validity.py::append_determinations.
+    "Observation_Validity_History": [
+        "id", "observation_id", "validity_status", "as_of_date", "determined_at", "determined_by", "basis",
+        "superseded_by", "notes",
+    ],
+    # Session 17 wrap-up (2026-09-13), Harness Advisor design, final. A DEDICATED table, not
+    # an extension of Company_State_History. Append-only: every determination is a new row;
+    # the only field ever set after insert is `superseded_by`, the forward pointer from a
+    # historical row to the row that replaced it. `as_of_date` is what the evidence
+    # establishes; `determined_at` is the load date. There is no Companies.public_private
+    # column and there never will be: "is this company currently public" is DERIVED as the
+    # latest non-superseded row per company with sec_reporting_status = active_reporter
+    # (core/sec_status.py), and validate_repo_db check 12 fails on any such column.
+    # Writer: core/db.py::append_sec_status.
+    # Tab `SEC_Reporting_Status_History`: Excel caps sheet names at 31 characters; the design name is 36.
+    "SEC_Reporting_Status_History": [
+        "id", "company_id", "sec_reporting_status", "source_filing_type", "source_reference",
+        "as_of_date", "determined_at", "determined_by", "superseded_by", "notes",
+    ],
     # Session 14 (2026-09-06), convention 43: the observation-id registry. One row per id
     # ever assigned; an id belongs to its natural key forever and is reused if the same
     # claim is re-proposed after a delete-and-rewrite, never handed to a different claim.
+    # current_id (Matthew Lebrecht, 2026-09-15, item 20) is appended by add_registry_lineage_column, not declared
+    # here: add_sheets aborts on an existing sheet whose header differs, so a declared column could never be added.
     "Observation_Ids": [
         "observation_id", "natural_key", "company_id", "harness_id", "topic", "source_url",
         "first_assigned", "status", "retired_at", "retired_note",
@@ -376,6 +443,13 @@ REACH_VALUES = {
     "SRC-0048": ("archival", None, "archival", None, "§21.2 NLRB (High)"),
     "SRC-0049": ("current_only", None, "current_only", None, "§21.2 own-domain careers pages: current_only (High)"),
     "SRC-0050": ("archival", None, "archival", None, "ping 2026-09-02: CA portal is a permanent, indexable public record (High); list since 2012"),
+    "SRC-0004": ("archival", None, "archival", None, "§21.2 SEC EDGAR / 8-K archival (High); submissions records reach back past the 2023-12-18 Item 1.05 rule for every scoped filer (Code 2026-09-13, probed live)"),
+    "SRC-0011": ("archival", None, "archival", None, "state WARN lists (Code 2026-09-13, probed live): TX yearly listings 2020+, UT table 2009+; CA structured only for the current fiscal year, so CA realized reach is bounded to 2026-07-01 -- stated in every CA row"),
+    "SRC-0021": ("archival", None, "archival", None, "Socrata permit datasets for Chicago, Seattle, Austin carry issue dates back to the mid-2000s (Code 2026-09-13, probed live); county-dependent elsewhere (§21.2)"),
+    "SRC-0035": ("archival", None, "archival", None, "§21.2 Granicus/Legistar minutes archival (Medium); Seattle Legistar matters dated back to at least 2015 (Code 2026-09-13, probed live)"),
+    "SRC-0052": ("current_only", None, "current_only", None, "own-domain served homepage: present state only (Code 2026-09-13)"),
+    "SRC-0005": ("archival", None, "archival", None, "§21.2 USASpending awards: archival (High); API search floor 2007-10-01, harness reads a five-year window (2026-09-13)"),
+    "SRC-0020": ("archival", None, "archival", None, "§21.2 USASpending awards: archival (High); API search floor 2007-10-01, harness reads a five-year window (2026-09-13)"),
     "SRC-0051": ("archival", None, "archival", None, "WA AG list is a permanent public record (Code 2026-09-06, probed live: 38 pages back to 2015; unverified beyond the probe)"),
 }
 
@@ -432,6 +506,14 @@ VALIDATIONS = [
     ("Coherence_Framework_Taxonomy", "H", "Z", 20_000),   # entity_type
     ("Observation_Coherence_Tags", "C", "AA", 250_000),   # coherence_valence
     ("Coherence_Pilot_Runs", "D", "AB", 20_000),          # cohort
+    # ---- SEC reporting status history, session 17 wrap-up (2026-09-13) ----
+    ("SEC_Reporting_Status_History", "C", "AC", 20_000),  # sec_reporting_status
+    # ---- evidence directionality, build handoff 2026-09-15; a tag table, so 250,000 ----
+    ("Observation_Directionality_Tags", "B", "AD", 250_000),  # evidence_directionality
+    # ---- role-classification reviews, 2026-09-15; a review table keyed by observation, 250,000 ----
+    ("Observation_Role_Reviews", "C", "AE", 250_000),  # role_verdict
+    # ---- observation validity history, 2026-09-15; append-only, so 250,000 ----
+    ("Observation_Validity_History", "C", "AF", 250_000),  # validity_status
 ]
 
 
@@ -600,7 +682,9 @@ class Migration:
         ws = self.wb["Companies"]
         headers = [ws.cell(1, c).value for c in range(1, ws.max_column + 1)]
         added = []
-        for col in ("industry_source",):
+        # hq_city (2026-09-15, Matthew): the city beside hq_state, for the same-HQ-city identity
+        # standard; populated by scripts/populate_hq_city.py, never guessed.
+        for col in ("industry_source", "hq_city"):
             if col in headers:
                 continue
             headers.append(col)
@@ -610,7 +694,24 @@ class Migration:
         if added:
             self.note(f"Companies: appended {added}")
         else:
-            self.skip("Companies.industry_source already present")
+            self.skip("Companies.industry_source and hq_city already present")
+
+    def add_registry_lineage_column(self) -> None:
+        """Item 20 (Matthew Lebrecht, 2026-09-15): `current_id` on Observation_Ids, after `retired_note` -- the live id
+        a retired id's claim now carries. Filled by scripts/record_id_lineage.py, blank on live ids; check 15."""
+        if "Observation_Ids" not in self.wb.sheetnames:
+            return
+        ws = self.wb["Observation_Ids"]
+        headers = [ws.cell(1, c).value for c in range(1, ws.max_column + 1)]
+        if "current_id" in headers:
+            self.skip("Observation_Ids.current_id already present")
+            return
+        col = headers.index("retired_note") + 2
+        if ws.cell(1, col).value is not None:
+            raise SystemExit(f"Observation_Ids column {col} is not empty ({ws.cell(1, col).value!r}); not adding current_id")
+        ws.cell(1, col).value = "current_id"
+        ws.cell(1, col).font = openpyxl.styles.Font(bold=True)
+        self.note("Observation_Ids: appended current_id")
 
     def register_observation_ids(self) -> None:
         """Every live Observations row gets a registry entry (idempotent)."""
@@ -972,6 +1073,7 @@ class Migration:
         self.add_reach_columns()
         self.populate_reach()
         self.add_company_columns()
+        self.add_registry_lineage_column()
         self.register_observation_ids()
         self.backfill_audit_gate()
         self.backfill_instrument_class()

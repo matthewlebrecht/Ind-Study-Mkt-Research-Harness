@@ -61,10 +61,14 @@ EVIDENCE_FAMILY = "11_product_quality_customer_friction"
 ROOT = Path(__file__).resolve().parents[2]
 OUTPUT_DIR = ROOT / "harness_output" / HARNESS_ID
 
-# Which companies these databases actually cover. Hand-seeded, visible and checkable, for
-# the same reason H-TRADEPRESS-01's outlet map is: `Companies.industry_primary` is blank
-# for all 100 Anvil rows, and inferring an industry from a name inside the harness is the
-# silent guess convention 13 forbids.
+# Which companies these databases actually cover. Hand-seeded, visible and checkable.
+# Originally because `Companies.industry_primary` was blank for all 100 Anvil rows and
+# inferring an industry from a name is the silent guess convention 13 forbids. That field
+# has been populated for 68 companies since session 15 (2026-09-06), and the map still must
+# NOT be derived from it: it is wrong or blank on exactly the companies this instrument
+# exists for (4LIFE reads `construction`, Simplot and SpartanNash `logistics`; Scentsy,
+# Co-Diagnostics and doTERRA blank). It is used as a cross-check instead -- the 2026-09-15
+# check found one omission, A027, added below.
 #
 # Everything NOT listed here is `not_covered`, with the reason -- a general contractor has
 # no FDA registration and a freight carrier has no CPSC recall. Running them anyway would
@@ -106,6 +110,15 @@ POPULATION = {
     "A059": ["consumer", "food"],  # doTERRA International (supplements)
     "A007": ["consumer"],          # National Product Sales
     "C0002": ["medical_device"],   # Mack Group (Mack Molding, contract medical device mfg)
+    # ADDED 2026-09-16 (Matthew). A027 is product-making by Companies.industry_primary
+    # (`manufacturing`, NAICS 332999 from 3 attributed OSHA inspections) and was the one
+    # company the 2026-09-15 cross-check found outside this map while meeting its criterion.
+    # SAME OPEN QUESTION AS DUKE, stated rather than settled: Petersen fabricates industrial
+    # metal products (pressure vessels, structures), not consumer products, so CPSC may be
+    # the wrong instrument rather than an incomplete one. `consumer` is the only kind of the
+    # three that could cover a fabricated-metal manufacturer at all; if CPSC is judged not
+    # to, Petersen's zero means nothing and the honest record is `not_covered` again.
+    "A027": ["consumer"],          # Petersen Inc. (fabricated metal products)
 }
 
 
@@ -409,14 +422,17 @@ def main() -> int:
 
     report = None
     if args.commit:
-        # v1.0's rows rest on an admission test that has since been shown wrong, so they
-        # are removed rather than reconciled. Human-reviewed rows are never touched
-        # (keep_reviewed defaults True); nothing here has been reviewed.
-        removed = db.delete_observations(HARNESS_ID, keep_reviewed=True)
-        if removed:
-            print(f"  removed {removed} row(s) from superseded version(s) before writing")
+        # Convention 45 (2026-09-15): no observation is hard-deleted. v1.1 deleted v1.0's rows before writing; now the
+        # run reconciles in place and a row it no longer proposes is recorded invalid instead.
         report = db.sync_observations(proposed)
         run.observations_written = report.written
+        from core import validity
+        invalidated = validity.invalidate_unreproduced(db, HARNESS_ID, VERSION, proposed,
+                                                       company_ids={c["company_id"] for c in companies})
+        if invalidated["invalidated"] or invalidated["held"]:
+            print(f"  not reproduced: {len(invalidated['invalidated'])} machine row(s) recorded invalid "
+                  f"(convention 45; nothing deleted) {invalidated['invalidated']}; "
+                  f"{len(invalidated['held'])} human-reviewed row(s) held")
     run.material_revision_notes = (
         "v1.1 -- MATERIAL: a process-cause cue now has to share a SENTENCE with a failure "
         "predicate. v1.0 scored a MAUDE narrative in which Midmark's ECG software "

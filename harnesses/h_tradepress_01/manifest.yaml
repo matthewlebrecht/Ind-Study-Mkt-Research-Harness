@@ -1,7 +1,7 @@
 harness_id: H-TRADEPRESS-01
 module: h_tradepress_01
 name: Vertical Trade Press Extractor
-current_version: v1.7
+current_version: v1.8
 grandfathered_name: false
 
 signal_types:
@@ -46,6 +46,15 @@ sources:
       off-list result is logged as excluded rather than silently dropped.
 
 versions:
+  - version: v1.8
+    date: 2026-09-15
+    reprocessing_required: false
+    summary: >
+      End-of-article marker fixed. (1) `editor.s picks` matched only "Editor's picks", never Construction Dive's
+      "Editors' picks" (measured 2026-09-15: 57 of 667 cached pages leaked past the marker, 29 carried a theme only
+      from the leaked text). (2) Since v1.7 the end-of-article pattern held literal backspace bytes where `\b`
+      was meant after "filed under" and "more from", so neither marker ever matched. Offline replay of the fixed
+      code against the live rows: see the commit and CLAUDE.md for the measured change.
   - version: v1.7
     date: 2026-09-06
     reprocessing_required: false

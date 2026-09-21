@@ -1,0 +1,48 @@
+harness_id: H-SEC8K-01
+module: h_sec8k_01
+name: SEC Form 8-K Item 1.05 Cybersecurity Incident Reader
+current_version: v1.1
+grandfathered_name: false
+
+signal_types: [sec_8k_item_105_cybersecurity]
+declared_evidence_families: [1_first_party_strategy_governance]
+
+sources:
+  - id: SRC-0004
+    role: primary
+    notes: >
+      SEC EDGAR submissions records (data.sec.gov), read for Form 8-K / 8-K/A filings on or
+      after 2023-12-18 whose structured item list includes 1.05 (material cybersecurity
+      incident). IC4: required of SEC reporting companies. Scope derived from
+      SEC_Reporting_Status_History (current active_reporter rows), never from a stored
+      public/private flag. Requests declare SEC_CONTACT_EMAIL per SEC's fair-access policy.
+
+versions:
+  - version: v1.1
+    date: 2026-09-15
+    reprocessing_required: false
+    summary: >
+      Scope correction, no code change. v1.0's only run, HR-0073 (2026-09-13), was scoped on
+      the three active reporters the status table derived at the time, SpartanNash included.
+      SpartanNash was then recorded deregistered (SRS-0014, Form 15-12G as of 2025-10-02), so
+      the derived scope is two: Co-Diagnostics and Merit Medical. The re-run, HR-0080, read 65
+      8-Ks since 2023-12-18 (33 and 32), none with Item 1.05: 2 absent_confirmed, population 0.
+      HR-0080 was committed under the v1.0 label and RELABELED v1.1 on Matthew's decision
+      (2026-09-15) so the version history shows the correction; it is the only run audited and
+      published. v1.0 is never published under any version: HR-0073 stays permanently
+      quarantined, the same treatment as H-VENDOR-01's v1.0 runs HR-0061..HR-0063.
+  - version: v1.0
+    date: 2026-09-13
+    reprocessing_required: false
+    summary: >
+      Session 17 wrap-up (Week 4 item 5), on the Harness Advisor's final reporting-status
+      design. Scoped narrowly first: the derived current active reporters (three today:
+      Merit Medical, SpartanNash, Co-Diagnostics). Every 8-K / 8-K/A filed since the rule
+      took effect is checked for item code 1.05 in EDGAR's own structured item list (exact
+      code, never substring). A filing writes cybersecurity / buyer_acts / measured_result /
+      grade A; a scoped reporter with none is absent_confirmed, which core/composition.py
+      reads as absence_licensed_IC4 for cybersecurity only after the run is audited and
+      published. Near-zero yield is the expected consequence of the population's reporting
+      status mix, not a defect. A deregistration filed after a company's status as-of date
+      is logged (SpartanNash, Form 15-12G 2025-10-02), not acted on: the status table decides
+      scope.

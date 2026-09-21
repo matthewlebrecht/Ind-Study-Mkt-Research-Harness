@@ -14,6 +14,7 @@ working, not only the one that was broken.
 
 from __future__ import annotations
 
+import re
 import sys
 from pathlib import Path
 
@@ -177,6 +178,22 @@ def main() -> int:
           "capped -1 is one grade below full")
     check("A" not in extract.GRADE_BY_TYPE.values(),
           "A is not reachable from a journalist-mediated source")
+
+    print("\n9. the end-of-article marker (v1.8): every apostrophe form, and the markers the backspace bytes disabled")
+    prose = ["Walbridge has rolled out a new estimating platform across its offices, the company said this week in a release.",
+             "The contractor said the change would shorten preconstruction schedules on its larger federal projects this year."]
+    teaser = "Colin Stoner, chief information officer for Novo Construction, describes how the firm uses artificial intelligence."
+    for form in ("Editors\u2019 picks", "Editors' picks", "Editor's picks", "Editors picks", "EDITORS\u2019 PICKS",
+                 "Filed Under:", "Filed Under: Commercial Building, Tech", "More from Construction Dive"):
+        body = extract.article_body(prose + [form, teaser])
+        check(teaser not in body and "estimating platform" in body, f"{form!r} ends the article body")
+    for form in ("Editors\u2019 picks", "Editor's picks"):
+        check(bool(extract._FOOTER_RE.search(form)), f"{form!r} is a footer phrase too")
+    check(not re.search(r"(?i)editor.s picks", "Editors\u2019 picks"),
+          "(the pre-v1.8 pattern `editor.s picks` missed Construction Dive's form -- the defect)")
+    src = (Path(__file__).resolve().parents[2] / "harnesses" / "h_tradepress_01" / "extract.py").read_bytes()
+    check(not [b for b in src if b < 32 and b not in (9, 10, 13)],
+          "extract.py holds no control bytes (v1.7 stored backspaces where `\\b` was meant)")
 
     print(f"\n{PASSED} checks passed, {FAILED} failed.")
     return 1 if FAILED else 0

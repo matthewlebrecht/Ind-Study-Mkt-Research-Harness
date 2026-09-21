@@ -35,6 +35,16 @@ the underlying rows can be checked, and a divergence from the stored rollup is r
 rather than hidden. Definition matches `core/attempts.py::rollups` exactly -- `scope =
 scoped` rows only (convention 9), with `covered`, `absent_confirmed` and `partial` all
 counting as coverage (convention 6: a confirmed absence is coverage, not a miss).
+
+VALIDITY -- THREE MEASUREMENTS (Matthew Lebrecht, 2026-09-15, item 19). An observation recorded invalid (the
+observation validity history, read only through invalid_observation_ids) is read as invalid, and nothing is netted
+out silently: observation counts print total,
+valid and invalid; each quoted coverage line prints the rate over all covered attempts, how many covered attempts rest
+only on invalid evidence (a `covered`/`partial` attempt for a company whose released rows from that harness are all
+recorded invalid), and the rate without them. A confirmed absence writes no row, so it never rests on one.
+
+HISTORICAL RECORDS ARE NOT RECOMPUTED. Audit artifacts are read here only for whether a version was audited; their
+recorded populations and rates are what was true on their audit dates and are never quoted as current figures.
 """
 
 from __future__ import annotations
@@ -49,6 +59,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from core import audit  # noqa: E402
+from core import validity  # noqa: E402
 from core.attempts import COVERAGE_OUTCOMES, ROLLUP_STATUSES  # noqa: E402
 
 DEFAULT_DB = ROOT / "data" / "market_intel_db.xlsx"
@@ -82,6 +93,13 @@ def main() -> int:
     artifacts = audit.load_artifacts()
     grandfathered = audit.load_grandfathered()
 
+    invalid = validity.invalid_observation_ids(wb)
+    released_by_company: dict[tuple, list] = {}
+    for o in obs:
+        if str(o.get("publication_state")) == "released":
+            released_by_company.setdefault((str(o.get("harness_id")), str(o.get("company_id"))), []).append(
+                str(o.get("observation_id")))
+
     by_run: dict[str, list] = {}
     for a in attempts:
         by_run.setdefault(str(a.get("run_id") or ""), []).append(a)
@@ -95,13 +113,23 @@ def main() -> int:
         scoped = [a for a in by_run.get(rid, []) if str(a.get("scope")) == "scoped"
                   and st_status.get(str(a.get("attempted_signal")), "active") in ROLLUP_STATUSES]
         covered = sum(1 for a in scoped if str(a.get("outcome")) in COVERAGE_OUTCOMES)
+        covered_invalid_only = 0
+        for a in scoped:
+            if str(a.get("outcome")) in COVERAGE_OUTCOMES and str(a.get("outcome")) != "absent_confirmed":
+                ids = released_by_company.get((hid, str(a.get("company_id"))), [])
+                if ids and all(i in invalid for i in ids):
+                    covered_invalid_only += 1
+        version_obs = [str(o.get("observation_id")) for o in obs if str(o.get("harness_id")) == hid
+                       and str(o.get("harness_version")) == ver]
         rec = {
             "run_id": rid, "harness_id": hid, "version": ver,
             "scoped": len(scoped), "covered": covered,
             "rate": (covered / len(scoped)) if scoped else None,
+            "covered_invalid_only": covered_invalid_only,
+            "valid_rate": ((covered - covered_invalid_only) / len(scoped)) if scoped else None,
             "stored": r.get("coverage_rate"),
-            "obs": sum(1 for o in obs if str(o.get("harness_id")) == hid
-                       and str(o.get("harness_version")) == ver),
+            "obs": len(version_obs),
+            "obs_invalid": sum(1 for i in version_obs if i in invalid),
             "audited": (hid, ver) in artifacts,
             "grandfathered": (hid, ver) in grandfathered,
         }
@@ -118,18 +146,19 @@ def main() -> int:
             latest[rec["harness_id"]] = rec
 
     print("PUBLISHED COVERAGE — released versions only")
-    print("=" * 78)
-    print(f"{'harness':<22} {'ver':<6} {'run':<8} {'scoped':>7} {'cov':>5} "
-          f"{'rate':>7}  basis")
-    print("-" * 78)
+    print("=" * 96)
+    print(f"{'harness':<22} {'ver':<6} {'run':<8} {'scoped':>7} {'cov':>5} {'rate':>7} "
+          f"{'cov-inv':>7} {'valid':>7}  basis")
+    print("-" * 96)
     divergences = []
     for hid in sorted(latest):
         rec = latest[hid]
         basis = "audited" if rec["audited"] else (
             "grandfathered" if rec["grandfathered"] else "NO ARTIFACT")
         rate = "n/a" if rec["rate"] is None else f"{rec['rate']:.1%}"
+        vrate = "n/a" if rec["valid_rate"] is None else f"{rec['valid_rate']:.1%}"
         print(f"{hid:<22} {rec['version']:<6} {rec['run_id']:<8} "
-              f"{rec['scoped']:>7} {rec['covered']:>5} {rate:>7}  {basis}")
+              f"{rec['scoped']:>7} {rec['covered']:>5} {rate:>7} {rec['covered_invalid_only']:>7} {vrate:>7}  {basis}")
         if (rec["rate"] is not None and rec["stored"] is not None
                 and abs(rec["rate"] - float(rec["stored"])) > 0.0001):
             divergences.append(
@@ -164,17 +193,23 @@ def main() -> int:
         for rec in sorted(group, key=lambda r: (r["harness_id"], r["version"])):
             rate = "n/a" if rec["rate"] is None else f"{rec['rate']:.1%}"
             print(f"    {rec['harness_id']:<22} {rec['version']:<6} {rec['run_id']:<8} "
-                  f"{rec['obs']:>3} obs   (would be {rate}, NOT PUBLISHED)")
+                  f"{rec['obs']:>3} obs ({rec['obs'] - rec['obs_invalid']} valid, {rec['obs_invalid']} invalid)   "
+                  f"(would be {rate}, NOT PUBLISHED)")
     if not quarantined and not superseded:
         print("  (none)")
 
     print()
-    n_obs_released = sum(1 for o in obs
-                         if str(o.get("publication_state")) == "released")
-    n_obs_quar = sum(1 for o in obs
-                     if str(o.get("publication_state")) == "quarantined")
-    print(f"Observations: {n_obs_released} released, {n_obs_quar} quarantined "
-          f"({len(obs)} total)")
+    print("  cov-inv = covered attempts whose company's released rows from that harness are ALL recorded invalid;")
+    print("  valid = the rate without them. The rate column is unchanged by validity (it counts attempts).")
+    print()
+
+    def split(state):
+        ids = [str(o.get("observation_id")) for o in obs if str(o.get("publication_state")) == state]
+        n_inv = sum(1 for i in ids if i in invalid)
+        return f"{len(ids)} {state} ({len(ids) - n_inv} valid, {n_inv} invalid)"
+    print(f"Observations: {split('released')}, {split('quarantined')} "
+          f"({len(obs)} total: {len(obs) - sum(1 for o in obs if str(o.get('observation_id')) in invalid)} valid, "
+          f"{sum(1 for o in obs if str(o.get('observation_id')) in invalid)} invalid)")
     print("No blended project-wide figure is reported: the harnesses have different "
           "denominators")
     print("and different instrument biases (convention 21a), so a mean over them names "

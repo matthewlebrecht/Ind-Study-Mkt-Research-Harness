@@ -323,9 +323,9 @@ def main() -> int:
     ap.add_argument("--offline", action="store_true", help="replay archived responses only")
     ap.add_argument("--providers", help="comma-separated provider_ids to limit the run")
     ap.add_argument("--retire-stale", action="store_true",
-                    help="after syncing, remove this harness's machine rows whose claim "
+                    help="after syncing, record invalid (convention 45: nothing is deleted) this harness's machine rows whose claim "
                          "this run did not reproduce (human-reviewed rows are held, "
-                         "never removed). Use after an ADMISSION change in core/topics.py.")
+                         "never invalidated). Use after an ADMISSION change in core/topics.py.")
     args = ap.parse_args()
 
     cfg = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
@@ -468,13 +468,14 @@ def main() -> int:
 
     # ---- write ----
     report = db.sync_observations(proposed)
-    retired = {"removed": [], "held": []}
+    retired = {"invalidated": [], "held": []}
     if args.retire_stale:
-        # Only meaningful over the full provider set: a --providers subset would retire
+        # Only meaningful over the full provider set: a --providers subset would invalidate
         # every other provider's rows for not having been proposed.
         if args.providers:
             raise SystemExit("ABORT: --retire-stale needs the full provider set, not --providers")
-        retired = db.retire_unreproduced(HARNESS_ID, proposed)
+        from core import validity
+        retired = validity.invalidate_unreproduced(db, HARNESS_ID, VERSION, proposed)
     run.observations_written = report.written
     summary = run.close()
 
@@ -488,8 +489,8 @@ def main() -> int:
           f"{summary['attempts_not_covered']} not_covered)")
     print(f"  dedupe: {report.summary()}")
     if args.retire_stale:
-        print(f"  retired: {len(retired['removed'])} unreproduced machine row(s) removed "
-              f"[{', '.join(retired['removed'])}]"
+        print(f"  not reproduced: {len(retired['invalidated'])} machine row(s) recorded invalid "
+              f"(convention 45; nothing deleted) [{', '.join(retired['invalidated'])}]"
               + (f"; {len(retired['held'])} human-reviewed row(s) HELD "
                  f"[{', '.join(retired['held'])}]" if retired["held"] else ""))
     log["retired"] = retired

@@ -545,7 +545,7 @@ _FOOTER_RE = re.compile(
     # interview has been edited for brevity and clarity", so treating it as a footer
     # marker cut the Gilbane interview down to 911 characters and deleted every answer in
     # it. "Editor's picks" IS furniture; "editor's note" is the article talking.
-    r"(?i)(recommended reading|editor.s picks|sign up for|"
+    r"(?i)(recommended reading|editor\W?s?\W{0,2}\s*picks|sign up for|"
     r"get the free (?:daily )?newsletter|share this|copy link|most popular|"
     r"related articles?|more from|filed under|topics covered|"
     r"the trendline|company announcements|subscribe to)")
@@ -554,9 +554,13 @@ _FOOTER_RE = re.compile(
 # Tail-of-page markers that end the article outright when met as their own block after
 # prose has begun. Narrower than _FOOTER_RE on purpose: "sign up" and "subscribe" also
 # appear in inline newsletter boxes mid-article and would cut a Q&A in half.
+# v1.8 (2026-09-15): two defects in this pattern, both found that day. (1) `editor.s picks` allowed exactly one
+# character between "editor" and "s", so it matched "Editor's picks" and never Construction Dive's "Editors' picks".
+# (2) Since v1.7 (commit 15f7c18) the file held literal BACKSPACE bytes where `\b` was meant after "filed under" and
+# "more from", so neither marker could ever match a line. Both fixed; core/tests/test_tradepress.py section 9.
 _END_OF_ARTICLE_RE = re.compile(
-    r"(?i)^(recommended reading|editor.s picks|filed under.*|related (?:articles?|stories)|"
-    r"more from.*|topics covered|most popular|read next|trending now|keep up with the story.*)$")
+    r"(?i)^(recommended reading|editor\W?s?\W{0,2}\s*picks|filed under\b.*|related (?:articles?|stories)|"
+    r"more from\b.*|topics covered|most popular|read next|trending now|keep up with the story.*)$")
 
 
 def qa_passages(text: str, speaker_names: list[str],

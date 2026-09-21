@@ -647,14 +647,17 @@ def main() -> int:
 
     report = None
     if args.commit:
-        # v1.1 supersedes v1.0's row. Unreviewed, so nothing is at risk; the
-        # delete exists so the surviving row carries the version that actually
-        # produced it rather than a stale one (convention 27).
-        removed = db.delete_observations(HARNESS_ID, keep_reviewed=True)
-        if removed:
-            print(f"  removed {removed} row(s) from superseded version(s)")
+        # Convention 45 (2026-09-15): no observation is hard-deleted. v1.1 deleted the superseded row before writing;
+        # now the run reconciles in place and a row it no longer proposes is recorded invalid instead.
         report = db.sync_observations(proposed)
         run.observations_written = len(report.inserted)
+        from core import validity
+        invalidated = validity.invalidate_unreproduced(db, HARNESS_ID, VERSION, proposed,
+                                                       company_ids={c["company_id"] for c in companies})
+        if invalidated["invalidated"] or invalidated["held"]:
+            print(f"  not reproduced: {len(invalidated['invalidated'])} machine row(s) recorded invalid "
+                  f"(convention 45; nothing deleted) {invalidated['invalidated']}; "
+                  f"{len(invalidated['held'])} human-reviewed row(s) held")
     run.material_revision_notes = (
         "v1.0 -- CourtListener RECAP, party-scoped. NLRB declared and not read: no JSON "
         "interface exists (404 on every API path, JS shell on the search page).")

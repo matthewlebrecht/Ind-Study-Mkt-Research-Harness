@@ -315,6 +315,7 @@ def validate(db_path: Path) -> Report:
         i_ver = hr_headers.index("version")
         i_pub = hr_headers.index("publication_status")
         i_run = hr_headers.index("harness_run_id")
+        i_date = hr_headers.index("date_run") if "date_run" in hr_headers else None
 
         # Observations per (harness_id, harness_version), so a `superseded` claim can be
         # checked against the sheet instead of believed.
@@ -330,6 +331,7 @@ def validate(db_path: Path) -> Report:
                 obs_by_version[k] = obs_by_version.get(k, 0) + 1
 
         published: dict[tuple, list] = {}
+        run_dates: dict[tuple, list] = {}
         quarantined = set()
         superseded: dict[tuple, list] = {}
         for r in range(2, hr.max_row + 1):
@@ -339,8 +341,14 @@ def validate(db_path: Path) -> Report:
                     str(hr.cell(r, i_ver + 1).value or "").strip())
             status = str(hr.cell(r, i_pub + 1).value or "").strip().lower()
             run_id = str(hr.cell(r, i_run + 1).value or "").strip()
+            run_date = ""
+            if i_date is not None:
+                _d = hr.cell(r, i_date + 1).value
+                run_date = (_d.isoformat()[:10] if hasattr(_d, "isoformat")
+                            else str(_d or "").strip()[:10])
             if status == "published":
                 published.setdefault(pair, []).append(run_id)
+                run_dates.setdefault(pair, []).append((run_id, run_date))
             elif status == "quarantined":
                 quarantined.add(pair)
             elif status == "superseded":
@@ -353,14 +361,35 @@ def validate(db_path: Path) -> Report:
         grandfathered = audit.load_grandfathered()
         artifacts = audit.load_artifacts()
 
+        # A GRANDFATHERED VERSION IS NOT A CLOSED SET. The exemption records a hand audit of the
+        # output that existed on its date_added; a later run can write new rows under the same
+        # version label, and those rows would inherit an exemption nobody granted them. So the
+        # exemption is honoured only for versions whose published runs all predate it: a
+        # grandfathered version with a run dated AFTER date_added is audited like any other.
+        # Measured 2026-09-17: exactly one version has ever done this -- H-FMCSA-01 v1.3, which
+        # gained 4 rows from HR-0034 on 2026-09-01, the day after its exemption. It was caught
+        # by hand at the time and has an artifact, so this rule fails nothing today; it removes
+        # the reliance on catching the next one by hand.
+        added_on = audit.grandfathered_added_on()
+        post_exemption = {}
+        for pair in sorted(grandfathered):
+            since = added_on.get(pair, "")
+            later = [f"{rid} ({d})" for rid, d in run_dates.get(pair, []) if since and d and d > since]
+            if later:
+                post_exemption[pair] = later
+
         missing, malformed, failing = [], [], []
         for pair, run_ids in sorted(published.items()):
-            if pair in grandfathered:
+            if pair in grandfathered and pair not in post_exemption:
                 continue
             art = artifacts.get(pair)
             if art is None:
+                why = ("" if pair not in post_exemption else
+                       f" — GRANDFATHERED, but run(s) {', '.join(post_exemption[pair])} wrote to "
+                       f"it after its exemption on {added_on.get(pair)}, so those rows were never "
+                       f"audited by anyone")
                 missing.append(f"{pair[0]} {pair[1]} (runs {', '.join(run_ids)}) — "
-                               f"expected {audit.audit_path(*pair).name}")
+                               f"expected {audit.audit_path(*pair).name}{why}")
                 continue
             problems = audit.validate_artifact(art)
             if problems:
@@ -402,8 +431,10 @@ def validate(db_path: Path) -> Report:
 
         # Orphan artifacts are a warning, not a failure: auditing a version that has not
         # published yet is exactly the intended order of operations.
+        # A version audited and published, then superseded by a later version, keeps its artifact as the record of
+        # that audit: not an orphan (2026-09-15, H-BREACHPORTAL-01 v1.1).
         orphans = [f"{h} {v}" for (h, v) in artifacts
-                   if (h, v) not in published and (h, v) not in quarantined]
+                   if (h, v) not in published and (h, v) not in quarantined and (h, v) not in superseded]
         if orphans:
             rep.warn(f"audit artifact(s) with no matching Harness_Runs row: "
                      f"{', '.join(sorted(orphans))}")
@@ -416,11 +447,15 @@ def validate(db_path: Path) -> Report:
                          f"blast radius {verdict['blast_radius']}")
 
         if not (missing or malformed or failing or live_superseded):
-            gf = len([p for p in published if p in grandfathered])
+            gf = len([p for p in published if p in grandfathered and p not in post_exemption])
             tail = (f", {len(superseded)} superseded" if superseded else "")
             rep.ok(f"check 9: {len(published)} published harness version(s) — "
                    f"{len(published) - gf} audited, {gf} grandfathered, "
-                   f"{len(quarantined)} quarantined run(s) not yet publishing" + tail)
+                   f"{len(quarantined)} quarantined run(s) not yet publishing" + tail
+                   + (f"; {len(post_exemption)} grandfathered version(s) audited anyway "
+                      f"(rows written after the exemption): "
+                      f"{', '.join(f'{h} {v}' for h, v in sorted(post_exemption))}"
+                      if post_exemption else ""))
 
     # ---- 10. the observation-id registry agrees with the live sheet (convention 43) ----
     if "Observation_Ids" not in wb.sheetnames:
@@ -610,6 +645,293 @@ def validate(db_path: Path) -> Report:
                    f"{n_tags} tag(s), {n_pilot} pilot row(s); no gate module reads the tag "
                    f"table")
     # COHERENCE-WALL-CHECK-END
+
+    # ---- 12. SEC reporting status history (Harness Advisor design, session 17 wrap-up) ----
+    # Append-only integrity, forward-only supersession, one current row per company, and the
+    # standing rule that no sheet ever carries a public/private column: "is this company
+    # currently a reporter" is derived from this table (core/sec_status.py), never stored.
+    from core import sec_status as _sec
+    pp = [name for name in wb.sheetnames
+          if "public_private" in [str(wb[name].cell(1, c).value or "").strip().lower()
+                                  for c in range(1, wb[name].max_column + 1)]]
+    if pp:
+        rep.fail(f"a public_private column exists on {pp} -- reporting status is derived from "
+                 f"{_sec.SHEET}, never stored as a column (session 17 design)")
+    if _sec.SHEET not in wb.sheetnames:
+        rep.fail(f"{_sec.SHEET} missing -- run scripts/migrate_schema.py --apply")
+    else:
+        try:
+            srows = _sec.rows_from_sheet(wb[_sec.SHEET])
+        except ValueError as e:
+            srows = None
+            rep.fail(str(e))
+        if srows is not None:
+            by_id = {str(r["id"]): r for r in srows}
+            bad = []
+            if len(by_id) != len(srows):
+                bad.append("duplicate id")
+            for r in srows:
+                probs = _sec.problems_with(r, companies)
+                if probs:
+                    bad.append(f"{r['id']}: {probs[0]}")
+                sup = str(r.get("superseded_by") or "")
+                if sup:
+                    nxt = by_id.get(sup)
+                    if nxt is None:
+                        bad.append(f"{r['id']}: superseded_by {sup} does not exist")
+                    elif str(nxt["company_id"]) != str(r["company_id"]):
+                        bad.append(f"{r['id']}: superseded by another company's row {sup}")
+                    elif str(nxt["as_of_date"]) < str(r["as_of_date"]) or sup == str(r["id"]):
+                        bad.append(f"{r['id']}: superseded_by points backward ({sup})")
+            current = {}
+            for r in srows:
+                if not r.get("superseded_by"):
+                    current.setdefault(str(r["company_id"]), []).append(r["id"])
+            multi = {k: v for k, v in current.items() if len(v) > 1}
+            if multi:
+                bad.append(f"more than one current (non-superseded) row for {sorted(multi)[:4]}")
+            if bad:
+                rep.fail(f"{_sec.SHEET}: " + "; ".join(bad[:6]))
+            else:
+                counts = {}
+                for r in _sec.current_rows(srows).values():
+                    counts[r["sec_reporting_status"]] = counts.get(r["sec_reporting_status"], 0) + 1
+                rep.ok(f"check 12: SEC reporting status history holds -- {len(srows)} row(s), "
+                       f"{len(current)} company current status(es) {counts or '(unseeded)'}; "
+                       f"no public_private column anywhere")
+
+    # DIRECTIONALITY-WALL-CHECK-BEGIN  (reads the tag table only to VALIDATE it; the scan below
+    # exempts exactly this fenced region and still fails on any reference elsewhere in this file)
+    # ---- 13. evidence directionality (build handoff 2026-09-15) ----
+    #
+    # THE CONVENTION 41 WALL, as for coherence tagging: no code path that computes review_status,
+    # audit_verdict, publication_state or reprocessing_required may read the directionality tag
+    # table, directly or by join, or import its module. A source scan, asserted as a FAILURE.
+    import re
+    from core import directionality as _dir
+    if _dir.SHEET not in wb.sheetnames:
+        rep.fail(f"{_dir.SHEET} missing -- run scripts/migrate_schema.py --apply")
+    else:
+        DIR_GATE_MODULES = ["core/db.py", "core/audit.py", "core/attempts.py",
+                            "core/composition.py", "scripts/write_audit_artifact.py",
+                            "scripts/validate_repo_db.py", "scripts/published_coverage.py",
+                            "scripts/audit_sample.py", "scripts/check_run_ledger.py"]
+        _src = (ROOT / "scripts/validate_repo_db.py").read_text(encoding="utf-8").splitlines()
+        _db = next((i for i, l in enumerate(_src, 1)
+                    if "DIRECTIONALITY-WALL-CHECK-BEGIN" in l and "in l" not in l), 0)
+        _de = next((i for i, l in enumerate(_src, 1)
+                    if "DIRECTIONALITY-WALL-CHECK-END" in l and "in l" not in l), 0)
+        _pat = re.compile(r"Observation_Directionality_Tags|core\.directionality|import\s+directionality"
+                          r"|directionality\s+import")
+        dir_leaks = []
+        for mod in DIR_GATE_MODULES:
+            path = ROOT / mod
+            if not path.exists():
+                continue
+            for i, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+                if not _pat.search(line):
+                    continue
+                if mod == "scripts/validate_repo_db.py" and _db and _de and _db <= i <= _de:
+                    continue
+                dir_leaks.append(f"{mod}:{i}")
+        if dir_leaks:
+            rep.fail("CONVENTION 41 WALL BREACHED: gate-computing module(s) reference the "
+                     "directionality tag table or module -- " + ", ".join(dir_leaks) + ". Tagging "
+                     "must not feed review_status / audit_verdict / publication_state / "
+                     "reprocessing_required. Escalate, do not work around.")
+        try:
+            drows = _dir.rows_from_sheet(wb[_dir.SHEET])
+        except ValueError as e:
+            drows = None
+            rep.fail(str(e))
+        if drows is not None:
+            ids = _dir.observation_ids(wb)
+            dbad, dkeys, ddupes = [], set(), []
+            for r in drows:
+                probs = _dir.problems_with(r, ids)
+                if probs:
+                    dbad.append(f"{r['observation_id']}: {probs[0]}")
+                key = (str(r["observation_id"]), str(r["tagging_run_id"]))
+                if key in dkeys:
+                    ddupes.append(key)
+                dkeys.add(key)
+            if dbad:
+                rep.fail(f"{_dir.SHEET}: {len(dbad)} bad row(s) -- {dbad[:4]}")
+            if ddupes:
+                rep.fail(f"{_dir.SHEET}: duplicate (observation_id, tagging_run_id) pair(s): {ddupes[:4]}")
+            if not (dir_leaks or dbad or ddupes):
+                by_value, by_run = {}, {}
+                for r in drows:
+                    by_value[r["evidence_directionality"]] = by_value.get(r["evidence_directionality"], 0) + 1
+                    by_run[r["tagging_run_id"]] = by_run.get(r["tagging_run_id"], 0) + 1
+                rep.ok(f"check 13: evidence directionality wall holds -- {len(drows)} tag(s) "
+                       f"{by_value or '(none yet)'} across {len(by_run)} tagging run(s); no gate "
+                       f"module reads the tag table")
+    # DIRECTIONALITY-WALL-CHECK-END
+
+    # ROLE-REVIEW-WALL-CHECK-BEGIN  (reads the role-review table only to VALIDATE it; the scan below
+    # exempts exactly this fenced region and still fails on any reference elsewhere in this file)
+    # ---- 14. role-classification reviews (Matthew Lebrecht, 2026-09-15; convention 44) ----
+    #
+    # A role verdict must not claim more than it is. Each of these is a FAILURE:
+    #   (a) THE CONVENTION 41 WALL: a gate-computing module names the table or imports its module,
+    #       which would let a role verdict feed review_status / audit_verdict / publication_state /
+    #       reprocessing_required;
+    #   (b) a row that is not scoped role_only, does not state that it re-clears neither identity
+    #       nor extraction, is not human-sourced, repeats the reviewed role as its verdict, gives a
+    #       non-'correct' verdict without the reviewer's words, or lacks a coherent numeric sample
+    #       basis;
+    #   (c) a run whose rows do not number exactly its sample_n, a stratum holding a different number
+    #       of rows than it claims reviewed, or strata that do not partition the sample and the
+    #       population -- so no row can claim coverage that was not reviewed;
+    #   (d) a run that disagrees, row for row or in either direction, with the committed verdicts
+    #       artifact it names.
+    # A reviewed observation whose evidence_role has changed since is a WARNING: that is history.
+    import re
+    from core import role_review as _rr
+    if _rr.SHEET not in wb.sheetnames:
+        rep.fail(f"{_rr.SHEET} missing -- run scripts/migrate_schema.py --apply")
+    else:
+        RR_GATE_MODULES = ["core/db.py", "core/audit.py", "core/attempts.py",
+                           "core/composition.py", "scripts/write_audit_artifact.py",
+                           "scripts/validate_repo_db.py", "scripts/published_coverage.py",
+                           "scripts/audit_sample.py", "scripts/check_run_ledger.py"]
+        _rsrc = (ROOT / "scripts/validate_repo_db.py").read_text(encoding="utf-8").splitlines()
+        _rb = next((i for i, l in enumerate(_rsrc, 1)
+                    if "ROLE-REVIEW-WALL-CHECK-BEGIN" in l and "in l" not in l), 0)
+        _re_end = next((i for i, l in enumerate(_rsrc, 1)
+                        if "ROLE-REVIEW-WALL-CHECK-END" in l and "in l" not in l), 0)
+        _rpat = re.compile(r"Observation_Role_Reviews|core\.role_review\b|import\s+role_review\b"
+                           r"|role_review\s+import")
+        rr_leaks = []
+        for mod in RR_GATE_MODULES:
+            path = ROOT / mod
+            if not path.exists():
+                continue
+            for i, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+                if not _rpat.search(line):
+                    continue
+                if mod == "scripts/validate_repo_db.py" and _rb and _re_end and _rb <= i <= _re_end:
+                    continue
+                rr_leaks.append(f"{mod}:{i}")
+        if rr_leaks:
+            rep.fail("CONVENTION 41 WALL BREACHED: gate-computing module(s) reference the role-review "
+                     "table or module -- " + ", ".join(rr_leaks) + ". A role verdict must not feed "
+                     "review_status / audit_verdict / publication_state / reprocessing_required. "
+                     "Escalate, do not work around.")
+        try:
+            rrows = _rr.rows_from_sheet(wb[_rr.SHEET])
+        except ValueError as e:
+            rrows = None
+            rep.fail(str(e))
+        if rrows is not None:
+            rids = _rr.observation_ids(wb)
+            rbad = []
+            for r in rrows:
+                probs = _rr.problems_with(r, rids)
+                if probs:
+                    rbad.append(f"{r['observation_id']}: {probs[0]}")
+            rbatch = _rr.batch_problems(rrows)
+            rart = _rr.artifact_problems(rrows, ROOT)
+            for label, items in (("bad row(s)", rbad), ("run problem(s)", rbatch),
+                                 ("disagreement(s) with the verdicts artifact", rart)):
+                if items:
+                    rep.fail(f"{_rr.SHEET}: {len(items)} {label} -- {items[:4]}")
+            drift = _rr.role_drift(rrows, _rr.current_roles(wb))
+            if drift:
+                rep.warn(f"{_rr.SHEET}: {len(drift)} reviewed observation(s) whose evidence_role has "
+                         f"changed since review -- {drift[:4]}")
+            if not (rr_leaks or rbad or rbatch or rart):
+                by_verdict, runs = {}, set()
+                for r in rrows:
+                    by_verdict[r["role_verdict"]] = by_verdict.get(r["role_verdict"], 0) + 1
+                    runs.add(r["review_run_id"])
+                rep.ok(f"check 14: role reviews hold -- {len(rrows)} verdict(s) "
+                       f"{by_verdict or '(none yet)'} across {len(runs)} run(s), each role-only, "
+                       f"reconciled to its sample and its artifact; no gate module reads the table")
+    # ROLE-REVIEW-WALL-CHECK-END
+
+    # VALIDITY-WALL-CHECK-BEGIN  (reads the validity table only to VALIDATE it; the scan below exempts exactly
+    # this fenced region and still fails on any reference elsewhere in this file)
+    # ---- 15. observation validity history (Matthew Lebrecht, 2026-09-15: no observation is hard-deleted) ----
+    #
+    # FAILURES: (a) the convention 41 wall -- a gate-computing module names the validity table or imports its
+    # module; (b) a malformed determination; (c) broken history -- a superseded_by that is missing, backward or
+    # about another observation, or more than one current determination for an observation; (d) a determination
+    # on an observation whose row is gone (an invalid observation must persist); (e) a Company_State_History row
+    # citing an id that was never assigned.
+    # WARNINGS: derivation rows citing DELETED observations (retired ids, the pre-rule hard deletions) or
+    # INVALIDATED ones -- named so they are seen, not failures, because derivations are immutable history.
+    import re
+    from core import validity as _val
+    if _val.SHEET not in wb.sheetnames:
+        rep.fail(f"{_val.SHEET} missing -- run scripts/migrate_schema.py --apply")
+    else:
+        # Amended 2026-09-15 (Matthew, item 19): composition, published coverage and the reconciler read an invalid
+        # row as invalid, through core/validity.py::invalid_observation_ids only (the reconciler only inside
+        # sync_observations). Any other read from a gate module is still a breach.
+        val_leaks = _val.wall_violations(ROOT)
+        if val_leaks:
+            rep.fail("CONVENTION 41 WALL BREACHED: gate-computing module(s) read observation validity other than "
+                     "through invalid_observation_ids in a permitted reader -- " + ", ".join(val_leaks) + ". "
+                     "Validity must not feed review_status / audit_verdict / publication_state / "
+                     "reprocessing_required. Escalate, do not work around.")
+        try:
+            vrows = _val.rows_from_sheet(wb[_val.SHEET])
+        except ValueError as e:
+            vrows = None
+            rep.fail(str(e))
+        if vrows is not None:
+            v_live = _val.live_observation_ids(wb)
+            v_reg = _val.registry(wb)
+            v_hist = _val.history_problems(vrows, v_live, set(v_reg))
+            if v_hist:
+                rep.fail(f"{_val.SHEET}: {len(v_hist)} problem(s) -- {v_hist[:4]}")
+            v_cur = _val.current_rows(vrows)
+            v_never, v_deleted, v_invalid = set(), {}, {}
+            for d in _val.derivation_citations(wb):
+                for oid, state in _val.citation_states(d["cited"], v_live, v_reg, v_cur).items():
+                    if state == "never assigned":
+                        v_never.add(oid)
+                    elif state == "deleted":
+                        v_deleted.setdefault(oid, 0)
+                        v_deleted[oid] += 1
+                    elif state.startswith("invalidated"):
+                        v_invalid.setdefault(oid, 0)
+                        v_invalid[oid] += 1
+            if v_never:
+                rep.fail(f"Company_State_History cites observation id(s) never assigned: {sorted(v_never)[:6]}")
+            if v_deleted:
+                rep.warn(f"Company_State_History cites {len(v_deleted)} DELETED observation(s) (retired ids, no row) "
+                         f"in {sum(v_deleted.values())} citation(s): {sorted(v_deleted)} -- restore and record "
+                         f"validity, or leave as named history")
+            if v_invalid:
+                rep.warn(f"Company_State_History cites {len(v_invalid)} INVALIDATED observation(s) in "
+                         f"{sum(v_invalid.values())} citation(s): {sorted(v_invalid)}")
+            v_hard = _val.hard_deletions(wb)
+            if v_hard:
+                rep.fail(f"NO HARD DELETION (convention 45): {len(v_hard)} retired observation id(s) whose claim has "
+                         f"no row -- {v_hard[:6]}. Restore them through core/db.py::restore_observation and record "
+                         f"their validity.")
+            v_db_deletes = "delete_rows(" in (ROOT / "core/db.py").read_text(encoding="utf-8")
+            if v_db_deletes:
+                rep.fail("NO HARD DELETION (convention 45): core/db.py deletes sheet rows again")
+            v_renum = _val.renumbered(wb)
+            v_lineage = _val.lineage_problems(wb)
+            if v_lineage:
+                rep.fail(f"ID LINEAGE (item 20): {len(v_lineage)} registry row(s) whose current_id is wrong -- "
+                         f"{v_lineage[:4]}. Run scripts/record_id_lineage.py.")
+            if not (val_leaks or v_hist or v_never or v_hard or v_db_deletes or v_lineage):
+                by_status = {}
+                for r in v_cur.values():
+                    by_status[r["validity_status"]] = by_status.get(r["validity_status"], 0) + 1
+                rep.ok(f"check 15: observation validity history holds -- {len(vrows)} determination(s), "
+                       f"{len(v_cur)} current {by_status or '(none yet)'}; every determined observation still has "
+                       f"its row; no hard deletion ({len(v_renum)} pre-rule id(s) renumbered onto live claims, each "
+                       f"recording its current_id); "
+                       f"gate modules read validity only through invalid_observation_ids in "
+                       f"{', '.join(sorted(_val.READERS))}")
+    # VALIDITY-WALL-CHECK-END
 
     return rep
 

@@ -1,7 +1,7 @@
 harness_id: H-PRODUCTQUALITY-01
 module: h_productquality_01
 name: Federal Recall & Complaint Extractor
-current_version: v1.4
+current_version: v1.5
 grandfathered_name: false
 
 signal_types: [product_quality_event]
@@ -33,6 +33,22 @@ sources:
       rather than dropped so the dependency and its status are recorded.
 
 versions:
+  - version: v1.5
+    date: 2026-09-16
+    reprocessing_required: false
+    summary: >
+      Population map 15 -> 16 (Matthew): A027 Petersen Inc. added as `consumer` (CPSC). The
+      2026-09-15 cross-check against Companies.industry_primary found it product-making
+      (manufacturing, NAICS 332999) and absent from the map -- the only such company. No
+      other code change.
+    notes: >
+      NOT RUN. The next run will move this harness's coverage_rate from 0.1389 to 16/108 =
+      0.1481 by the map change alone -- the rate measures the map's length, not the source
+      (docs/diagnostics/productquality_attempts_control_2026-09-15.md). Open, as for Duke:
+      Petersen makes industrial fabricated metal, so CPSC may be the wrong instrument, in
+      which case an absent_confirmed for it would assert a clean record a consumer-product
+      database is not complete for.
+
   - version: v1.4
     date: 2026-09-03
     reprocessing_required: false

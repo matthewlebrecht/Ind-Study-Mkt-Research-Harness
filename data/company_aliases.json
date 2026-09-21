@@ -9,7 +9,9 @@
   "",
   "Every entry is a documented limit on automation: a fact a human had to supply.",
   "Keep 'why' populated so the Week 4 review can count how much human seeding the",
-  "portfolio actually required, rather than estimating it."
+  "portfolio actually required, rather than estimating it.",
+  "",
+  "Optional 'not_variants': names a human has confirmed are a DIFFERENT entity from the company; H-PROCUREMENT-01 v1.1 refuses them as confirmed_different_entity so they stop blocking an absence. Seeded only by a recorded decision, never by a harness."
  ],
  "C0002": {
   "canonical_name": "Mack Group",
@@ -39,5 +41,81 @@
    "Kenco Logistics"
   ],
   "why": "Kenco Group is the holding-brand name; the operating entities that appear in federal records are Kenco Logistics, Inc. and Kenco Logistic Services, LLC. NLRB case search is a phrase match and returns 0 for 'Kenco Group' while 'Kenco' returns 5 cases, all of them genuinely Kenco -- the same shape as the Mack Group / Mack Molding seed for C0002, and the same false-absence risk convention 6a exists to stop. 'Kenco' is a coined token, so it is safe as an identity under convention 31 in a way 'Prime' is not. Seeded 2026-09-01."
+ },
+ "A039": {
+  "canonical_name": "Mortenson",
+  "name_variants": [
+   "M. A. MORTENSON COMPANIES, INC.",
+   "M. A. MORTENSON COMPANY"
+  ],
+  "why": "Source records, 2026-09-14. USASpending recipient M. A. MORTENSON COMPANY (UEI GPXRWUEUHZ19, Minneapolis MN) lists M. A. MORTENSON COMPANIES, INC. (UEI PGUPK1DSLPN9) as its SAM parent entity; the parent name was supplied by the session 17 follow-up brief and confirmed on that record, and the recipient legal name is taken from the same record. The parent name alone does not match the permit strings ('MA Mortenson Company'), because COMPANIES is not COMPANY; the recipient name does."
+ },
+ "A003": {
+  "canonical_name": "The McShane Companies",
+  "name_variants": [
+   "McShane Construction Company"
+  ],
+  "why": "Source record, 2026-09-14. City of Chicago building permits name MCSHANE CONSTRUCTION COMPANY, LLC as general contractor with contact address Rosemont, IL -- the company's own HQ city in Companies. No USASpending recipient record carries the name; the permit portal's address is the corroboration."
+ },
+ "A012": {
+  "canonical_name": "Clyde Companies",
+  "name_variants": [
+   "W. W. CLYDE & CO."
+  ],
+  "why": "Source record, 2026-09-14 (same-HQ-city standard, as McShane). USASpending recipient W. W. CLYDE & CO. (UEI MH2KKA8M75E9) is registered in OREM, UT, Clyde Companies' HQ city, and lists itself as its own SAM parent, so there is no parent link; the identity rests on the company's distinctive name at its HQ city. Not a punctuation mismatch: every spelling tokenizes to WW CLYDE, refused for the extra token."
+ },
+ "A050": {
+  "canonical_name": "Leprino Foods",
+  "name_variants": [
+   "LEPRINO FOODS DAIRY PRODUCTS COMPANY"
+  ],
+  "why": "Source record, 2026-09-14 (same-HQ-city standard, as McShane). USASpending recipient LEPRINO FOODS DAIRY PRODUCTS COMPANY (UEI D4MJSVZ7TNL8; child-level parent G27DCPKEJXM9 of the same name) is registered in DENVER, CO, Leprino's HQ city; no link to a differently named parent."
+ },
+ "A004": {
+  "canonical_name": "Cajun Industries Holdings LLC",
+  "name_variants": [
+   "CAJUN INDUSTRIES LLC"
+  ],
+  "why": "Source record, 2026-09-14 (same-HQ-city standard, as McShane). USASpending recipient CAJUN INDUSTRIES LLC (UEI VD9PFDJUDR37) is registered in BATON ROUGE, LA, the company's HQ city, under SAM parent CAJUN INDUSTRIES, LLC (UEI KK5YUK9FE8N1). The canonical name's HOLDINGS token is why the exact-token rule refused it. not_variants: CAJUN GROWERS INC (UEI K2B7MGJ9D2J5, Cut Off, LA, small business, one grant) confirmed a different firm by Matthew, 2026-09-14.",
+  "not_variants": [
+   "CAJUN GROWERS INC"
+  ]
+ },
+ "A068": {
+  "canonical_name": "Anderson Trucking Service (ATS)",
+  "name_variants": [],
+  "not_variants": [
+   "ANDERSON ENGINEERING OF MINNESOTA, LLC"
+  ],
+  "why": "not_variants: ANDERSON ENGINEERING OF MINNESOTA, LLC (UEI N3WLAAEHKYN8, Minneapolis MN, a veteran-owned engineering firm and its own SAM parent) confirmed a different firm by Matthew, 2026-09-14. The company's own registered entity is ANDERSON TRUCKING SERVICE, INC. (UEI E4AHCJK3MK16, MN), which holds no award in the window."
+ },
+ "A092": {
+  "canonical_name": "Herzog Enterprises",
+  "name_variants": [],
+  "not_variants": [
+   "HERZOG GROUP INC."
+  ],
+  "why": "not_variants: HERZOG GROUP INC. (UEI RC7SWPVPWE81, Compton CA, its own SAM parent, 1 contract + 1 IDV in the window) confirmed unrelated to Herzog Enterprises (St. Joseph, MO rail/highway contractor) by Matthew, 2026-09-15: separate corporate registration, different industry, no connection found."
+ },
+ "A047": {
+  "canonical_name": "Austin Industries",
+  "name_variants": [],
+  "not_variants": [
+   "AUSTIN TASK INC",
+   "AUSTIN PRECISION PRODUCTS INCORPORATED",
+   "AUSTIN AIRPORT INVESTMENT LLC",
+   "AUSTIN H. I. BORROWER LLC",
+   "AUSTIN GROUPS FOR THE ELDERLY",
+   "AUSTIN GEOTECH SERVICES INC."
+  ],
+  "why": "not_variants: the six same-state UEI near-misses from HR-0076 confirmed other firms by Matthew, 2026-09-15. The company's registered entity is AUSTIN INDUSTRIES INC DELAWARE CORPORATION (UEI RZ6KK34KE6Y1, no location on its record), which holds no award in the window; the 0-award absence is accepted as resolved."
+ },
+ "A035": {
+  "canonical_name": "Clayco",
+  "name_variants": [],
+  "not_variants": [
+   "CLAYCO CONSTRUCTION"
+  ],
+  "why": "not_variants: the Austin permit contractor 'CLAYCO CONSTRUCTION' (contractor address Hutto, TX; a small residential contractor with an electrician license; no SAM/USASpending record) confirmed unrelated to Clayco (St. Louis, MO design-build) by Matthew, 2026-09-15. Do not alias."
  }
 }

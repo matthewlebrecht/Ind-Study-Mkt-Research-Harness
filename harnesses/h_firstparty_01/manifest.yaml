@@ -1,7 +1,7 @@
 harness_id: H-FIRSTPARTY-01
 module: h_firstparty_01
 name: First-Party Announcement Extractor
-current_version: v1.2
+current_version: v1.3
 grandfathered_name: false
 
 signal_types: [first_party_announcement]
@@ -33,6 +33,32 @@ sources:
       executive -- which is the upgrade rule the taxonomy itself specifies.
 
 versions:
+  - version: v1.3
+    date: 2026-09-15
+    reprocessing_required: true
+    affected_topics: [all]
+    summary: >
+      Article-body extraction (harnesses/h_firstparty_01/body.py). v1.2 classified themes on the whole page --
+      navigation, teaser rails, footers and cookie banners -- and an offline dry run found 109 of its 230 rows with
+      no theme match in the article body; eight rows so matched were judged by Matthew Lebrecht to rest on page
+      furniture (seven Construction Dive / ENR pages, three Caddell cookie-banner pages) and are recorded
+      invalidated_extraction_defect. v1.3 reads identity, themes, state and quotes from the article body only. The
+      body composes H-VENDOR-01 v1.2's chrome strip with H-TRADEPRESS-01 v1.7's prose filter and end-of-article
+      cut, with the five fixes the first composition needed: list items inside the article are prose; a footer
+      phrase ends the body only after article prose has begun; consent banners are excluded; the end marker
+      matches "Editors' picks"; the end is found before chrome is stripped. Verified on the 111 pages the rows
+      came from (core/tests/test_firstparty_body.py, fixtures in core/tests/fixtures/firstparty_pages).
+    notes: >
+      RUN 2026-09-15 as HR-0083, after Matthew lifted the hold the same day (item 22): an offline replay of the
+      HR-0041 cache with --commit --retire-stale. 110 proposals -- 3 inserted, 27 refreshed, 78 unchanged, 1 held --
+      and 97 machine rows that v1.3 no longer produces recorded invalidated_extraction_defect rather than removed
+      (Matthew's decision, item 4; the status names the reason), with 18 human-reviewed rows HELD, not invalidated.
+      HR-0083 is QUARANTINED: it holds 30 rows and publishes no coverage number until an audit artifact exists at
+      harness_output/audits/H-FIRSTPARTY-01__v1.3.json. That audit has not been drawn.
+      KNOWN, from that run: 8 of the 97 carry a status that overstates the reason -- O00297, O00298, O00354, O00355,
+      O00431 were lost to the body-based identity test, O00324 and O00325 to staleness, O00359 to theme admission,
+      and their matched terms are still in the article body. Whether to supersede them is Matthew's decision;
+      core/tests/test_firstparty_body.py section 9 pins the exception set so it cannot grow unnoticed.
   - version: v1.2
     date: 2026-09-03
     reprocessing_required: false

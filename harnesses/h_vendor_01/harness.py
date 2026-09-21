@@ -68,16 +68,16 @@ sys.path.insert(0, str(ROOT))
 from core import topics  # noqa: E402
 from core.cache import DatedCache  # noqa: E402
 from core.db import MarketIntelDB, Observation, today  # noqa: E402
-from core.resolution import tokens  # noqa: E402
+from core.resolution import STATE_NAMES, WEAK_TOKENS, state_code, tokens  # noqa: E402
 from core.robots import RobotsGate  # noqa: E402
 from core.search import host_of  # noqa: E402
 from harnesses.h_execid_01.extract import html_lines  # noqa: E402
 from harnesses.h_execid_01.source import SiteClient  # noqa: E402
-from harnesses.h_firstparty_01.article import is_about_company  # noqa: E402
+from harnesses.h_firstparty_01.article import COMMON_WORD_NAMES, is_about_company  # noqa: E402
 
 HARNESS_ID = "H-VENDOR-01"
 HARNESS_NAME = "Vendor & Partner Disclosure Reader"
-VERSION = "v1.0"
+VERSION = "v1.2"
 FAMILY = "6_vendor_partner_disclosure"
 SIGNAL_DEPLOY = "vendor_case_study_deployment_fact"
 SIGNAL_QUOTE = "vendor_case_study_buyer_quote"
@@ -85,7 +85,15 @@ OUTPUT_DIR = ROOT / "harness_output" / HARNESS_ID
 SEED_GLOB = str(ROOT / "harness_output" / "H-EXECVOICE-01" / "run-*.json")
 
 # Hosts EXECVOICE tagged as vendor content by URL shape that are not vendor content.
-NOT_VENDOR_HOSTS = {"appsruntheworld.com": "executive_data_aggregator_not_vendor_content"}
+NOT_VENDOR_HOSTS = {"appsruntheworld.com": "executive_data_aggregator_not_vendor_content",
+                    # v1.1: a business directory profile is not a vendor's customer page
+                    # (EXECVOICE logged a dnb.com profile against Scentsy, 2026-09-06)
+                    "dnb.com": "business_directory_not_vendor_content"}
+# v1.1: a university or government page is never vendor content. v1.0 read a University of
+# Michigan dyslexia-help "success story" about Suffolk's CEO as a vendor page because EXECVOICE
+# tagged it by URL shape, and it counted toward an absence.
+NOT_VENDOR_TLDS = {"edu": "university_page_not_vendor_content",
+                   "gov": "government_page_not_vendor_content"}
 
 DEPLOY_RE = re.compile(
     r"\b(implement\w*|deploy\w*|adopt\w*|roll(?:ed|ing|s)?\s+out|migrat\w*|standardi[sz]\w*|"
@@ -116,19 +124,27 @@ def seeds() -> tuple[list[dict], list[dict]]:
         except json.JSONDecodeError:
             continue
         for e in log.get("excluded_vendor_urls") or []:
-            key = (str(e["company_id"]), str(e["url"]))
+            # v1.1: "grantthornton.com" and "www.grantthornton.com" are one page
+            key = (str(e["company_id"]), re.sub(r"^(https?://)www\.", r"\1", str(e["url"])))
             if key in seen:
                 continue
             seen.add(key)
-            rec = {"company_id": key[0], "url": key[1], "execvoice_reason": e.get("reason"),
+            # The normalised form is the DEDUPE key only. The first v1.1 dry run fetched the
+            # stripped URL, and openspace.ai without www served a page that no longer read as
+            # about Joeris -- the one page v1.0 had read correctly (convention 37).
+            rec = {"company_id": key[0], "url": str(e["url"]), "execvoice_reason": e.get("reason"),
                    "seed_log": Path(path).name}
             host = host_of(key[1])
             base = ".".join(host.split(".")[-2:])
+            tld = host.rsplit(".", 1)[-1]
             if e.get("reason") != "vendor_customer_content_family_6":
                 rec["excluded"] = f"{e.get('reason')}: provider's own page, H-SELLERCONTENT-01 material"
                 excluded.append(rec)
             elif base in NOT_VENDOR_HOSTS:
                 rec["excluded"] = NOT_VENDOR_HOSTS[base]
+                excluded.append(rec)
+            elif tld in NOT_VENDOR_TLDS:
+                rec["excluded"] = NOT_VENDOR_TLDS[tld]
                 excluded.append(rec)
             else:
                 use.append(rec)
@@ -136,6 +152,55 @@ def seeds() -> tuple[list[dict], list[dict]]:
 
 
 MAX_SENTENCE_CHARS = 350
+
+# v1.2 (session 17 wrap-up, Matthew's design): page chrome is removed before any sentence scan.
+# Measured on the Ardoq / SpawGlass page: every theme-laden marketing line ("Govern and Leverage
+# AI Effectively", "AI Lens", "AI Webinars", "ERP Transformation") sits inside <header>/<nav>,
+# and the customer story sits inside <main>/<article>.
+CHROME_RE = re.compile(r"(?is)<(nav|header|footer|aside)\b[^>]*>.*?</\1\s*>")
+
+
+def strip_chrome(raw_html: str) -> str:
+    """The page with navigation, header, footer and aside blocks removed (repeated, because a
+    <nav> is usually nested inside a <header>)."""
+    prev, out = None, raw_html or ""
+    while prev != out:
+        prev, out = out, CHROME_RE.sub(" ", out)
+    return out
+
+
+# True block-level elements only. An inline element (a, span, strong, em, b, i) is part of the
+# running sentence: on the Ardoq page "They leveraged the <a><span>Microsoft Entra ID
+# integration</span></a> (formerly known as Active Directory) ..." is ONE sentence, and
+# H-EXECID-01's html_lines, which breaks at inline tags as well, cut it into three pieces once
+# v1.2 started splitting sentences on line breaks (first v1.2 dry run, 2026-09-13).
+_BLOCK_TAGS = re.compile(
+    r"(?is)</?(?:p|li|ul|ol|h[1-6]|div|section|article|main|table|thead|tbody|tr|td|th|"
+    r"blockquote|figure|figcaption|dl|dt|dd|br|hr|header|footer|nav|aside)\b[^>]*>")
+
+
+def body_lines(raw_html: str) -> list[str]:
+    """Visible text split at block boundaries only; inline markup is removed in place."""
+    import html as _html
+    t = re.sub(r"(?is)<(script|style|noscript|svg|template)\b.*?</\1>", " ", raw_html or "")
+    t = re.sub(r"(?s)<!--.*?-->", " ", t)
+    t = _BLOCK_TAGS.sub("\n", t)
+    t = re.sub(r"<[^>]+>", "", t)
+    t = _html.unescape(t)
+    return [ln for ln in (re.sub(r"[ \t\r\f\v\u00a0]+", " ", x).strip() for x in t.split("\n")) if ln]
+
+
+def page_title(raw_html: str) -> str:
+    """<title>, else og:title, else the first <h1>."""
+    import html as _html
+    for pattern in (r"(?is)<title[^>]*>(.*?)</title>", r'(?is)<meta[^>]+property="og:title"[^>]+content="([^"]*)"',
+                    r"(?is)<h1[^>]*>(.*?)</h1>"):
+        m = re.search(pattern, raw_html or "")
+        if m:
+            t = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", _html.unescape(m.group(1)))).strip()
+            if t:
+                return t
+    return ""
 NAV_RE = re.compile(
     r"(?i)(sign in|skip to|talk to an expert|read more|learn more|read story|show previous|"
     r"show next|dig deeper|case study\b|next article|previous article|most recent articles|"
@@ -148,7 +213,11 @@ def sentences(text: str) -> list[str]:
     the first dry run wrote two Joeris rows off exactly that (convention 16). A sentence
     is prose if it is short enough to be one and carries no navigation furniture."""
     out = []
-    for s in re.split(r"(?<=[.!?])\s+", text):
+    # v1.2: a line break is a boundary too. The chrome-free body keeps html_lines' block
+    # breaks, so a heading with no full stop ("SpawGlass Builds a Cost-Efficient Future")
+    # no longer fuses with the paragraph after it into one "sentence" that names the company
+    # (caught by core/tests/test_vendor.py section 4 before the v1.2 run was read).
+    for s in re.split(r"(?<=[.!?])\s+|\n+", text):
         s = s.strip()
         if 30 < len(s) <= MAX_SENTENCE_CHARS and not NAV_RE.search(s):
             out.append(s)
@@ -156,11 +225,64 @@ def sentences(text: str) -> list[str]:
 
 
 def names_company(sentence: str, name: str) -> bool:
-    distinct = [t for t in tokens(name) if len(t) > 3]
+    """Does this sentence name the company?
+
+    v1.0 demanded the full canonical string whenever the name had one long token, so
+    "SpawGlass Holding" and "Melaleuca, Inc." were never found in sentences that say
+    "SpawGlass" (10 on the Ardoq page) and "Melaleuca" (8 on the XCentium page): two of the
+    six pages v1.0 read and called absent. Convention 31 is the actual rule: a COINED token
+    stands alone; an ordinary word needs the full phrase. Page-level identity is decided
+    separately (is_about_company plus corroborates_identity)."""
+    distinct = [t for t in tokens(name) if len(t) > 2 and t not in WEAK_TOKENS]
     up = sentence.upper()
-    if len(distinct) <= 1:
-        return name.upper() in up          # a single common token is never an identity
-    return any(t.upper() in up for t in distinct)
+    if len(distinct) >= 2:
+        return any(re.search(rf"\b{re.escape(t)}\b", up) for t in distinct)
+    if len(distinct) == 1 and distinct[0].lower() not in COMMON_WORD_NAMES:
+        return bool(re.search(rf"\b{re.escape(distinct[0])}\b", up))
+    words = [w.upper() for w in re.split(r"[^A-Za-z0-9]+", name) if w]
+    if not words:
+        return False
+    phrase = r"[\s,.\-]*".join(re.escape(w) for w in words)
+    return bool(re.search(rf"\b{phrase}\b", up))
+
+
+_STATE_FULL = {}
+for _full, _code in STATE_NAMES.items():
+    if len(_full) > 4:
+        _STATE_FULL.setdefault(_code, _full)
+
+
+def corroborates_identity(raw_html: str, text: str, company: dict) -> tuple[bool, str]:
+    """v1.1 identity gate for a name that reduces to ONE distinctive token.
+
+    v1.0 accepted Autodesk's story about GRAHAM, the UK and Ireland contractor, as evidence
+    about Graham Construction of Omaha (grahambuilds.com): the token and even "GRAHAM
+    Construction" were on the page. A single token on a third-party page is not an identity
+    unless the page also carries something only this company has: its website domain, its
+    HQ city, or its HQ state. Measured on the six v1.0 pages: SpawGlass (domain, Texas),
+    Joeris (San Antonio, Texas), PENTA (Las Vegas) pass; the UK GRAHAM page carries none and
+    is refused. Cost, stated: XCentium's genuine Melaleuca page carries none either and is
+    refused too. An identity gate, so it refuses rather than writing low-grade (convention 41).
+    Names with two or more distinctive tokens are not gated here."""
+    name = company["canonical_name"]
+    distinct = [t for t in tokens(name) if len(t) > 2 and t not in WEAK_TOKENS]
+    if len(distinct) >= 2:
+        return True, "multi-token name"
+    hq = str(company.get("hq_state") or "")
+    st = state_code(hq)
+    city = hq.split(",")[0].strip() if "," in hq else ""
+    domain = re.sub(r"^https?://(www\.)?", "", str(company.get("website") or "")).strip("/").lower()
+    low = text.lower()
+    if domain and domain in (raw_html or "").lower():
+        return True, f"website domain {domain} on page"
+    if city and re.search(rf"\b{re.escape(city.lower())}\b", low):
+        return True, f"HQ city {city} on page"
+    full = _STATE_FULL.get(st, "")
+    if full and re.search(rf"\b{re.escape(full.lower())}\b", low):
+        return True, f"HQ state {full.title()} on page"
+    return False, (f"one distinctive token ({distinct[0] if distinct else name}) and no corroborator "
+                   f"on the page: no {domain or 'website'}, no {city or 'HQ city'}, no "
+                   f"{full.title() or 'HQ state'}")
 
 
 def company_near(text: str, pos: int, name: str, radius: int = 300) -> bool:
@@ -226,7 +348,8 @@ def theme_hits(text: str) -> dict:
 
 
 def build(company: dict, theme_key: str, role: str, signal: str, passages: list[str],
-          speaker: str, url: str, stamp: str, tier: str, hits: list[str]) -> Observation:
+          speaker: str, url: str, stamp: str, tier: str, hits: list[str],
+          attributed: bool = False) -> Observation:
     theme = topics.THEMES_BY_KEY[theme_key]
     name = company["canonical_name"]
     low = tier != "strong"
@@ -237,6 +360,17 @@ def build(company: dict, theme_key: str, role: str, signal: str, passages: list[
                 f"party (IC1), and the fact is checkable rather than the framing.")
         grade, conf, strength, state = "B", 0.5, "weak_clue", "active_transition"
         excerpt = " | ".join(p[:300] for p in passages[:3])
+        if attributed:
+            # v1.2: no passage names the company; each is attributed to it because the page is
+            # a single-customer story whose TITLE names the company, and the sentence was read
+            # from the page body with navigation, header and footer removed. Weaker identity
+            # than a named sentence, so lower confidence, and the text says so.
+            text = (f"{name} is the subject of a vendor-published customer page (named in its title) "
+                    f"whose body describes a deployment bearing on {theme.label} ({len(passages)} "
+                    f"passage(s)) without naming the company in the sentence. Attributed by page "
+                    f"subject; the vendor is the interested party (IC1).")
+            conf = 0.4
+            excerpt = "[page-subject attribution: company in page title; sentence does not name it] " + excerpt
     else:
         text = (f"{speaker} of {name} is quoted on a vendor-published customer page articulating "
                 f"{theme.label} ({len(passages)} passage(s)). Vendor marketing composes and "
@@ -258,15 +392,27 @@ def build(company: dict, theme_key: str, role: str, signal: str, passages: list[
         harness_id=HARNESS_ID, harness_version=VERSION, confidence_0_1=conf)
 
 
-def read_page(text: str, company: dict, url: str, stamp: str, entry: dict) -> list[Observation]:
+def read_page(text: str, company: dict, url: str, stamp: str, entry: dict,
+              subject: bool = False) -> list[Observation]:
+    """`text` is the page body with chrome removed (v1.2). `subject` is True only when the page
+    title names the company; then a deployment sentence that does not name it is attributed."""
     name = company["canonical_name"]
     out: list[Observation] = []
     # ---- deployment facts ----
     by_theme: dict[str, tuple[list, list, str]] = {}
+    named_any: dict[str, bool] = {}
+    attributed_sentences = 0
     for s in sentences(text):
-        if not names_company(s, name) or not DEPLOY_RE.search(s):
+        if not DEPLOY_RE.search(s):
             continue
-        for tk, (hits, tier) in theme_hits(s).items():
+        named = names_company(s, name)
+        if not named and not subject:
+            continue
+        themed = theme_hits(s)
+        if themed and not named:
+            attributed_sentences += 1
+        for tk, (hits, tier) in themed.items():
+            named_any[tk] = named_any.get(tk, False) or named
             cur = by_theme.setdefault(tk, ([], [], "weak"))
             cur[0].append(s)
             cur[1].extend(hits)
@@ -274,8 +420,9 @@ def read_page(text: str, company: dict, url: str, stamp: str, entry: dict) -> li
                 by_theme[tk] = (cur[0], cur[1], "strong")
     for tk, (passages, hits, tier) in by_theme.items():
         out.append(build(company, tk, "buyer_acts", SIGNAL_DEPLOY, passages, "", url, stamp,
-                         tier, hits))
+                         tier, hits, attributed=not named_any.get(tk, False)))
     entry["deploy_sentences"] = sum(len(v[0]) for v in by_theme.values())
+    entry["deploy_sentences_attributed_by_title"] = attributed_sentences
     # ---- quotes (§24.2 attribution gate) ----
     quotes_by: dict[tuple[str, str], tuple[list, list, str]] = {}
     anonymous, unconfirmed, unthemed = 0, 0, 0
@@ -333,6 +480,8 @@ def main() -> int:
     ap.add_argument("--offline", action="store_true")
     ap.add_argument("--companies")
     ap.add_argument("--pause", type=float, default=1.0)
+    ap.add_argument("--show-rows", action="store_true",
+                    help="print every proposed row in full, for reading before a commit")
     args = ap.parse_args()
 
     db = MarketIntelDB()
@@ -369,7 +518,7 @@ def main() -> int:
         name = company["canonical_name"]
         entry = {"company_id": cid, "name": name, "pages": []}
         rows: list[Observation] = []
-        read_ok, not_about, fetch_fail, robots_block = 0, 0, 0, 0
+        read_ok, not_about, fetch_fail, robots_block, js_gap = 0, 0, 0, 0, 0
         for seed in seed_list:
             url = seed["url"]
             page_entry = {"url": url}
@@ -392,8 +541,30 @@ def main() -> int:
                 page_entry["rejected"] = f"not_about_company: {about_why}"
                 entry["pages"].append(page_entry)
                 continue
+            ok_id, id_why = corroborates_identity(page.html, text, company)
+            if not ok_id:
+                not_about += 1
+                page_entry["rejected"] = f"identity_uncorroborated: {id_why}"
+                entry["pages"].append(page_entry)
+                continue
+            page_entry["identity"] = id_why
+            if not any(names_company(sn, name) for sn in sentences(text)):
+                # v1.1: the page is about the company by its title and header but carries no
+                # prose sentence naming it -- Autodesk's PENTA story, whose body is loaded
+                # client-side (13 mentions, all in the header and meta tags). Nothing was read,
+                # so nothing may be called absent.
+                js_gap += 1
+                page_entry["rejected"] = ("retrieval_gap: page passes identity but no prose sentence "
+                                          "names the company (body not in the served HTML)")
+                entry["pages"].append(page_entry)
+                continue
             read_ok += 1
-            found = read_page(text, company, url, stamp, page_entry)
+            title = page_title(page.html)
+            subject = bool(title) and names_company(title, name)
+            body = "\n".join(body_lines(strip_chrome(page.html)))
+            page_entry["title"] = title[:200]
+            page_entry["subject_in_title"] = subject
+            found = read_page(body, company, url, stamp, page_entry, subject=subject)
             page_entry["observations"] = len(found)
             rows.extend(found)
             entry["pages"].append(page_entry)
@@ -409,6 +580,14 @@ def main() -> int:
                 run.attempt(cid, sig, outcome="absent_confirmed",
                             source_url_attempted=seed_list[0]["url"],
                             candidates_evaluated=n_seed, candidates_discarded=n_seed - read_ok)
+            elif js_gap and not fetch_fail:
+                run.attempt(cid, sig, outcome="not_covered", failure_stage="fetch",
+                            failure_category="js_rendered_unreachable", fix_class="source_limitation",
+                            failure_detail=f"{js_gap} seed page(s) pass identity but serve no prose naming "
+                                           f"the company (body rendered client-side); {not_about} not "
+                                           f"about the company, {robots_block} robots-refused",
+                            source_url_attempted=seed_list[0]["url"],
+                            candidates_evaluated=n_seed, candidates_discarded=n_seed)
             elif robots_block and not fetch_fail and not not_about:
                 run.attempt(cid, sig, outcome="not_covered", failure_stage="fetch",
                             failure_category="access_blocked", fix_class="source_limitation",
@@ -436,6 +615,13 @@ def main() -> int:
         print(f"  [{mark}] {cid} {name}: {n_seed} seed(s), {read_ok} read, {len(rows)} observation(s)")
         log["companies"].append(entry)
 
+    if args.show_rows:
+        for o in proposed:
+            print()
+            print(f"  ---- {o.company_id} {o.topic} {o.evidence_role} grade={o.source_grade} conf={o.confidence_0_1}")
+            print(f"  TEXT: {o.observation_text}")
+            print(f"  EXCERPT: {o.evidence_excerpt}")
+            print(f"  URL: {o.source_url}")
     report = db.sync_observations(proposed)
     run.observations_written = report.written
     summary = run.close()

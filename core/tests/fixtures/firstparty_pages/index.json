@@ -1,0 +1,1347 @@
+{
+ "built_from": "every H-FIRSTPARTY-01 observation's source_url in data/market_intel_db.xlsx, cached page under harness_output/H-FIRSTPARTY-01/raw/pages (latest partition holding it)",
+ "pages": {
+  "http://www.prnewswire.com/news-releases/co-diagnostics-hosts-kingdom-of-saudi-arabia-joint-venture-comira-for-unveiling-of-future-automated-manufacturing-line-302804392.html": {
+   "cache_file": "p_www.prnewswire.com_news-releases_co-diagnostics-hosts-kingdom-of-saudi-arabia-joint-venture-comira-for-unveili.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "95007d4270a1baf81e559b6062f3850569283f98908f7fe83985270802eb5a7e",
+   "file": "page_001.html.gz",
+   "fixture_sha256": "f09933d5338d9afc3efcacde0c63c7a8f8280596cc9cd7860701bed106ee505a",
+   "observation_ids": [
+    "O00304",
+    "O00443"
+   ],
+   "status": 200
+  },
+  "http://www.prnewswire.com/news-releases/co-diagnostics-reports-second-quarter-2026-financial-results-302851294.html": {
+   "cache_file": "p_www.prnewswire.com_news-releases_co-diagnostics-reports-second-quarter-2026-financial-results-302851294.html.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "14bed90a8580631deec7aee09f0b20b3bcb81d6a5bc73d2be825c5cecc4763c2",
+   "file": "page_002.html.gz",
+   "fixture_sha256": "96e0231b401ffdfc0b6d771c9cfe222c723aa28d59fbaad73e44ce896720b974",
+   "observation_ids": [
+    "O00305",
+    "O00444"
+   ],
+   "status": 200
+  },
+  "https://caddell.com/caddell-construction-announces-key-c-suite-and-executive-promotions/": {
+   "cache_file": "p_caddell.com_caddell-construction-announces-key-c-suite-and-executive-promotions.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "2bcc6de123b7ae0c6ae73680d2b2ec4ebceb421f76ecd02ebdbad73a6aeef71a",
+   "file": "page_003.html.gz",
+   "fixture_sha256": "78c461a0243cd675c328d436188425bc124b5be5dd746e84332fe2d92a9297e5",
+   "observation_ids": [
+    "O00539",
+    "O00540"
+   ],
+   "status": 200
+  },
+  "https://caddell.com/caddell-construction-announces-strategic-executive-hires-and-promotions/": {
+   "cache_file": "p_caddell.com_caddell-construction-announces-strategic-executive-hires-and-promotions.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "3650ae87ad73088eedbf078bc0d4ea5ff161b3f4878c3dc3fd3d4ace1c1c1436",
+   "file": "page_004.html.gz",
+   "fixture_sha256": "602d3103e1fd9d14a4f015c5dc3bce81244d11217bb77947799ba5434b963197",
+   "observation_ids": [
+    "O00541",
+    "O00542",
+    "O00543"
+   ],
+   "status": 200
+  },
+  "https://caddell.com/caddell-construction-announces-three-new-presidents/": {
+   "cache_file": "p_caddell.com_caddell-construction-announces-three-new-presidents.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "261a5b49cee4ed5a8ff11db83b77469241dae25d45d47a2bc591df0c6bbacdb5",
+   "file": "page_005.html.gz",
+   "fixture_sha256": "4e01035cb97f444617baf4ce0529251b89a83143b0dc727e95b387538f3edfbf",
+   "observation_ids": [
+    "O00544"
+   ],
+   "status": 200
+  },
+  "https://dukemfg.com/": {
+   "cache_file": "p_dukemfg.com.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "ea334a49effbf1461c8fe6cf1ba31c8ee30cccf136c75552f49e81488ae0517c",
+   "file": "page_006.html.gz",
+   "fixture_sha256": "b0bd640d6df390eabc05ffbeadf243565853431407a707315526111ddbaa124f",
+   "observation_ids": [
+    "O00287"
+   ],
+   "status": 200
+  },
+  "https://fclbuilders.com/what-we-do/what-we-build/e-commerce/": {
+   "cache_file": "p_fclbuilders.com_what-we-do_what-we-build_e-commerce.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "a96fd893d9ee28cba1b2a168befe4a9415f477d9383fa8d7fb34ea2345072cf3",
+   "file": "page_007.html.gz",
+   "fixture_sha256": "b8d12502ddbe256a0a873b2bae2ae5a88474cb0e431f34b922f1b9ee4d948683",
+   "observation_ids": [
+    "O00547"
+   ],
+   "status": 200
+  },
+  "https://finance.yahoo.com/energy/articles/ess-tech-inc-announces-second-200500926.html": {
+   "cache_file": "p_finance.yahoo.com_energy_articles_ess-tech-inc-announces-second-200500926.html.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "18ee408ab478c5bde8716a728e583af6b720c50a5691dab225a9452c4f73b224",
+   "file": "page_008.html.gz",
+   "fixture_sha256": "3243ae5bcf9524c82a70437c76777e7ec4b1e7b2ebb28f178b2d9d8ed455e320",
+   "observation_ids": [
+    "O00555",
+    "O00556",
+    "O00557"
+   ],
+   "status": 200
+  },
+  "https://finance.yahoo.com/healthcare/articles/jrm-construction-management-completes-relocation-160000208.html": {
+   "cache_file": "p_finance.yahoo.com_healthcare_articles_jrm-construction-management-completes-relocation-160000208.html.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "544a3a490de1181082565048181cbeb340960fbedac447f8151c005b2fb35db8",
+   "file": "page_009.html.gz",
+   "fixture_sha256": "f12004b514480c6538e190d228a50b063cf51eea6ce6c53c2e61e18c9a687748",
+   "observation_ids": [
+    "O00549"
+   ],
+   "status": 200
+  },
+  "https://finance.yahoo.com/news/clayco-announces-ceo-change-data-102100546.html": {
+   "cache_file": "p_finance.yahoo.com_news_clayco-announces-ceo-change-data-102100546.html.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "57f7c5c86221bb4778199de355ec675514141edc3834c20dd61c865ef2bd0291",
+   "file": "page_010.html.gz",
+   "fixture_sha256": "74d93c2fb89e07d1d3e00cfa38e88b82e3e7cdf35191f8eb57c31ca9034ee10f",
+   "observation_ids": [
+    "O00474"
+   ],
+   "status": 200
+  },
+  "https://finance.yahoo.com/news/clayco-announces-launch-advanced-technologies-120000153.html": {
+   "cache_file": "p_finance.yahoo.com_news_clayco-announces-launch-advanced-technologies-120000153.html.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "eafbda749f4576238b1da0e83c62440adadf2be20b992b7f27e3f28059244586",
+   "file": "page_011.html.gz",
+   "fixture_sha256": "67bd77fc1fdbfc7af251eff7bbeabb4b715264a6a9ab68462da3ea0cb74be2e4",
+   "observation_ids": [
+    "O00321",
+    "O00475"
+   ],
+   "status": 200
+  },
+  "https://finance.yahoo.com/news/fcl-builders-expands-project-development-130500058.html": {
+   "cache_file": "p_finance.yahoo.com_news_fcl-builders-expands-project-development-130500058.html.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "a15d14234d4cc378770aa1865a578e94d9a0653e5ac8d573a2f7586875d6b631",
+   "file": "page_012.html.gz",
+   "fixture_sha256": "05bdc88cada552d1dba34e1d46a8937bd41072d6f409e5ec34d49ae251bc2a2c",
+   "observation_ids": [
+    "O00548"
+   ],
+   "status": 200
+  },
+  "https://finance.yahoo.com/news/hitt-contracting-breaks-ground-visionary-180900735.html": {
+   "cache_file": "p_finance.yahoo.com_news_hitt-contracting-breaks-ground-visionary-180900735.html.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "5a6223bf1e137cefaa3277db006db504586394aa5228aa72c91d1c02bbc86ae7",
+   "file": "page_013.html.gz",
+   "fixture_sha256": "2b67a49e26ce9b0b544ddb2f1ca65034f0710119c834f04df0e184e5049e2940",
+   "observation_ids": [
+    "O00470"
+   ],
+   "status": 200
+  },
+  "https://finance.yahoo.com/news/kenco-2026-innovation-report-companies-140000486.html": {
+   "cache_file": "p_finance.yahoo.com_news_kenco-2026-innovation-report-companies-140000486.html.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "98fc80ad08e69c2a44775d85f4d75f03bbca3b0ff147b572d7640223f2a4fe27",
+   "file": "page_014.html.gz",
+   "fixture_sha256": "b4b51e9ef8924644fd36c06c5d3f9e5519eaba75daa07dde36bc6516d0243f54",
+   "observation_ids": [
+    "O00288",
+    "O00289",
+    "O00290",
+    "O00418"
+   ],
+   "status": 200
+  },
+  "https://finance.yahoo.com/news/phillips-jordan-inc-rebrands-phillips-203800910.html": {
+   "cache_file": "p_finance.yahoo.com_news_phillips-jordan-inc-rebrands-phillips-203800910.html.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "bfa9fba60c22532421885f6643f21e7d577bb70fbd7dfa5b0e053b6cdbfd7e3a",
+   "file": "page_015.html.gz",
+   "fixture_sha256": "e2e28b04c88ffc9321133485ea490337708061ce69b700c8d02e7b94ca7e41cc",
+   "observation_ids": [
+    "O00429",
+    "O00430"
+   ],
+   "status": 200
+  },
+  "https://finance.yahoo.com/news/suffolk-technologies-ranked-top-investor-143000460.html": {
+   "cache_file": "p_finance.yahoo.com_news_suffolk-technologies-ranked-top-investor-143000460.html.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "cb1aa14f1d6c4b230e8228fe716bab8dc55d333f82605f7e3c89afcd941cd714",
+   "file": "page_016.html.gz",
+   "fixture_sha256": "ca131325fd0a7db08bbad28b3fa21d52e1a1496b7dbbc7bb5007d5571bf9a6c6",
+   "observation_ids": [
+    "O00487",
+    "O00488"
+   ],
+   "status": 200
+  },
+  "https://finance.yahoo.com/news/whiting-turner-establish-corporate-headquarters-143000043.html": {
+   "cache_file": "p_finance.yahoo.com_news_whiting-turner-establish-corporate-headquarters-143000043.html.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "66801986ab018eb8fd094141538e62bdbdb253a0b426bde6f10132f027460d14",
+   "file": "page_017.html.gz",
+   "fixture_sha256": "3053bfc08c9fd10d9e859ce3f8c09bbafbad578aa2e00ef1d1ac2bac2b8a8529",
+   "observation_ids": [
+    "O00465"
+   ],
+   "status": 200
+  },
+  "https://finance.yahoo.com/real-estate/articles/gilbane-reports-record-2025-performance-172600172.html": {
+   "cache_file": "p_finance.yahoo.com_real-estate_articles_gilbane-reports-record-2025-performance-172600172.html.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "10b6b9957eb6b602fb378d08da5e1ce96324c7c89f7673d76f0b4fdfb97340fe",
+   "file": "page_018.html.gz",
+   "fixture_sha256": "004486e6f28b722729bed7c49b7221e1c8385f8d072ad312a87863e7d2dc17d2",
+   "observation_ids": [
+    "O00467",
+    "O00468",
+    "O00469"
+   ],
+   "status": 200
+  },
+  "https://finance.yahoo.com/sectors/energy/articles/black-veatch-positioned-human-critical-130000968.html": {
+   "cache_file": "p_finance.yahoo.com_sectors_energy_articles_black-veatch-positioned-human-critical-130000968.html.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "d572126b1cb6f277f55455570eb932a3c82fc599d31ebb13a374fcd4efbb08f9",
+   "file": "page_019.html.gz",
+   "fixture_sha256": "6ffcfc4cab3d984b25e2dc65da057467c472c3e762d0af7df04c76bbdadd4f63",
+   "observation_ids": [
+    "O00338",
+    "O00504",
+    "O00505"
+   ],
+   "status": 200
+  },
+  "https://finance.yahoo.com/sectors/energy/articles/energysolutions-acquired-energy-capital-partners-113000072.html": {
+   "cache_file": "p_finance.yahoo.com_sectors_energy_articles_energysolutions-acquired-energy-capital-partners-113000072.html.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "362cd41aea2e560b2f8e7b8b8d57eb750fa023db01534e7efe62fabc101e3bce",
+   "file": "page_020.html.gz",
+   "fixture_sha256": "1105e021792beedfb31f6a5a52a6dae1808541dc8884ae1ba798f9e92935ec11",
+   "observation_ids": [
+    "O00432"
+   ],
+   "status": 200
+  },
+  "https://finance.yahoo.com/sectors/technology/articles/carrier-logistics-acquired-private-equity-103200965.html": {
+   "cache_file": "p_finance.yahoo.com_sectors_technology_articles_carrier-logistics-acquired-private-equity-103200965.html.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "3af22b1942e4f0fd30f634774530898f5a332d629c84586b6e9cc1b735868424",
+   "file": "page_021.html.gz",
+   "fixture_sha256": "3b30ba4b505551f05d32b8c74bb22be1300656a6d1e123dc308d70c4e4f97ede",
+   "observation_ids": [
+    "O00341",
+    "O00508",
+    "O00509"
+   ],
+   "status": 200
+  },
+  "https://finance.yahoo.com/small-business/articles/pls-logistics-services-acquires-agl-230500469.html": {
+   "cache_file": "p_finance.yahoo.com_small-business_articles_pls-logistics-services-acquires-agl-230500469.html.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "0036af9ad0744aaaf1fce590e9718b68e5e68714d3f8b8a2da13e4a7d3ccfcfd",
+   "file": "page_022.html.gz",
+   "fixture_sha256": "396efee52e03d025600c1114f6db1cc5ae23083ef20e043cb04e0efc87f50eac",
+   "observation_ids": [
+    "O00425",
+    "O00426"
+   ],
+   "status": 200
+  },
+  "https://hoar.com/resources/news/hoar-announces-executive-leadership-transition/": {
+   "cache_file": "p_hoar.com_resources_news_hoar-announces-executive-leadership-transition.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "eaeb3e5a2c5161b9d040953ae95e3409e214f1bd78a6c2658bec8ee9040a829f",
+   "file": "page_023.html.gz",
+   "fixture_sha256": "de428740116be2ad0e8d3a4a6ee8bb69cd6e54cbc41473edf20e77c21c0661cd",
+   "observation_ids": [
+    "O00522"
+   ],
+   "status": 200
+  },
+  "https://hoar.com/resources/news/hoar-announces-topping-out-of-chattanooga-states-new-facility/": {
+   "cache_file": "p_hoar.com_resources_news_hoar-announces-topping-out-of-chattanooga-states-new-facility.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "5ea0250598023d284056fa66468aced08bd88908d1b485d29d36d06f496e4882",
+   "file": "page_024.html.gz",
+   "fixture_sha256": "c2cb49fbd3e1feab54b56846da8a5146245d71cd26631713b39afa2be33a1d20",
+   "observation_ids": [
+    "O00523"
+   ],
+   "status": 200
+  },
+  "https://hoar.com/resources/news/hoar-construction-announces-completion-of-structural-work/": {
+   "cache_file": "p_hoar.com_resources_news_hoar-construction-announces-completion-of-structural-work.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "1b66a1e9d20815f8cb320ab03360bb1e21d136678236da8178e56495f2b6183c",
+   "file": "page_025.html.gz",
+   "fixture_sha256": "132defe074bd90db707c6fe62381ee479c80a6f9fb693f61156ff34cb7240a2c",
+   "observation_ids": [
+    "O00524"
+   ],
+   "status": 200
+  },
+  "https://hoar.com/resources/news/hoar-construction-completes-research-and-lab-facility-at-embry-riddle-aeronautical-university/": {
+   "cache_file": "p_hoar.com_resources_news_hoar-construction-completes-research-and-lab-facility-at-embry-riddle-aeronautical-uni.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "b94541f197080d4ac1d1c90f4cfdd17bd10a3fcdecf5c69a859273444a501d88",
+   "file": "page_026.html.gz",
+   "fixture_sha256": "81ce38d3d35360ae93361bad8a38c14335cfda1e0c369a7e499b1d0b403893d9",
+   "observation_ids": [
+    "O00525"
+   ],
+   "status": 200
+  },
+  "https://hoar.com/resources/news/hoar-kicks-off-construction-on-two-major-industrial-projects/": {
+   "cache_file": "p_hoar.com_resources_news_hoar-kicks-off-construction-on-two-major-industrial-projects.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "31c966e671e927c3bda7638bfa3215758e795ad7279b38df9218432c4a2f747a",
+   "file": "page_027.html.gz",
+   "fixture_sha256": "5754297ab59a6b42226087e7db429f42b2fb99029b4efc14f770b41c6d8db036",
+   "observation_ids": [
+    "O00526"
+   ],
+   "status": 200
+  },
+  "https://jedunn.com/?taxonomy=type-of-content_tax&term=press-release-content": {
+   "cache_file": "p_jedunn.com_taxonomy_type-of-content_tax_term_press-release-content.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "58e67735c644006a20a7403bc7aa5f6ab2c73749266967e56d3947b959b77524",
+   "file": "page_028.html.gz",
+   "fixture_sha256": "6d01e494dbdc673e5e0d915813c45cc41dbd19abb3b46c9dcde58fe107829d11",
+   "observation_ids": [
+    "O00478"
+   ],
+   "status": 200
+  },
+  "https://jedunn.com/blog/je-dunn-announces-its-newly-formed-advanced-facilities-group/": {
+   "cache_file": "p_jedunn.com_blog_je-dunn-announces-its-newly-formed-advanced-facilities-group.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "88b277991f1758d1b2902c177f4e0203c0c58492bd5da3538a6f33bc2a131d9e",
+   "file": "page_029.html.gz",
+   "fixture_sha256": "1f794e560acf09efda78b363693518eceea7751ad5c5e911d6a967e99a356018",
+   "observation_ids": [
+    "O00479",
+    "O00480"
+   ],
+   "status": 200
+  },
+  "https://jedunn.com/blog/je-dunn-plans-expansion-into-south-dakota-market-with-acquisition-of-henry-carlson-construction/": {
+   "cache_file": "p_jedunn.com_blog_je-dunn-plans-expansion-into-south-dakota-market-with-acquisition-of-henry-carlson-constructio.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "a695b2cebb0fe770d92fbc86e00eba2737a378c5b45952f19067fbc6bb1506c4",
+   "file": "page_030.html.gz",
+   "fixture_sha256": "0a53c1ff26407fc87c5300c9c1bfbcf64d848e54db001d174dbbd5b8e266b75a",
+   "observation_ids": [
+    "O00481"
+   ],
+   "status": 200
+  },
+  "https://kencogroup.com/news/2026-innovation-report-announcement/": {
+   "cache_file": "p_kencogroup.com_news_2026-innovation-report-announcement.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "960cc163317d2dbeb9cf719153845f21c4e2d231dd4e2d6bb4d9767304e7c4c8",
+   "file": "page_031.html.gz",
+   "fixture_sha256": "9f201d17e34bca2aa2ff00b0997b7de38f3ce7aa26d368f63a56aafc9690ca26",
+   "observation_ids": [
+    "O00291",
+    "O00292",
+    "O00419",
+    "O00420"
+   ],
+   "status": 200
+  },
+  "https://kencogroup.com/news/innovation-lab-2026-opening/": {
+   "cache_file": "p_kencogroup.com_news_innovation-lab-2026-opening.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "df910e183a1306b669b3f24393b0d83912f7db0c1fc7cbb03acfa64af34ed39d",
+   "file": "page_032.html.gz",
+   "fixture_sha256": "cd0add0f6a9b032cd42735a63d8917893a7c3a86532fab81ec74c6be1808b542",
+   "observation_ids": [
+    "O00293",
+    "O00421"
+   ],
+   "status": 200
+  },
+  "https://leprino.com/leprino-foods-announces-lubbock-texas-as-site-for-new-state-of-the-art-dairy-manufacturing-facility/": {
+   "cache_file": "p_leprino.com_leprino-foods-announces-lubbock-texas-as-site-for-new-state-of-the-art-dairy-manufacturing-facilit.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "33c6662ab3dd69d73ad2b2acf0941d6414b314b96fb6aaf0d0d2eb3595409175",
+   "file": "page_033.html.gz",
+   "fixture_sha256": "210d2a0720db01a900be96fd638c0cea2b4e483a4d213c6f8af65bd065a6c66a",
+   "observation_ids": [
+    "O00502"
+   ],
+   "status": 200
+  },
+  "https://leprino.com/media-center/": {
+   "cache_file": "p_leprino.com_media-center.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "aa4a8450f0ca48c6e2f936f4623eecaa02ca20de984ab8a3159b10dd2b0ef2f7",
+   "file": "page_034.html.gz",
+   "fixture_sha256": "b85a263e4f811109877c2a209a0c3be6ce7daf73925035acb0cca0c26b2f2f65",
+   "observation_ids": [
+    "O00503"
+   ],
+   "status": 200
+  },
+  "https://savageco.com/press-release/supply-chain-solutions-savage/": {
+   "cache_file": "p_savageco.com_press-release_supply-chain-solutions-savage.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "6c01ad5bbf94d2021c12ee1811f8004ae4981b50ec418955408f58988cc73f1c",
+   "file": "page_035.html.gz",
+   "fixture_sha256": "0ff73ee21eb5e158426e940b307b21e36ea5f5cbc16d6f43553556b8814d5a70",
+   "observation_ids": [
+    "O00545"
+   ],
+   "status": 200
+  },
+  "https://swinerton.com/scott-conrad-retires-from-swinerton/": {
+   "cache_file": "p_swinerton.com_scott-conrad-retires-from-swinerton.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "8a2c55ab0e663972fbfe4a369f7ed116b90821d2cccd27319cafddd4bdc63573",
+   "file": "page_036.html.gz",
+   "fixture_sha256": "1babcbef6532fa2bf160fc09e03ec2a63807096fe18ce7fe77d65a2a8487b27d",
+   "observation_ids": [
+    "O00490"
+   ],
+   "status": 200
+  },
+  "https://www.boldt.com/news/news-release/the-boldt-company-announces-move-to-new-corporate-headquarters/": {
+   "cache_file": "p_www.boldt.com_news_news-release_the-boldt-company-announces-move-to-new-corporate-headquarters.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "2836ac365d752eafefd954027b8c16b45f24f91d23fedd4b00c0c2a7af7fff1e",
+   "file": "page_037.html.gz",
+   "fixture_sha256": "fd90dfcb6b8ec106fb41af16350e382a62c8d483566d283fafb28b8c927c90a9",
+   "observation_ids": [
+    "O00532"
+   ],
+   "status": 200
+  },
+  "https://www.businesswire.com/news/home/20240819979937/en/Graham-Corporation-Announces-Groundbreaking-Ceremony-for-%2417.6-Million-Manufacturing-Facility-on-Batavia-New-York-Campus": {
+   "cache_file": "p_www.businesswire.com_news_home_20240819979937_en_Graham-Corporation-Announces-Groundbreaking-Ceremony-for-_241.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "00d73aef1f03b7085b0b26c9099dac96acebbeb380320a6bee01b50feb62891d",
+   "file": "page_038.html.gz",
+   "fixture_sha256": "37852d7a3df872eff2c88b558c42f7092adba771cf165744f535d3f8f38fdb9c",
+   "observation_ids": [
+    "O00449"
+   ],
+   "status": 200
+  },
+  "https://www.businesswire.com/news/home/20260507163788/en/ESS-Tech-Inc.-Announces-First-Quarter-2026-Financial-Results": {
+   "cache_file": "p_www.businesswire.com_news_home_20260507163788_en_ESS-Tech-Inc.-Announces-First-Quarter-2026-Financial-Results.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "d3697a1f3abdab9c954640470ebc305e2ad712acb98db7a5511c6cf4ab133480",
+   "file": "page_039.html.gz",
+   "fixture_sha256": "d6fb2145a71bad1dbe752afb217a0587d00b6617c3eb9385d37383b1ac16fa2a",
+   "observation_ids": [
+    "O00558",
+    "O00559"
+   ],
+   "status": 200
+  },
+  "https://www.businesswire.com/news/home/20260602021799/en/AMCS-Group-Appoints-Eric-S.-Walsh-as-Chief-Executive-Officer": {
+   "cache_file": "p_www.businesswire.com_news_home_20260602021799_en_AMCS-Group-Appoints-Eric-S.-Walsh-as-Chief-Executive-Officer.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "95215569c1ac1078292a45366a411b3bcbef8f8689578e4073201d61b9066829",
+   "file": "page_040.html.gz",
+   "fixture_sha256": "b5ca23a2beecade02641dc24941fb2a9b7f972a6e209b8781f5ae7291eeb4a1b",
+   "observation_ids": [
+    "O00320"
+   ],
+   "status": 200
+  },
+  "https://www.businesswire.com/news/home/20260811241297/en/ESS-Tech-Inc.-Announces-Second-Quarter-2026-Financial-Results": {
+   "cache_file": "p_www.businesswire.com_news_home_20260811241297_en_ESS-Tech-Inc.-Announces-Second-Quarter-2026-Financial-Results.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "2a7c638724ff9365e97661475650446ff574147e8c94ae68c191ee512e693060",
+   "file": "page_041.html.gz",
+   "fixture_sha256": "470a2a31bcdf38235f154d51f3f70d35005b9b648a77c18a88ddeb6e00d5f8ee",
+   "observation_ids": [
+    "O00359"
+   ],
+   "status": 200
+  },
+  "https://www.constructiondive.com/news/adolfson-peterson-completes-2-texas-hospitals-37m/690880/": {
+   "cache_file": "p_www.constructiondive.com_news_adolfson-peterson-completes-2-texas-hospitals-37m_690880.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "73c2187f7009f3b1600e6603556107f30299273cd904bd23224be5ab680bac18",
+   "file": "page_042.html.gz",
+   "fixture_sha256": "2f67e4845515e54ed83139742913020176ed93c842cf2dc447c77e1a33cfc988",
+   "observation_ids": [
+    "O00301",
+    "O00436"
+   ],
+   "status": 200
+  },
+  "https://www.constructiondive.com/news/adolfson-peterson-wins-74m-raytheon-rehab-project-plano-texas/650502/": {
+   "cache_file": "p_www.constructiondive.com_news_adolfson-peterson-wins-74m-raytheon-rehab-project-plano-texas_650502.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "8234b5f7edad568f1e43bd4500504199324691f52822213926f79b5c4d122656",
+   "file": "page_043.html.gz",
+   "fixture_sha256": "a0bedd16786fd7df1872e930e84a6ea9381ecd73043c48dab179930cb51af177",
+   "observation_ids": [
+    "O00302",
+    "O00437"
+   ],
+   "status": 200
+  },
+  "https://www.constructiondive.com/news/austin-adolfson-peterson-texas-high-school/751820/": {
+   "cache_file": "p_www.constructiondive.com_news_austin-adolfson-peterson-texas-high-school_751820.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "4c1e2a84aa4912a114a03ce15ed6ac662a00178e0f6802349a0b4a17051a2767",
+   "file": "page_044.html.gz",
+   "fixture_sha256": "0ae216a71df7f270d8cfa0cf2930cb631cd4f1aa9c8d8170e14d66d037d36375",
+   "observation_ids": [
+    "O00303",
+    "O00438"
+   ],
+   "status": 200
+  },
+  "https://www.constructiondive.com/news/bechtel-kiewit-japan-ohio-power-generation-ai/815768/": {
+   "cache_file": "p_www.constructiondive.com_news_bechtel-kiewit-japan-ohio-power-generation-ai_815768.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "39ed59518edd993841a2e160fcc9d6acd184891e5c81d35ef766047dad8765da",
+   "file": "page_045.html.gz",
+   "fixture_sha256": "93a82dfc0d085610c501b508694399091ffadb63e67a4e5b1f04060249c7c325",
+   "observation_ids": [
+    "O00349",
+    "O00529"
+   ],
+   "status": 200
+  },
+  "https://www.constructiondive.com/news/bill-oneil-former-we-oneil-ceo-dies/746366/": {
+   "cache_file": "p_www.constructiondive.com_news_bill-oneil-former-we-oneil-ceo-dies_746366.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "1c46fa21c7b2666e03571feb7214155a9faf0d7b1e2e1e2cbe68850ad8b5bc0b",
+   "file": "page_046.html.gz",
+   "fixture_sha256": "524eee72418c32bbd4da2222cbcf59b1f64536be90214b588cea83c28dbd372a",
+   "observation_ids": [
+    "O00357",
+    "O00553"
+   ],
+   "status": 200
+  },
+  "https://www.constructiondive.com/news/boldt-bildt-modular-construction-unit/737633/": {
+   "cache_file": "p_www.constructiondive.com_news_boldt-bildt-modular-construction-unit_737633.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "37390293116a7a5731a7a55e17d83a56f8f9aaf096a90236f05acc1b48f15cc5",
+   "file": "page_047.html.gz",
+   "fixture_sha256": "52266adb7d4986b7b250fa07c0e65896c756db300e1dcc1b47151d40e7e77aa1",
+   "observation_ids": [
+    "O00533",
+    "O00534"
+   ],
+   "status": 200
+  },
+  "https://www.constructiondive.com/news/boldt-invests-vc-firm-green-bay-packers-microsoft/642243/": {
+   "cache_file": "p_www.constructiondive.com_news_boldt-invests-vc-firm-green-bay-packers-microsoft_642243.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "c7673e5704a3a34bb0c4293b2743e28156fe5df7d1f7846894845c3f87adfc2d",
+   "file": "page_048.html.gz",
+   "fixture_sha256": "0701c3245868cee39e6d53a4b1e00f6536f03bbd9901e2e8bee00c7611b23266",
+   "observation_ids": [
+    "O00535",
+    "O00536"
+   ],
+   "status": 200
+  },
+  "https://www.constructiondive.com/news/clark-construction-expansion-baltimore-maryland-virginia-mid-atlantic-office/623874/": {
+   "cache_file": "p_www.constructiondive.com_news_clark-construction-expansion-baltimore-maryland-virginia-mid-atlantic-office_623.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "1398021ac6181fbb758fa3beb5c1c8cd3d02770d69b77d0a41279a5e5c0a777e",
+   "file": "page_049.html.gz",
+   "fixture_sha256": "b031a02d32515d8dc1991e93fd56f49e598a5ddcf31b0f08b6020bc15793acbe",
+   "observation_ids": [
+    "O00322",
+    "O00482"
+   ],
+   "status": 200
+  },
+  "https://www.constructiondive.com/news/clayco-new-ceo-data-center-expansion/737390/": {
+   "cache_file": "p_www.constructiondive.com_news_clayco-new-ceo-data-center-expansion_737390.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "e51aae2fdaf86e7c38975e7c07cceb214f879308906504e123f30aa2bdfc6ff4",
+   "file": "page_050.html.gz",
+   "fixture_sha256": "1cc3e098c15f18c585d7a0092ad5f22c7c489addcdfccd54f3c6cafe06215afe",
+   "observation_ids": [
+    "O00476"
+   ],
+   "status": 200
+  },
+  "https://www.constructiondive.com/news/dycom-black-veatch-acquisition-wireless-infrastructure-construction/725464/": {
+   "cache_file": "p_www.constructiondive.com_news_dycom-black-veatch-acquisition-wireless-infrastructure-construction_725464.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "4d08c7566d046bba21b01e4364f568ac65f201a42eba838d6f7f6e3598fcc816",
+   "file": "page_051.html.gz",
+   "fixture_sha256": "52ffef879539c9cdbabf65ca3d92d22dd8f09a95ed518b629158b93087ed9cbf",
+   "observation_ids": [
+    "O00339",
+    "O00340",
+    "O00506"
+   ],
+   "status": 200
+  },
+  "https://www.constructiondive.com/news/graham-construction-acquire-xl-industries/742121/": {
+   "cache_file": "p_www.constructiondive.com_news_graham-construction-acquire-xl-industries_742121.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "1d8e46ff969a36db87bfdbcda52cedc1273b8b94086e98e7351f5da64dfe1d18",
+   "file": "page_052.html.gz",
+   "fixture_sha256": "6e3ec77ee674dfc0cd5f5ef338bb54b29c8bb0082b28716df476806a74cc55bc",
+   "observation_ids": [
+    "O00309",
+    "O00450"
+   ],
+   "status": 200
+  },
+  "https://www.constructiondive.com/news/hitt-new-headquarters-virginia-groundbreaking/738335/": {
+   "cache_file": "p_www.constructiondive.com_news_hitt-new-headquarters-virginia-groundbreaking_738335.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "483aca881437c61d95a6ba82148891927a4aebbe06941431c3e9dbc2dcf96152",
+   "file": "page_053.html.gz",
+   "fixture_sha256": "c0820020e8ef347917bf4f1b3790b0b905786a9c1f4c81cc56f3097cab44ec8d",
+   "observation_ids": [
+    "O00317",
+    "O00471"
+   ],
+   "status": 200
+  },
+  "https://www.constructiondive.com/news/meta-commits-50b-louisiana-data-center-richland-parish/825329/": {
+   "cache_file": "p_www.constructiondive.com_news_meta-commits-50b-louisiana-data-center-richland-parish_825329.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "39392a23d5f474720a5be28d68b8f26722787b4ac9b1afa0d1a99df0a0a8618f",
+   "file": "page_054.html.gz",
+   "fixture_sha256": "91dd4bd49f581b6e876877fbbcb6fb007ae64fb506be046aba78929502e36071",
+   "observation_ids": [
+    "O00327",
+    "O00484"
+   ],
+   "status": 200
+  },
+  "https://www.constructiondive.com/news/mortenson-partners-robotics-maker-orteco-solar-project/633170/": {
+   "cache_file": "p_www.constructiondive.com_news_mortenson-partners-robotics-maker-orteco-solar-project_633170.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "957166a4650111807157d977ad5f5b0acf9f8570f2ce5a42e1e90d82749e4d37",
+   "file": "page_055.html.gz",
+   "fixture_sha256": "bfcf1f1b031a09bec1501f0fc245eea190119578acada074ca44e2a77743ff6e",
+   "observation_ids": [
+    "O00485",
+    "O00486"
+   ],
+   "status": 200
+  },
+  "https://www.constructiondive.com/news/timberlab-swinerton-acquire-american-laminators/717335/": {
+   "cache_file": "p_www.constructiondive.com_news_timberlab-swinerton-acquire-american-laminators_717335.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "7787872b9d6d29af0e55cf21033364a9b416c40937f30fb94eea26aedd6ba1d2",
+   "file": "page_056.html.gz",
+   "fixture_sha256": "430d4534bb1a545a7a86c084b231db7d9a58dad63146ca7eff93d995dff4466e",
+   "observation_ids": [
+    "O00491",
+    "O00492"
+   ],
+   "status": 200
+  },
+  "https://www.constructiondive.com/news/virginia-tech-hitt-coalition-awards-grants/759681/": {
+   "cache_file": "p_www.constructiondive.com_news_virginia-tech-hitt-coalition-awards-grants_759681.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "e593e5c8cc9a12cfa33aa5be1b8dd3b5f9a820d09a69204a1aedec49291b59f0",
+   "file": "page_057.html.gz",
+   "fixture_sha256": "5520c2e741b1e0430b5b9c19cafe7fddaef97b328181bdf255e786d510356f3d",
+   "observation_ids": [
+    "O00318",
+    "O00472"
+   ],
+   "status": 200
+  },
+  "https://www.constructiondive.com/news/we-oneil-names-new-ceo-john-finn/743350/": {
+   "cache_file": "p_www.constructiondive.com_news_we-oneil-names-new-ceo-john-finn_743350.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "8c9ff4ac8703f3b09ca8faefebf2b4c02cc064f21bc15126a6253f885f5a9a0d",
+   "file": "page_058.html.gz",
+   "fixture_sha256": "602c73a5ff454b76f03a52fba6d23c6113e492f14042fe4679b53896b9485915",
+   "observation_ids": [
+    "O00358",
+    "O00554"
+   ],
+   "status": 200
+  },
+  "https://www.constructiondive.com/press-release/20210301-adolfson-peterson-construction-announces-additions-to-midwest-leadership/": {
+   "cache_file": "p_www.constructiondive.com_press-release_20210301-adolfson-peterson-construction-announces-additions-to-midwest-.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "a43a06a03b3df8903b8b3f5cd08d55e5cf1cc2a8be75271c9a909019bcb1c558",
+   "file": "page_059.html.gz",
+   "fixture_sha256": "27b6853017b61fbefaeac27a21fe2aa8026de8c951afbbf087ecc812dc8a2201",
+   "observation_ids": [
+    "O00439",
+    "O00440"
+   ],
+   "status": 200
+  },
+  "https://www.crst.com/blog/crst-an-update-on-our-otr-fleets/": {
+   "cache_file": "p_www.crst.com_blog_crst-an-update-on-our-otr-fleets.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "ef75cf219c3e8783b31e228e8e37c9bb233ca2d25cd00f9428209d1a3b25c420",
+   "file": "page_060.html.gz",
+   "fixture_sha256": "ad6d768e46f957f1fe6506d7887b41812b035e4d748102fb5877e9b7127750f4",
+   "observation_ids": [
+    "O00518"
+   ],
+   "status": 200
+  },
+  "https://www.cve.com/news/cache-valley-electric-acquires-rouser-automation/": {
+   "cache_file": "p_www.cve.com_news_cache-valley-electric-acquires-rouser-automation.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "820304d89cdb74fecfcde6f3c615392e35b6535add3b99b559474ef15ebb8a23",
+   "file": "page_061.html.gz",
+   "fixture_sha256": "77347efe8ac398d79c51108576221716e10e9d1e4402acfe33748529688ed54d",
+   "observation_ids": [
+    "O00347",
+    "O00521"
+   ],
+   "status": 200
+  },
+  "https://www.energysolutions.com/energysolutions-to-be-acquired-by-energy-capital-partners-ecp/": {
+   "cache_file": "p_www.energysolutions.com_energysolutions-to-be-acquired-by-energy-capital-partners-ecp.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "aafc5fd71d8da42b7d646929db805bc201cc14603729f57ea8696838dcf9f09c",
+   "file": "page_062.html.gz",
+   "fixture_sha256": "3a55a34fe32264845e9a8dc00fa7118765202f42f755ce7ca4d70305a92d684c",
+   "observation_ids": [
+    "O00433",
+    "O00434"
+   ],
+   "status": 200
+  },
+  "https://www.enr.com/articles/63476-adolfson-and-peterson-builds-community-one-project-at-a-time": {
+   "cache_file": "p_www.enr.com_articles_63476-adolfson-and-peterson-builds-community-one-project-at-a-time.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "89611eaef13f003416cc6cc43f9a37a220a117b4115ede418456832061776234",
+   "file": "page_063.html.gz",
+   "fixture_sha256": "7782f831868da33254521cec2fdbd9909a866266886550c1fc5b00e63fbf13eb",
+   "observation_ids": [
+    "O00441",
+    "O00442"
+   ],
+   "status": 200
+  },
+  "https://www.fhpaschen.com/press-release/": {
+   "cache_file": "p_www.fhpaschen.com_press-release.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "eab602938df1f44aaefbd26ab558dade7a08c7a16fee1f0a51855af549dc1d08",
+   "file": "page_064.html.gz",
+   "fixture_sha256": "7d9216fc752e0344b4f2c933d87ebf77965d001755fa2e0c7bdb0edb126a5b46",
+   "observation_ids": [
+    "O00428"
+   ],
+   "status": 200
+  },
+  "https://www.freightwaves.com/news/kenan-advantage-group-acquires-louisiana-based-tank-hauler": {
+   "cache_file": "p_www.freightwaves.com_news_kenan-advantage-group-acquires-louisiana-based-tank-hauler.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "963d931304fa8a9da7231642e3082acf9d51ff42f380c38048af9a6e678eb9ef",
+   "file": "page_065.html.gz",
+   "fixture_sha256": "9db0f07839d919283664c541d6838b5c27ed5fdd0b8c069b749ad11f974b7d63",
+   "observation_ids": [
+    "O00514",
+    "O00515"
+   ],
+   "status": 200
+  },
+  "https://www.freightwaves.com/news/kenan-advantage-group-acquires-texas-based-xbl": {
+   "cache_file": "p_www.freightwaves.com_news_kenan-advantage-group-acquires-texas-based-xbl.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "fc9178e626903e06bfd7fb1c24730494a45ce87ed8613b9bdefff197f5c03189",
+   "file": "page_066.html.gz",
+   "fixture_sha256": "896f957f161077055f1964b44b54a121aeeac6d4e975fbec2ce87e5baf3157fd",
+   "observation_ids": [
+    "O00516",
+    "O00517"
+   ],
+   "status": 200
+  },
+  "https://www.globenewswire.com/news-release/2024/08/21/2933347/0/en/Dycom-Industries-Inc-Acquires-Black-Veatch-s-Public-Carrier-Wireless-Telecommunications-Infrastructure-Business.html": {
+   "cache_file": "p_www.globenewswire.com_news-release_2024_08_21_2933347_0_en_Dycom-Industries-Inc-Acquires-Black-Veatch-s-Public.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "0a9e95caba3bd45e97a932cce54752e1560de9016a23e607011b273d35fab169",
+   "file": "page_067.html.gz",
+   "fixture_sha256": "34f8d9da3f394149baeca79122599514762172568ed12cba14022059e8b6cdd4",
+   "observation_ids": [
+    "O00507"
+   ],
+   "status": 200
+  },
+  "https://www.grahambuilds.com/about-graham/leadership/": {
+   "cache_file": "p_www.grahambuilds.com_about-graham_leadership.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "8e80ef162c228a85beb9b1783c3a53b2b596e8186997a502009429642b3fc16f",
+   "file": "page_068.html.gz",
+   "fixture_sha256": "54b741390ad4da9d7ce160bb469171e85460d8411f5d848261804f276258fe67",
+   "observation_ids": [
+    "O00451",
+    "O00452",
+    "O00453"
+   ],
+   "status": 200
+  },
+  "https://www.hitt.com/advanced-manufacturing/": {
+   "cache_file": "p_www.hitt.com_advanced-manufacturing.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "37fe194d47d0dd7542c9f38b386a50e90cea07a568c771fedb8319c66e49a194",
+   "file": "page_069.html.gz",
+   "fixture_sha256": "a57e4c0afcac90227c33ab492a4fe5e9384f6105c6fa84176e1fd850a85d51ae",
+   "observation_ids": [
+    "O00319",
+    "O00473"
+   ],
+   "status": 200
+  },
+  "https://www.jrmcm.com/about-us/our-team/": {
+   "cache_file": "p_www.jrmcm.com_about-us_our-team.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "427ebce1c83ac38eb349064969f3c7617e720bde178231dd3dd8ef555f75bd7d",
+   "file": "page_070.html.gz",
+   "fixture_sha256": "5334319a7898c66f05cc6fad611283a2e440115e3a3f28f5b9187b8ca412e55c",
+   "observation_ids": [
+    "O00356",
+    "O00550",
+    "O00551",
+    "O00552"
+   ],
+   "status": 200
+  },
+  "https://www.macktech.com/press-release/mack-technologies-announces-significant-capacity-expansion-to-existing-operations/": {
+   "cache_file": "p_www.macktech.com_press-release_mack-technologies-announces-significant-capacity-expansion-to-existing-operatio.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "8874b59a4440dc3f8d1d33e87740d17572446391a707bac5571129821a6b6677",
+   "file": "page_071.html.gz",
+   "fixture_sha256": "c637d19d97c9b23f0dbecd3323a95060bd29ba4927a175442cba639f01bde805",
+   "observation_ids": [
+    "O00414"
+   ],
+   "status": 200
+  },
+  "https://www.macktech.com/press-release/mack-technologies-expands-electronics-manufacturing-operation-in-mexico/": {
+   "cache_file": "p_www.macktech.com_press-release_mack-technologies-expands-electronics-manufacturing-operation-in-mexico.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "136931ab9d103fa3452706777659122e53a9847a217d6a37f52ae675d64a9d26",
+   "file": "page_072.html.gz",
+   "fixture_sha256": "cd7040abe4ae37589ad04aa73116087ba4f2e6bb07f57a1ad385f96706ecec0b",
+   "observation_ids": [
+    "O00415"
+   ],
+   "status": 200
+  },
+  "https://www.macktech.com/press-release/mack-technologies-wins-2025-circuits-assemblys-service-excellence-award-for-ems-companies-with-revenues-between-100m-and-500m/": {
+   "cache_file": "p_www.macktech.com_press-release_mack-technologies-wins-2025-circuits-assemblys-service-excellence-award-for-ems.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "ec7cc5249546a5256f5ff9f2cc79983798cf28e0f6ec6406cafe9ee81ef1cd90",
+   "file": "page_073.html.gz",
+   "fixture_sha256": "abd4e0fa8385d05c6a84aa3dbe5d5565daae36cd43aa2accdf1e8508e9dc1285",
+   "observation_ids": [
+    "O00416",
+    "O00417"
+   ],
+   "status": 200
+  },
+  "https://www.mccarthy.com/insights/mccarthy-and-palantir-announce-strategic-partnership-to-bring-ai-to-the-construction-field": {
+   "cache_file": "p_www.mccarthy.com_insights_mccarthy-and-palantir-announce-strategic-partnership-to-bring-ai-to-the-construction.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "3e6df069a508ec4751538d8f2bd995679431f6a953cd46effb85ba88ea30d807",
+   "file": "page_074.html.gz",
+   "fixture_sha256": "501588538f3e03d945e1f0dd8f0edea52e60257647cb1f994e2762c1bbccacbf",
+   "observation_ids": [
+    "O00323",
+    "O00483"
+   ],
+   "status": 200
+  },
+  "https://www.mcgough.com/2022/05/mcgough-headquarters-earns-well-platinum-certification/": {
+   "cache_file": "p_www.mcgough.com_2022_05_mcgough-headquarters-earns-well-platinum-certification.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "0253193e57cc70e652ee5790ba1a7aaffca039ea774228acf4e838c06ed6bda2",
+   "file": "page_075.html.gz",
+   "fixture_sha256": "afe8185e3534b25fe27b0e85e47b98beb60ba31cc6109dff938df0a7331a8356",
+   "observation_ids": [
+    "O00562"
+   ],
+   "status": 200
+  },
+  "https://www.ontrac.com/ontrac-appoints-akash-chauhan-as-chief-operations-officer/": {
+   "cache_file": "p_www.ontrac.com_ontrac-appoints-akash-chauhan-as-chief-operations-officer.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "afee62ac66cd9fb547261a79535e063a821699430034f8b927ee9e15ce6d215c",
+   "file": "page_076.html.gz",
+   "fixture_sha256": "45f04914310b376d7d92cc1356e42e7de9d8e81fc3ccc836a9be80662a763e46",
+   "observation_ids": [
+    "O00346",
+    "O00520"
+   ],
+   "status": 200
+  },
+  "https://www.penskelogistics.com/press-releases/penske-logistics-presents-new-state-of-logistics-report/": {
+   "cache_file": "p_www.penskelogistics.com_press-releases_penske-logistics-presents-new-state-of-logistics-report.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "c3e608cbcab3dd1eb9c465161ced89dd2d67f9d7eaa13a73f3e53a16f670584d",
+   "file": "page_077.html.gz",
+   "fixture_sha256": "b745a6fa698a145a5ed22c19493474ff7c7d7cd706acd8a41f69a62aea9553fb",
+   "observation_ids": [
+    "O00331",
+    "O00495"
+   ],
+   "status": 200
+  },
+  "https://www.penskelogistics.com/technology/innovation/": {
+   "cache_file": "p_www.penskelogistics.com_technology_innovation.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "abbcc41d6d568c60761d544b5d12bde527073722b995dd53254bda15a3177a5d",
+   "file": "page_078.html.gz",
+   "fixture_sha256": "9a764ec6274b5fd1982bb7e8dd65fe9d5333d14c93c9a74af286c802116e970a",
+   "observation_ids": [
+    "O00332",
+    "O00333",
+    "O00334",
+    "O00496"
+   ],
+   "status": 200
+  },
+  "https://www.prnewswire.com/news-releases/alamo-group-inc-to-acquire-petersen-industries-expanding-its-industrial-equipment-product-offering-302638483.html": {
+   "cache_file": "p_www.prnewswire.com_news-releases_alamo-group-inc-to-acquire-petersen-industries-expanding-its-industrial-equip.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "4ce2c3f849b447f330116b2fe9dfb2bf27982d45376cff4a8265ebe26bf726b0",
+   "file": "page_079.html.gz",
+   "fixture_sha256": "6f1a24541ff4e15e106c9215f2000a07c8bb6e204944c9b392d4dd6f87e6e772",
+   "observation_ids": [
+    "O00311",
+    "O00455"
+   ],
+   "status": 200
+  },
+  "https://www.prnewswire.com/news-releases/american-securities-to-acquire-swinertons-renewable-energy-division--solv-inc-301380795.html": {
+   "cache_file": "p_www.prnewswire.com_news-releases_american-securities-to-acquire-swinertons-renewable-energy-division--solv-inc.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "386e2185fb4e7489f2c65e93e2ade0ed9bed8b5c9ea9358b9ddf377b94f9ec14",
+   "file": "page_080.html.gz",
+   "fixture_sha256": "93f495174086c4d9729156f273ff4d6dc2d658b6c152ac7d68ca9974136a89d0",
+   "observation_ids": [
+    "O00329",
+    "O00493"
+   ],
+   "status": 200
+  },
+  "https://www.prnewswire.com/news-releases/clayco-announces-launch-of-advanced-technologies-construction-business-unit-clayco-compute-302351125.html": {
+   "cache_file": "p_www.prnewswire.com_news-releases_clayco-announces-launch-of-advanced-technologies-construction-business-unit-c.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "f6a9565f036ce7e727ce045c11e2e6c8005f34963e043c35a3c59c9ade1a9ffe",
+   "file": "page_081.html.gz",
+   "fixture_sha256": "a2a572750df39dda0a6f6f57cb6973ad8c779c6f20819a02b3d54dade8ce70ed",
+   "observation_ids": [
+    "O00477"
+   ],
+   "status": 200
+  },
+  "https://www.prnewswire.com/news-releases/clyde-companies-partners-with-sis-in-business-transformation-301731209.html": {
+   "cache_file": "p_www.prnewswire.com_news-releases_clyde-companies-partners-with-sis-in-business-transformation-301731209.html.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "d978cf8df657feb0011c1cae6f22fc216b401e6abad0db91fcabc97a58e59b57",
+   "file": "page_082.html.gz",
+   "fixture_sha256": "5486ede6b0575519c9747f41a44e2d2a8d323c9bde190a7f95a234f85b696089",
+   "observation_ids": [
+    "O00299",
+    "O00300",
+    "O00435"
+   ],
+   "status": 200
+  },
+  "https://www.prnewswire.com/news-releases/co-diagnostics-announces-3-0-million-private-placement-priced-at-the-market-under-nasdaq-rules-302777009.html": {
+   "cache_file": "p_www.prnewswire.com_news-releases_co-diagnostics-announces-3-0-million-private-placement-priced-at-the-market-u.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "29da1da0da1463e09db742721c006a7c6f5ac0fcbdf186a1c7c6228026628192",
+   "file": "page_083.html.gz",
+   "fixture_sha256": "ecae7f86bd13527993585358abd949fd33f0b4ffc07c62f056d31936031435fc",
+   "observation_ids": [
+    "O00306",
+    "O00445"
+   ],
+   "status": 200
+  },
+  "https://www.prnewswire.com/news-releases/co-diagnostics-reports-full-year-2025-financial-results-302730537.html": {
+   "cache_file": "p_www.prnewswire.com_news-releases_co-diagnostics-reports-full-year-2025-financial-results-302730537.html.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "930f2aa374c9cbf471a8092853a17d84a471914182be3b28a23326d93773666e",
+   "file": "page_084.html.gz",
+   "fixture_sha256": "83eacd1f775145a42626005575b6926a5512a839e8313812d2456b8c5acc740c",
+   "observation_ids": [
+    "O00307",
+    "O00446",
+    "O00447"
+   ],
+   "status": 200
+  },
+  "https://www.prnewswire.com/news-releases/co-diagnostics-to-integrate-and-implement-proprietary-artificial-intelligence-technology-into-co-dx-primer-ai-platform-302602287.html": {
+   "cache_file": "p_www.prnewswire.com_news-releases_co-diagnostics-to-integrate-and-implement-proprietary-artificial-intelligence.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "c64c4070dce6673b8925c56058ee972f4862da6d1c6b5cce87c98f59655b8a0f",
+   "file": "page_085.html.gz",
+   "fixture_sha256": "1c40a24020ef8d61e6ef77024622cd8126dba0bf914ec35c25477ae211a5093a",
+   "observation_ids": [
+    "O00308",
+    "O00448"
+   ],
+   "status": 200
+  },
+  "https://www.prnewswire.com/news-releases/cr-england-advances-industry-excellence-with-lytx-video-safety-technologies-302402627.html": {
+   "cache_file": "p_www.prnewswire.com_news-releases_cr-england-advances-industry-excellence-with-lytx-video-safety-technologies-3.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "90c1b6817af4d4d362d6961a22faab907f1fe65f69db3adc2778d5c3e2d7b626",
+   "file": "page_086.html.gz",
+   "fixture_sha256": "00b635dfda6bd68620778a91f4d9855409e9b0e751a8939ef5229c0dc9c0063b",
+   "observation_ids": [
+    "O00344",
+    "O00512",
+    "O00513"
+   ],
+   "status": 200
+  },
+  "https://www.prnewswire.com/news-releases/ct-launches-industrial--logistics-investment-management-platform-302767530.html": {
+   "cache_file": "p_www.prnewswire.com_news-releases_ct-launches-industrial--logistics-investment-management-platform-302767530.ht.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "c039c4c3b85454257a020b4320b7d3f9bf721ff16c2ab503437bea3eb40c75b3",
+   "file": "page_087.html.gz",
+   "fixture_sha256": "227de05ca64f16aa79ed7ec4a709592ace6f1638641c886a98ae24854615efcb",
+   "observation_ids": [
+    "O00295",
+    "O00296",
+    "O00427"
+   ],
+   "status": 200
+  },
+  "https://www.prnewswire.com/news-releases/front-line-power-construction-announces-strategic-investment-from-ariel-alternatives-302691595.html": {
+   "cache_file": "p_www.prnewswire.com_news-releases_front-line-power-construction-announces-strategic-investment-from-ariel-alter.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "7706b0de28cd4afa4184f7b7df538a87746be03f3f34b401240310a1b28bc0d7",
+   "file": "page_088.html.gz",
+   "fixture_sha256": "f30f858ab8e60f048053692996d84f438f1742a36a91e2083f85488bef1c9533",
+   "observation_ids": [
+    "O00350",
+    "O00530",
+    "O00531"
+   ],
+   "status": 200
+  },
+  "https://www.prnewswire.com/news-releases/hoar-construction-signs-enterprise-agreement-with-revizto-to-boost-collaboration-and-facilitate-team-growth-302053558.html": {
+   "cache_file": "p_www.prnewswire.com_news-releases_hoar-construction-signs-enterprise-agreement-with-revizto-to-boost-collaborat.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "ac50d23b20ce677cedfd2681f6f399e84333b8bfd9616055a0369c94b423bfd3",
+   "file": "page_089.html.gz",
+   "fixture_sha256": "eb60d0c63fcec1841024dc01519adab8a1931fcb9e5541d3fa23b586060c0deb",
+   "observation_ids": [
+    "O00348",
+    "O00527",
+    "O00528"
+   ],
+   "status": 200
+  },
+  "https://www.prnewswire.com/news-releases/hunt-scanlon-ventures-serves-as-advisor-to-savage-partners-in-acquisition-by-russell-reynolds-associates-301989858.html": {
+   "cache_file": "p_www.prnewswire.com_news-releases_hunt-scanlon-ventures-serves-as-advisor-to-savage-partners-in-acquisition-by-.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "aaeac126a136ac5c396c6d2a8b2a23f401924c47cf2669ebe95fa11d2052f328",
+   "file": "page_090.html.gz",
+   "fixture_sha256": "785848b1a32c01ca21c7ff760eb0f10bd4f59f1c190a063e16b688adbbbbffac",
+   "observation_ids": [
+    "O00353",
+    "O00546"
+   ],
+   "status": 200
+  },
+  "https://www.prnewswire.com/news-releases/industry-leading-general-contractor-mcgough-signs-enterprise-agreement-with-revizto-to-save-time-and-empower-employees-302203373.html": {
+   "cache_file": "p_www.prnewswire.com_news-releases_industry-leading-general-contractor-mcgough-signs-enterprise-agreement-with-r.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "1d7b1e929e4c279a5a8f51ad5e6b5f7b1a9f93f491bacbd9f50a5cd6ce312f17",
+   "file": "page_091.html.gz",
+   "fixture_sha256": "282f13d045bfe85be76c2422dc0cc11f17e10831449107b3b0685f5bb1fa007f",
+   "observation_ids": [
+    "O00363",
+    "O00563"
+   ],
+   "status": 200
+  },
+  "https://www.prnewswire.com/news-releases/kenco-deploys-deepfabric-ai-agents-across-its-operations-to-power-the-3pl-of-the-future-302843255.html": {
+   "cache_file": "p_www.prnewswire.com_news-releases_kenco-deploys-deepfabric-ai-agents-across-its-operations-to-power-the-3pl-of-.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "35f5824ef641b993f66e629b525fd566166f91638abb7668bfc0eb89e98e0ae9",
+   "file": "page_092.html.gz",
+   "fixture_sha256": "f2816b835b1c17cba2aadb61d4448ad93ef7e38550016cb8ae73640267898ff9",
+   "observation_ids": [
+    "O00294",
+    "O00422",
+    "O00423",
+    "O00424"
+   ],
+   "status": 200
+  },
+  "https://www.prnewswire.com/news-releases/leading-us-commercial-construction-company-mccarthy-holdings-inc-selects-gep-smart-software-to-transform-and-unify-procurement-301372567.html": {
+   "cache_file": "p_www.prnewswire.com_news-releases_leading-us-commercial-construction-company-mccarthy-holdings-inc-selects-gep-.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "55c81ad3d32cf1f480f7a4340a6a32ee319b3f1b39e55b54f5ae5ea2115296c5",
+   "file": "page_093.html.gz",
+   "fixture_sha256": "9385ea340daf5b65720af6a2201fa23902403e32ce27b2da7fa8aa4ad29d92eb",
+   "observation_ids": [
+    "O00324",
+    "O00325",
+    "O00326"
+   ],
+   "status": 200
+  },
+  "https://www.prnewswire.com/news-releases/lio-raises-30m-series-a-to-bring-agentic-ai-to-enterprise-procurement-302705236.html": {
+   "cache_file": "p_www.prnewswire.com_news-releases_lio-raises-30m-series-a-to-bring-agentic-ai-to-enterprise-procurement-3027052.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "29ec9cdfe37441aa42e926c43cb2ed99f8980bc450920eb4ee8fede0a298b415",
+   "file": "page_094.html.gz",
+   "fixture_sha256": "66c78e4feb92d1e102a679bce0845ac3eff5ad6228bc23c1c108b9feebe0e8bd",
+   "observation_ids": [
+    "O00297",
+    "O00298",
+    "O00431"
+   ],
+   "status": 200
+  },
+  "https://www.prnewswire.com/news-releases/midmark-rtls-joins-epic-toolbox-deepening-healthcare-integration-excellence-302387862.html": {
+   "cache_file": "p_www.prnewswire.com_news-releases_midmark-rtls-joins-epic-toolbox-deepening-healthcare-integration-excellence-3.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "38b7e09e855cc7ebd8fc6be89a048a7c5f5ec3cec49c1dfd9c90226311a7045d",
+   "file": "page_095.html.gz",
+   "fixture_sha256": "30bea8c7525d56babf11b9b6becc124b7982dc2a75c7e72404164307bfbe9d9f",
+   "observation_ids": [
+    "O00285",
+    "O00286",
+    "O00413"
+   ],
+   "status": 200
+  },
+  "https://www.prnewswire.com/news-releases/one-equity-partners-exits-investment-in-ps-logistics-301399228.html": {
+   "cache_file": "p_www.prnewswire.com_news-releases_one-equity-partners-exits-investment-in-ps-logistics-301399228.html.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "86dbc346dacba38e8569585966f994caf31dfc762eb57281412f85a711b8c9c1",
+   "file": "page_096.html.gz",
+   "fixture_sha256": "3db0d656394a0f2b2ffe70b4f1a83e659b6f4735187720f04a6abaff0417dcf3",
+   "observation_ids": [
+    "O00345",
+    "O00519"
+   ],
+   "status": 200
+  },
+  "https://www.prnewswire.com/news-releases/penske-logistics-accelerates-agentic-ai-supply-chain-initiative-with-augment-302660410.html": {
+   "cache_file": "p_www.prnewswire.com_news-releases_penske-logistics-accelerates-agentic-ai-supply-chain-initiative-with-augment-.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "4e00b8409874f64bc60917d1314a8d171b5d015febcd0cbf9e5cd12f0cb20615",
+   "file": "page_097.html.gz",
+   "fixture_sha256": "04bd6954cdc4d8de927eb80b5ad7d8b180bfab9d9d35bc4294cfd61b65a30aa2",
+   "observation_ids": [
+    "O00335",
+    "O00336",
+    "O00497",
+    "O00498"
+   ],
+   "status": 200
+  },
+  "https://www.prnewswire.com/news-releases/penske-logistics-introduces-supply-chain-insight-to-empower-smarter-more-resilient-supply-chain-operations-302760700.html": {
+   "cache_file": "p_www.prnewswire.com_news-releases_penske-logistics-introduces-supply-chain-insight-to-empower-smarter-more-resi.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "d812946f23d9afa540f11a403aaeaef63715f671b17f0fef0922d841e323f3f4",
+   "file": "page_098.html.gz",
+   "fixture_sha256": "0025ced67d2a69c4093a021d4f421ce9dd2813aa985afa105b8702d06399f916",
+   "observation_ids": [
+    "O00337",
+    "O00499",
+    "O00500",
+    "O00501"
+   ],
+   "status": 200
+  },
+  "https://www.prnewswire.com/news-releases/rmx-opens-development-facility-in-austin-texas-302789022.html": {
+   "cache_file": "p_www.prnewswire.com_news-releases_rmx-opens-development-facility-in-austin-texas-302789022.html.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "8d3855aeed63ef64048b81f01275f6519a2ec0c0fcf7ae33325fc601ff0ee7dd",
+   "file": "page_099.html.gz",
+   "fixture_sha256": "2450a9189ef700100679565fb176fd13837c93014e4bdbd778644d705319fcc1",
+   "observation_ids": [
+    "O00330",
+    "O00494"
+   ],
+   "status": 200
+  },
+  "https://www.prnewswire.com/news-releases/rogers-obrien-construction-named-winner-in-the-mid-sized-business-category-of-fast-companys-2024-world-changing-ideas-awards-302145611.html": {
+   "cache_file": "p_www.prnewswire.com_news-releases_rogers-obrien-construction-named-winner-in-the-mid-sized-business-category-of.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "a89d58f5f1a763dc3b3afb4c3b2878708eddee141b14644568c49a90e3cab357",
+   "file": "page_100.html.gz",
+   "fixture_sha256": "6bc090d332260ffc3864b15bdabd0032bf5b5d4c463c937afb906491f9cc481a",
+   "observation_ids": [
+    "O00360",
+    "O00560"
+   ],
+   "status": 200
+  },
+  "https://www.prnewswire.com/news-releases/spartannash-announces-first-quarter-fiscal-2024-results-302158674.html": {
+   "cache_file": "p_www.prnewswire.com_news-releases_spartannash-announces-first-quarter-fiscal-2024-results-302158674.html.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "eba905b5e9703d3caa0ad70bd0948976c302fa502ff465cac170da76382d2026",
+   "file": "page_101.html.gz",
+   "fixture_sha256": "9fa619bd710add9fa2bed5ddf6fbd2b28552e2236fb4c1468fec1d100cb85333",
+   "observation_ids": [
+    "O00312",
+    "O00456",
+    "O00457",
+    "O00458"
+   ],
+   "status": 200
+  },
+  "https://www.prnewswire.com/news-releases/spartannash-announces-fourth-quarter-and-fiscal-2024-results-302374348.html": {
+   "cache_file": "p_www.prnewswire.com_news-releases_spartannash-announces-fourth-quarter-and-fiscal-2024-results-302374348.html.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "aeb4d1337593db75413493e4b0381b593a86863f91edc74baa59f9f608c1a829",
+   "file": "page_102.html.gz",
+   "fixture_sha256": "c6ba72da5280ea56609b6a26f909607fee3fefc29713b4c1423213c60e03752b",
+   "observation_ids": [
+    "O00313",
+    "O00459",
+    "O00460"
+   ],
+   "status": 200
+  },
+  "https://www.prnewswire.com/news-releases/spartannash-announces-second-quarter-fiscal-2024-results-302222819.html": {
+   "cache_file": "p_www.prnewswire.com_news-releases_spartannash-announces-second-quarter-fiscal-2024-results-302222819.html.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "f1bb58103e1cb961121e55e53ab675e31085d4b9bab3169e47185fb91a26cee9",
+   "file": "page_103.html.gz",
+   "fixture_sha256": "bbbac52279b7e2c779e19057e6e2a5a2f3a89b5187b8aa36dfc9d8f841563432",
+   "observation_ids": [
+    "O00314",
+    "O00461",
+    "O00462",
+    "O00463"
+   ],
+   "status": 200
+  },
+  "https://www.prnewswire.com/news-releases/spartannash-strengthens-customer-centric-innovation-with-robotics-automation-301820823.html": {
+   "cache_file": "p_www.prnewswire.com_news-releases_spartannash-strengthens-customer-centric-innovation-with-robotics-automation-.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "a5a0f3f3587f5127e25e1ea85e15b9fe7ac5a2db8366c4211a100c70cdad5a99",
+   "file": "page_104.html.gz",
+   "fixture_sha256": "583fd4be6bb2d4f23bb1c9af61d8c2cd0efb36cd76b577d1d50ca9429f6eed8b",
+   "observation_ids": [
+    "O00315",
+    "O00464"
+   ],
+   "status": 200
+  },
+  "https://www.prnewswire.com/news-releases/stg-announces-acquisition-of-carrier-logistics-inc-to-pioneer-ai-agentic-platform-for-ltl-and-last-mile-carriers-302739828.html": {
+   "cache_file": "p_www.prnewswire.com_news-releases_stg-announces-acquisition-of-carrier-logistics-inc-to-pioneer-ai-agentic-plat.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "1ea054c9f299c392abb138c924278f33e250d760b86a20509f55a3867c6bca91",
+   "file": "page_105.html.gz",
+   "fixture_sha256": "1bfe5011e671d1940c3a8ef79305e87884b91d5a2803aeebc7b97460167c0cd1",
+   "observation_ids": [
+    "O00342",
+    "O00343",
+    "O00510",
+    "O00511"
+   ],
+   "status": 200
+  },
+  "https://www.prnewswire.com/news-releases/suffolk-partners-with-arrowsights-intelligent-video-coaching-solution-to-radically-improve-jobsite-construction-safety-302716397.html": {
+   "cache_file": "p_www.prnewswire.com_news-releases_suffolk-partners-with-arrowsights-intelligent-video-coaching-solution-to-radi.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "2fc1c9c61837ce31ea02daebe2e3241b1d9eacf4c8e5c75700a038b816aa8e45",
+   "file": "page_106.html.gz",
+   "fixture_sha256": "f69d08a43d14a39aff1181abaa0247c4499e1230ed48437d8aa84ebac3e3b23c",
+   "observation_ids": [
+    "O00328",
+    "O00489"
+   ],
+   "status": 200
+  },
+  "https://www.prnewswire.com/news-releases/texas-premier-builder-rogers-obrien-construction-signs-enterprise-agreement-with-revizto-to-standardize-project-collaboration-302217206.html": {
+   "cache_file": "p_www.prnewswire.com_news-releases_texas-premier-builder-rogers-obrien-construction-signs-enterprise-agreement-w.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "48b895328b8c68100a26fb362aa6e971fbddb52c258cbc0b859d5ba31227612b",
+   "file": "page_107.html.gz",
+   "fixture_sha256": "db81de0bc07188e313bd3e54a1cff950cc218f6df7e0185580b540cbe443c2c1",
+   "observation_ids": [
+    "O00361",
+    "O00362",
+    "O00561"
+   ],
+   "status": 200
+  },
+  "https://www.prnewswire.com/news-releases/touchplan-and-the-boldt-company-complete-enterprise-agreement-301472755.html": {
+   "cache_file": "p_www.prnewswire.com_news-releases_touchplan-and-the-boldt-company-complete-enterprise-agreement-301472755.html.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "1dd95ba0b632345902ab864bc75a8dff65a9ad36672f570c38e1fa23441737e8",
+   "file": "page_108.html.gz",
+   "fixture_sha256": "cca092957a945344aa0d907cd9192d303eb0542d2b8e6d7d053ac10d1ca32013",
+   "observation_ids": [
+    "O00351",
+    "O00352",
+    "O00537",
+    "O00538"
+   ],
+   "status": 200
+  },
+  "https://www.prnewswire.com/news-releases/whiting-turner-to-establish-new-corporate-headquarters-on-goucher-college-campus-302385366.html": {
+   "cache_file": "p_www.prnewswire.com_news-releases_whiting-turner-to-establish-new-corporate-headquarters-on-goucher-college-cam.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "0d7d5a676c046e1c89ffe589e6edb3cb86f4623c20ae06b052f56bb79b528cdf",
+   "file": "page_109.html.gz",
+   "fixture_sha256": "669ea4bc18f5118d1dfb2bd5322c75d10af042d4340c74a9346747ba381a74ef",
+   "observation_ids": [
+    "O00316",
+    "O00466"
+   ],
+   "status": 200
+  },
+  "https://www.prnewswire.com/news-releases/xl-industries-announces-strategic-merger-with-graham-construction-302391988.html": {
+   "cache_file": "p_www.prnewswire.com_news-releases_xl-industries-announces-strategic-merger-with-graham-construction-302391988.h.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "64dd11faceb911ffd90ce7631faee8f4456a6f09b0f538dd625c8e4c5dd83c8f",
+   "file": "page_110.html.gz",
+   "fixture_sha256": "834737ef636b26a386519d6193c17be5be54131b14952e817f9dedad79da7b0e",
+   "observation_ids": [
+    "O00310",
+    "O00454"
+   ],
+   "status": 200
+  },
+  "https://www.prweb.com/releases/jdm-technology-group-expands-construction-software-offering-acquiring-penta-technologies-and-struxi-302080723.html": {
+   "cache_file": "p_www.prweb.com_releases_jdm-technology-group-expands-construction-software-offering-acquiring-penta-technologie.txt",
+   "cache_partition": "2026-08-31",
+   "cache_sha256": "04cea6b7c12e09c95f574c637fc05db446cab61abac248faa779b885863a2df1",
+   "file": "page_111.html.gz",
+   "fixture_sha256": "5ff3ea362a812a0702841ba1cebc4fabca698348c53bb1e3cb76cd78e3d30b36",
+   "observation_ids": [
+    "O00354",
+    "O00355"
+   ],
+   "status": 200
+  }
+ },
+ "transformation": "status line unwrapped; <script>/<style>/<noscript>/<svg>/<template> and comments removed (body.py::_NON_TEXT, the extractor's own first step); gzip",
+ "urls_without_a_cached_page": {}
+}
